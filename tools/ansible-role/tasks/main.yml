@@ -183,7 +183,6 @@
       - ansible_os_family == 'RedHat'
       - isecl_role == 'enterprise'
       - setup == 'workload-conf-containers-docker'
-      - wpm_container_security == 'yes'
 
 
 # os: Redhat and setup: workload-conf-containers-crio and isecl_role: enterprise
@@ -200,7 +199,6 @@
       - ansible_os_family == 'RedHat'
       - isecl_role == 'enterprise'
       - setup == 'workload-conf-containers-crio'
-      - wpm_container_security == 'yes'
 
 
 # os: Redhat and setup: workload-conf-vm and isecl_role: enterprise
@@ -240,7 +238,6 @@
       - ansible_os_family == 'RedHat' 
       - isecl_role == 'node'
       - setup == 'workload-conf-containers-docker'
-      - wa_with_container_security == 'yes'
 
 
 # os: Redhat and setup: workload-conf-containers-crio and isecl_role: node
@@ -254,7 +251,6 @@
       - ansible_os_family == 'RedHat' 
       - isecl_role == 'node'
       - setup == 'workload-conf-containers-crio'
-      - wa_with_container_security == 'yes'
 
 
 # os: Redhat and setup: workload-conf-vm and isecl_role: node

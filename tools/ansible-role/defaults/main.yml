@@ -1,6 +1,4 @@
 ---
-# The below default variables are documented in Readme.md under Role Variables along with the requirements specific to each usecase
-
 # --------------------------- CERTIFICATE MANAGEMENT SERVICE (CMS) ----------------------------------- #
 
 # The name of the binary installer as per the release tag for Certificate Management Service
@@ -17,6 +15,18 @@ authservice_port: 8444
 
 
 # ----------------------------- BOOTSTRAP DB -------------------------------------- #
+
+# The RPM download URL for postgresql on RHEL OS
+postgres_db_rpm: https://download.postgresql.org/pub/repos/yum/11/redhat/rhel-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+
+# The postgresql RPM  file name for RHEL OS
+postgres_rpm_name: pgdg-redhat-repo-latest.noarch.rpm
+
+# The apt repo for postgresql on Ubuntu OS
+postgres_db_apt_repo: https://apt.postgresql.org/pub/repos/apt
+
+# The apt repo signing key for postgresql on Ubuntu OS
+postgres_db_apt_repo_signing_key: https://www.postgresql.org/media/keys/ACCC4CF8.asc
 
 # The shell script file src for installing postgres DB
 isecl_pgdb_installer_file_src: "{{binaries_path}}/install_pgdb.sh"
@@ -226,54 +236,14 @@ wpm_admin_username: admin@wpm
 # The service account password for Workload Policy Manager
 wpm_admin_password: wpmAdminPass
 
-# Enable/disable Workload Policy Manager Installation with container security 
-# [ yes - Container Confidentiality with Docker Containers, no - others]
-wpm_container_security: 'yes'
-
 
 # ---------------------------------------- TRUST AGENT ------------------------------------------- #
-# Enable/disable for UEFI SecureBoot Mode
-# [yes - UEFI SecureBoot mode, no - Legacy mode]
-uefi_secureboot: 'no'
 
 # The name of the binary installer as per release tag for  Trust Agent
 ta_installer_file_name: trustagent-v3.3.0.bin
 
 # The binary installer file source for Trust Agent
 ta_installer_file_src: "{{binaries_path}}/{{ta_installer_file_name}}"
-
-# The TPM Storage Root Key(SRK) Password to be used if TPM is already owned
-tpm_owner_secret: "{{tpm_secret | default('')}}"
-
-# The grub file path for Legacy mode & UEFI Mode. Default is Legacy mode path. Update the below path for UEFI mode with UEFI SecureBoot
-grub_file_path: /boot/grub2/grub.cfg
-
-# TRUST AGENT - Below is Only for Launch Time Protection - Container Confidentiality 
-# with Docker Containers and Launch Time Protection - Container Confidentiality with Docker Containers
-
-# Enable/disable container security for Docker runtime or CRIO runtime
-# [yes - Launch Time Protection with Docker Containers, NA - others]
-wa_with_container_security: 'yes'
-
-# Enable/disable container security for CRIO runtime
-# [yes - Launch Time Protection with CRIO Containers, NA - others]
-skip_secure_docker_daemon: "{{skip_sdd | default('no')}}"
-
-# [TRUE/FALSE based on registry configured with http/https respectively]
-# Required for Workload Integrity with containers
-insecure_skip_verify: "{{insecure_verify | default('')}}"
-
-# The registry IP for the Docker registry from where container images are pulled
-# Required for Workload Integrity with containers
-registry_ip: "{{registry_ipaddr | default('')}}"
-
-# Proxy details if running behind a proxy
-# Required for Workload Integrity with containers
-https_proxy: "{{https_proxy | default('')}}"
-
-# The registry protocol for talking to the remote registry [http/https]
-# Required for Workload Integrity with containers
-registry_scheme_type: "{{registry_scheme | default('')}}"
 
 
 # ---------------------------------------- CRIO -----------------------------------------------------#

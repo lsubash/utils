@@ -5,7 +5,7 @@ An ansible role that installs Intel® Security Libraries for Data Center (Intel�
 
 Table of Contents
 -----------------
-  
+
    * [Ansible Role - Intel Security Libraries - DC](#ansible-role---intel-security-libraries---dc)
       * [Table of Contents](#table-of-contents)
       * [Requirements](#requirements)
@@ -386,7 +386,7 @@ ansible_password=<password>
 
 > **Note:** Ansible requires `ssh` and `root` user access to remote machines. The following command can be used to ensure ansible can connect to remote machines with host key check `
   ```shell
-  ssh-keyscan -H <ip_address> >> /root/.ssh/known_hosts
+  ssh-keyscan -H <ip_address/hostname> >> /root/.ssh/known_hosts
   ```
 
 Using the Role in Ansible
@@ -475,7 +475,7 @@ ansible-playbook <playbook-name> --extra-vars setup=<setup var from supported us
 > **Note:** Update the `roles_path` under `ansible.cfg` to point to the cloned repository so that the role can be read by Ansible
 
 
-Additional Examples and Tips
+Additional Workflow Examples
 ----------------------------
 
 #### TPM is already owned
@@ -490,7 +490,7 @@ ansible-playbook <playbook-name> \
 ```
 or
 
-Update the following vars in `defaults/main.yml`
+Update the following vars in `vars/main.yml`
 
 ```yaml
 # The TPM Storage Root Key(SRK) Password to be used if TPM is already owned
@@ -511,15 +511,16 @@ ansible-playbook <playbook-name> \
 
 or
 
-Update the following vars in `defaults/main.yml`
+Update the following vars in `vars/main.yml`
 
 ```yaml
-# Enable/disable for UEFI SecureBoot Mode
-# [yes - UEFI SecureBoot mode, no - Legacy mode]
-uefi_secureboot: 'yes'
+# Legacy mode or UEFI SecureBoot mode
+# ['no' - Legacy mode, 'yes' - UEFI SecureBoot mode]
+uefi_secureboot: 'no'
 
-# The grub file path for Legacy mode & UEFI Mode. Default is Legacy mode path. Update the below path for UEFI mode with UEFI SecureBoot
-grub_file_path: <uefi mode grub file path>
+# The grub file path for Legacy mode & UEFI Mode. 
+# [/boot/grub2/grub.cfg - Legacy mode, /boot/efi/EFI/redhat/grub.cfg - UEFI Mode]
+grub_file_path: /boot/grub2/grub.cfg
 ```
 
 #### Using Docker Notary
@@ -533,10 +534,11 @@ ansible-playbook <playbook-name> \
 --extra-vars insecure_verify=<insecure_verify[TRUE/FALSE]> \
 --extra-vars registry_ipaddr=<registry ipaddr> \
 --extra-vars registry_scheme=<registry scheme[http/https]>
+--extra-vars https_proxy=<https_proxy[To be set only if running behind a proxy]>
 ```
 or
 
-Update the following vars in `defaults/main.yml`
+Update the following vars in `vars/main.yml`
 
 ```yaml
 # [TRUE/FALSE based on registry configured with http/https respectively]
@@ -544,11 +546,13 @@ Update the following vars in `defaults/main.yml`
 insecure_skip_verify: <insecure_skip_verify>
 
 # The registry IP for the Docker registry from where container images are pulled
-# Required for Workload Integrity with containers
 registry_ip: <registry_ipaddr>
 
-# The registry protocol for talking to the remote registry [http/https]
-# Required for Workload Integrity with containers
+# Proxy details if running behind a proxy
+https_proxy: <https_proxy>
+
+# The registry protocol for talking to the remote registry 
+# [http - When registry is configured with http , https - When registry is configured with https]
 registry_scheme_type: <registry_scheme>
 ```
 
@@ -704,262 +708,11 @@ Log files: `none`<br>
 Default Port: `none`<br>
 <br>
 
-Role Variables
---------------
-
-The Default variables under `defaults/main.yml` need to be modified only if any specific changes are required, else they can be used as is to deploy Intel® SecL-DC libraries. 
-The variables under `vars/main.yml` need to updated if running behind a proxy(defaults are emtpy), can be left as is if proxy is not required.
-
-The description for default variables under `defaults/main.yml` for each service and other variables under `vars/main.yml` along with the required variables per usecase is given below.
-
-**Certificate Management Service**
-
-| Default variable (defaults/main.yml) | Description                                                  | Host Attestation | Application Integrity | Data Fencing & Asset Tags | Launch Time Protection - VM Confidentiality | Launch Time Protection - Container Confidentiality | Secure Key Caching | SGX Orchestration | SGX Attestation |
-| ------------------------------------ | ------------------------------------------------------------ | ---------------- | --------------------- | ------------------------- | ------------------------------------------ | -------------------------------------------------- | ------------------- | ------------------|-----------------|
-| cms_installer_file_src               | The binary installer file src for Certificate Management Service | Yes              | Yes                   | Yes                       | Yes                                        | Yes                                                | Yes     | Yes    | Yes   |
-| cms_installer_name                   | The name of the binary installer as per the release tag for Certificate Management Service | Yes              | Yes                   | Yes                       | Yes                                        | Yes                                                | Yes     | Yes    | Yes   |
-| cms_port                             | The port to be used by Certificate Management Service        | Yes              | Yes                   | Yes                       | Yes                                        | Yes                                                | Yes     | Yes    | Yes   |
-| authservice_port                     | The port to be used by Authentication & Authorization Service | Yes              | Yes                   | Yes                       | Yes                                        | Yes                                                | Yes     |  Yes    | Yes   |
-
-
-
-**Bootstrap DB**
-
-| Default variable (defaults/main.yml) | Description                                                  | Host Attestation | Application  Integrity | Data Fencing & Asset Tags | Launch Time Protection - VM Confidentiality | Launch Time Protection - Container Confidentiality | Secure Key Caching | SGX Orchestration | SGX Attestation |
-| ------------------------------------ | ------------------------------------------------------------ | ---------------- | ---------------------- | ------------------------- | ------------------------------------------ | -------------------------------------------------- | ------------------- | ----------------- | --------------- |
-| isecl_pgdb_installer_file_src        | The shell script file src for installing postgres DB         | yes              | yes                    | yes                       | yes                                        | yes                                                | Yes     | Yes    | Yes   |
-| isecl_pgdb_create_db_file_src        | The shell script file src for creating DB tables for services | yes              | yes                    | yes                       | yes                                        | yes                                                | Yes     | Yes    | Yes   |
-| isecl_pgdb_repo_list                 | The repo list for postgres DB on Ubuntu                       | no              | no                    | no                       | no                                        | no                                                | Yes     | no    | no   |
-| isecl_pgdb_port                      | The port to be used by postgres DB                           | yes              | yes                    | yes                       | yes                                        | yes                                                | Yes     | Yes    | Yes   |
-| isecl_pgdb_save_db_install_log       | Save postgres DB install logs [true/false]                   | yes              | yes                    | yes                       | yes                                        | yes                                                | Yes     | Yes    | Yes   |
-| aas_db_name                          | The db name for Authentication and Authorization Service     | yes              | yes                    | yes                       | yes                                        | yes                                                | Yes     | Yes    | Yes   |
-| aas_db_user                          | The db user for Authentication and Authorization Service     | yes              | yes                    | yes                       | yes                                        | yes                                                | Yes     | Yes    | Yes   |
-| aas_db_password                      | The db password for Authentication and Authorization Service | yes              | yes                    | yes                       | yes                                        | yes                                                | Yes     | Yes    | Yes   |
-| hvs_db_name                          | The db name for Verification Service                         | yes              | yes                    | yes                       | yes                                        | yes                                                | No     | No    | Yes   |
-| hvs_db_user                          | The db user for Verification Service                         | yes              | yes                    | yes                       | yes                                        | yes                                                | No     | No    | Yes   |
-| hvs_db_password                      | The db password for Verification Service                     | yes              | yes                    | yes                       | yes                                        | yes                                                | No     | No    | Yes   |
-| wls_db_name                          | The db name for Workload Service                             | yes              | yes                    | yes                       | yes                                        | yes                                                | No     | No    | Yes   |
-| wls_db_user                          | The db user for Workload Service                             | yes              | yes                    | yes                       | yes                                        | yes                                                | No     | No    | Yes   |
-| wls_db_password                      | The db password for Workload Service                         | yes              | yes                    | yes                       | yes                                        | yes                                                | No     | No    | Yes   |
-| scs_db_hostname                          | The db hostname for SGX Caching Service                             | no              | no                    | no                       | no                                        | no                                                | Yes     | Yes    | Yes   |
-| scs_db_name                          | The db name for SGX Caching Service                             | no              | no                    | no                       | no                                        | no                                                | Yes     | Yes    | Yes   |
-| scs_db_user                          | The db user for SGX Caching Service                             | no              | no                    | no                       | no                                        | no                                                | Yes     | Yes    | Yes   |
-| scs_db_password                      | The db password SGX Caching Service                         | no              | no                    | no                       | no                                        | no                                                | Yes     | Yes    | Yes   |
-| shvs_db_hostname                          | The db hostname for SGX Host Verification Service                             | no              | no                    | no                       | no                                        | no                                                | Yes     | Yes    | Yes   |
-| shvs_db_name                          | The db name for SGX Host Verification Service                             | no              | no                    | no                       | no                                        | no                                                | Yes     | Yes    | Yes   |
-| shvs_db_user                          | The db user for SGX Host Verification Service                             | no              | no                    | no                       | no                                        | no                                                | Yes     | Yes    | Yes   |
-| shvs_db_password                      | The db password SGX Host Verification Service                         | no              | no                    | no                       | no                                        | no                                                | Yes     | Yes    | Yes   |
-
-
-**Authentication and Authorization Service**
-
-| Default variable (defaults/main.yml) | Description                                                  | Host Attestation | Application  Integrity | Data Fencing & Asset Tags | Launch Time Protection - VM Confidentiality | Launch Time Protection - Container Confidentiality | Secure Key Caching | SGX Orchestration | SGX Attestation |
-| ------------------------------------ | ------------------------------------------------------------ | ---------------- | ---------------------- | ------------------------- | ------------------------------------------ | -------------------------------------------------- | ------------------- | ----------------- | --------------- |
-| aas_installer_file_src               | The binary installer file src for Authentication and Authorization Service | yes              | yes                    | yes                       | yes                                        | yes                                                | Yes     | Yes    | Yes   |
-| aas_installer_name                   | The name of the binary installer as per the release tag for Authentication and Authorization Service | yes              | yes                    | yes                       | yes                                        | yes                                                | Yes     | Yes    | Yes   |
-| aas_port                             | The port to be used by Authentication and Authorization Service | yes              | yes                    | yes                       | yes                                        | yes                                                | Yes     | Yes    | Yes   |
-| aas_admin_username                   | The service account username for Authentication and Authorization Service | yes              | yes                    | yes                       | yes                                        | yes                                                | Yes     | Yes    | Yes   |
-| aas_admin_password                   | The service password for Authentication and Authorization Service | yes              | yes                    | yes                       | yes                                        | yes                                                | Yes     | Yes    | Yes   |
-
-
-**Host Verification Service**
-
-| Default variable (defaults/main.yml) | Description                                                  | Host Attestation | Application  Integrity | Data Fencing & Asset Tags | Launch Time Protection - VM Confidentiality | Launch Time Protection - Container Confidentiality | Secure Key Caching | SGX Orchestration | SGX Attestation |
-| ------------------------------------ | ------------------------------------------------------------ | ---------------- | ---------------------- | ------------------------- | ------------------------------------------ | -------------------------------------------------- | ------------------- | ----------------- | --------------- |
-| hvs_installer_file_src               | The binary installer file src for Host Verification Service  | yes              | yes                    | yes                       | yes                                        | yes                                                | No     | No    | No    | 
-| hvs_installer_name                   | The name of the binary installer as per release tag for Host Verification Service | yes              | yes                    | yes                       | yes                                        | yes                                                | No     | No    | No    |
-| hvs_port                             | The port to be used by Host Verification Service             | yes              | yes                    | yes                       | yes                                        | yes                                                | No     | No    | No    |
-| hvs_service_username                 | The service account username for Host Verification Service   | yes              | yes                    | yes                       | yes                                        | yes                                                | No     | No    | No    |
-| hvs_service_password                 | The service account password for Host Verification Service   | yes              | yes                    | yes                       | yes                                        | yes                                                | No     | No    | No    |
-
-**Populate Users Script**
-
-| Default variable (defaults/main.yml) | Description                                                  | Host Attestation | Application  Integrity | Data Fencing & Asset Tags | Launch Time Protection - VM Confidentiality | Launch Time Protection - Container Confidentiality | Secure Key Caching | SGX Orchestration | SGX Attestation |
-| ------------------------------------ | ------------------------------------------------------------ | ---------------- | ---------------------- | ------------------------- | ------------------------------------------ | -------------------------------------------------- | ------------------- | ------------------|---------------- |
-| populate_users_script_file_src       | The shell script file source for populating users in Auth Service DB | yes              | yes                    | yes                       | yes                                        | yes                                        | No     | No    | No    |
-| global_admin_username                | The admin username for accessing all endpoints in each service | yes              | yes                    | yes                       | yes                                        | yes                                                                   | No     | No    | No    |
-| global_admin_password                | The admin password for accessing all endpoints in each service | yes              | yes                    | yes                       | yes                                        | yes                                              | No     | No    | No    |
-| install_admin_username               | The installer admin username for installing services based on usecases | yes              | yes                    | yes                       | yes                                        | yes                                      | No     | No    | No    |
-| install_admin_password               | The installer admin password for installing services based on usecases | yes              | yes                    | yes                       | yes                                        | yes                                      | No     | No    | No    |
-
-
-**Integration Hub**
-
-| Default variable (defaults/main.yml) | Description                                                  | Host Attestation | Application  Integrity | Data Fencing & Asset Tags | Launch Time Protection - VM Confidentiality | Launch Time Protection - Container Confidentiality | Secure Key Caching | SGX Orchestration | SGX Attestation |
-| ------------------------------------ | ------------------------------------------------------------ | ---------------- | ---------------------- | ------------------------- | ------------------------------------------ | -------------------------------------------------- | ------------------- | ------------------|---------------- |
-| ihub_installer_file_src              | The binary installer file source for Integration Hub         | no               | no                     | yes                       | yes                                        | yes                                                 | No     | No    | No    |
-| ihub_installer_file_name             | The name of the binary installer as per release tag  for Integration Hub | no               | no                     | yes                       | yes                                        | yes                                      | No     | No    | No    |
-| ihub_http_port                       | The http port for running the Integration hub                | no               | no                     | yes                       | yes                                        | yes                                                 | No     | No    | No    |
-| ihub_https_port                      | The https port for running the Integration hub               | no               | no                     | yes                       | yes                                        | yes                                                 | No     | No    | No    |
-| ihub_service_username                | The service account username name for Integration hub        | no               | no                     | yes                       | yes                                        | yes                                                 | No     | Yes    | Yes    |
-| ihub_service_password                | The service account password for Integration hub             | no               | no                     | yes                       | yes                                        | yes                                                 | No     | Yes    | Yes    |
-
-
-**Workload Service**
-
-| Default variable (defaults/main.yml) | Description                                                  | Host Attestation | Application  Integrity | Data Fencing & Asset Tags | Launch Time Protection - VM Confidentiality | Launch Time Protection - Container Confidentiality | Secure Key Caching | SGX Orchestration | SGX Attestation |
-| ------------------------------------ | ------------------------------------------------------------ | ---------------- | ---------------------- | ------------------------- | ------------------------------------------ | -------------------------------------------------- | ------------------- | ------------------| --------------- |
-| wls_installer_file_src               | The binary installer file source for Workload Service        | no               | no                     | no                        | yes                                        | yes                                                | No     | No    | No    |
-| wls_installer_file_name              | The name of the binary installer as per release tag for Workload Service | no               | no                     | no                        | yes                                        | yes                                                         | No     | No    | No    |
-| wls_port                             | The port for running the Workload Service                    | no               | no                     | no                        | yes                                        | yes                                                | No     | No    | No    |
-| wls_service_username                 | The service account username name for Workload Service       | no               | no                     | no                        | yes                                        | yes                                                | No     | No    | No    |
-| wls_service_password                 | The service account password for Workload Service            | no               | no                     | no                        | yes                                        | yes                                                | No     | No    | No    |
-
-
-**Key Broker Service**
-
-| Default variable (defaults/main.yml) | Description                                                  | Host Attestation | Application  Integrity | Data Fencing & Asset Tags | Launch Time Protection - VM Confidentiality | Launch Time Protection - Container Confidentiality| Secure Key Caching | SGX Orchestration| SGX Attestation |
-| ------------------------------------ | ------------------------------------------------------------ | ---------------- | ---------------------- | ------------------------- | ------------------------------------------ | --------------------------------------------------| ------------------- | -----------------| --------------- |
-| kbs_installer_file_src               | The binary installer file source for Key Broker Service      | no               | no                     | no                        | yes                                        | yes                                                | Yes     | Yes   | No    |
-| kbs_installer_file_name              | The name of the binary installer as per release tag for Key Broker Service | no               | no                     | no                        | yes                                        | yes                                   | Yes     | Yes    | No    |
-| kbs_port                             | The port for running the Key Broker Service                  | no               | no                     | no                        | yes                                        | yes                                                | Yes     | Yes    | No    |
-| kbs_admin_username              | The service account username for SKC Key Broker Service | no               | no                     | no                        | no                                        | no                                                           | Yes     | Yes    | No    |
-| kbs_admin_password                 | The service account password for SKC Key Broker Service       | no               | no                     | no                        | no                                        | no                                                | Yes     | Yes    | No    |
-
-**SKOPEO**
-
-| Default variable (defaults/main.yml) | Description                                 | Host Attestation | Application  Integrity | Data Fencing & Asset Tags | Launch Time Protection - VM Confidentiality | Launch Time Protection - Container Confidentiality | Secure Key Caching | SGX Orchestration | SGX Attestation |
-| ------------------------------------ | ------------------------------------------- | ---------------- | ---------------------- | ------------------------- | ------------------------------------------- | -------------------------------------------------- | ------------------ | ------------------|---------------- |
-| skopeo_installer_file_src            | The binary installer file source for Skopeo | no               | no                     | no                        | yes                                         | yes                                                | No                 | No                | No              |
-| skopeo_installer_file_name           | The binary installer file source for Skopeo | no               | no                     | no                        | yes                                         | yes                                                | No                 | No                | No              |
-
-**Docker**
-
-| Default variable (defaults/main.yml) | Description    | Host Attestation | Application  Integrity | Data Fencing & Asset Tags | Launch Time Protection - VM Confidentiality | Launch Time Protection - Container Confidentiality | Secure Key Caching | SGX Orchestration | SGX Attestation |
-| ------------------------------------ | -------------- | ---------------- | ---------------------- | ------------------------- | ------------------------------------------- | -------------------------------------------------- | ------------------ | ------------------|---------------- |
-| docker_version                       | Docker Version | no               | no                     | no                        | yes                                         | yes                                                | No                 | No                | No              | 
-
-
-**Workload Policy Manager**
-
-| Default variable (defaults/main.yml) | Description                                                  | Host Attestation | Application  Integrity | Data Fencing & Asset Tags | Launch Time Protection - VM Confidentiality | Launch Time Protection - Container Confidentiality | Secure Key Caching | SGX Orchestration | SGX Attestation |
-| ------------------------------------ | ------------------------------------------------------------ | ---------------- | ---------------------- | ------------------------- | ------------------------------------------ | -------------------------------------------------- | ------------------- | ----------------- | --------------- |
-| wpm_installer_file_src               | The binary installer file source for Workload Policy Manager | no               | no                     | no                        | yes                                        | yes                                                | No     | No    | No    |
-| wpm_installer_file_name              | The name of the binary installer as per release tag for Workload Policy Manager | no               | no                     | no                        | yes                                        | yes                                                  | No     | No    | No    |
-| wpm_admin_username                   | The service account username name for Workload Policy Manager | no               | no                     | no                        | yes                                        | yes                                               | No     | No    | No    |
-| wpm_admin_password                   | The service account password for Workload Policy Manager     | no               | no                     | no                        | yes                                        | yes                                                | No     | No    | No    |
-| wpm_container_security               | Enable/disable Workload Policy Manager Installation with container security [ yes - Launch Time Protection - Container Confidentiality, no - others] | no               | no                     | no       | yes     | yes            | No     | No    | No    |
-
-**Trust Agent**
-
-| Default variable (defaults/main.yml) | Description                                                  | Host Attestation | Application  Integrity | Data Fencing & Asset Tags | Launch Time Protection - VM Confidentiality | Launch Time Protection - Container Confidentiality | Secure Key Caching | SGX Orchestration | SGX Attestation |
-| ------------------------------------ | ------------------------------------------------------------ | ---------------- | ---------------------- | ------------------------- | ------------------------------------------ | -------------------------------------------------- | ------------------- | ------------------|---------------- |
-| ta_installer_file_src                | The binary installer file source for Trust Agent             | yes              | yes                    | yes                       | yes                                        | yes                                                | No     | No    | No    |
-| ta_installer_file_name               | The name of the binary installer as per release tag for  Trust Agent | yes              | yes                    | yes                       | yes                                        | yes                                                             | No     | No    | No    |
-| grub_file                            | The grub.cfg path on the OS                                  | yes              | yes                    | yes                       | yes                                        | yes                                                | No     | No    | No    |
-| tpm_owner_secret                     |                                                              | yes*             | yes*                   | yes*                      | yes*                                       | yes*                                               | No     | No    | No    |
-| wa_with_container_security           | Enable/disable Trust Agent Installation with container security [yes - Launch Time Protection - Container Confidentiality, no - others] | no               | no                     | no       | no  | yes                             | No     | No    | No    |
-| insecure_skip_verify                 |                                                              | no               | no                     | no                        | no                                         | yes                                                | No     | No    | No    |
-| registry_ip                          | The registry IP for the registry from where Docker images are pulled | no               | no                     | no                        | no                                         | yes                                        | No     | No    | No    |
-| https_proxy                          | Proxy details if running behind a proxy                      | no               | no                     | no                        | no                                         | yes                                                | No     | No    | No    |
-| registry_scheme_type                 | The registry protocol for talking to the remote registry     | no               | no                     | no                        | no                                         | yes                                                | No     | No    | No    |
-| skip_secure_docker_daemon            | Enable/disable container security for CRIO runtime           | no               | no                     | no                        | no                                         | yes                                                | No     | No    | No    |
-> **NOTE: ** `*`Required if TPM is already owned  and not cleared
-
-**CRIO**
-
-| Default variable (defaults/main.yml) | Description                               | Host Attestation | Application  Integrity | Data Fencing & Asset Tags | Launch Time Protection - VM Confidentiality | Launch Time Protection - Container Confidentiality | Secure Key Caching | SGX Orchestration | SGX Attestation |
-| ------------------------------------ | ----------------------------------------- | ---------------- | ---------------------- | ------------------------- | ------------------------------------------- | -------------------------------------------------- | ------------------ | ----------------- |---------------- |
-| crio_version                         | CRIO Version                              | no               | no                     | no                        | yes                                         | yes                                                | No                 | No                | No                |
-| crictl_version                       | crictl version                            | no               | no                     | no                        | yes                                         | yes                                                | No                 | No                | No                |
-| crio_installer_file_name             | The name of the binary installer for CRIO | no               | no                     | no                        | yes                                         | yes                                                | No                 | No                | No                |
-| crio_file_src                        | The binary installer file source for CRIO | no               | no                     | no                        | yes                                         | yes                                                | No                 | No                | No                |
-
-**Workload Agent**
-
-| Default variable (defaults/main.yml) | Description                                                  | Host Attestation | Application  Integrity | Data Fencing & Asset Tags | Launch Time Protection - VM Confidentiality | Launch Time Protection - Container Confidentiality | Secure Key Caching | SGX Orchestration | SGX Attestation |
-| ------------------------------------ | ------------------------------------------------------------ | ---------------- | ---------------------- | ------------------------- | ------------------------------------------ | -------------------------------------------------- | ------------------- | ----------------- |-----------------|
-| wla_installer_file_src               | The binary installer file source for Workload Agent          | no               | no                     | no                        | yes                                        | yes                                                | No     | No    | No    |
-| wla_installer_file_name              | The name of the binary installer as per release tag for Workload Agent | no               | no                     | no                        | yes                                        | yes                                                           | No     | No    | No    |
-| wla_service_username                 | The service account username name for Workload Agent         | no               | no                     | no                        | yes                                        | yes                                                | No     | No    | No    |
-| wla_service_password                 | The service account password for Workload Agent              | no               | no                     | no                        | yes                                        | yes                                                | No     | No    | No    |
-
-
-**SGX Caching Service**
-
-| Default variable (defaults/main.yml) | Description                                                  | Host Attestation | Application  Integrity | Data Fencing & Asset Tags | Launch Time Protection - VM Confidentiality | Launch Time Protection - Container Confidentiality | Secure Key Caching | SGX Orchestration |SGX Attestation |
-| ------------------------------------ | ------------------------------------------------------------ | ---------------- | ---------------------- | ------------------------- | ------------------------------------------ | -------------------------------------------------- | ------------------- | ------------------|--------------- |
-| scs_port               | The port for running the SGX Caching Service          | no               | no                     | no                        | no                                        | no                                                | Yes     | Yes    | Yes    |
-| scs_admin_username              | The service account username for SGX Caching Service | no               | no                     | no                        | no                                        | no                                                           | Yes     | Yes    | Yes    |
-| scs_admin_password                 | The service account password for SGX Caching Service        | no               | no                     | no                        | no                                        | no                                                | Yes     | Yes    | Yes    |
-| scs_installer_name                 | The name of the binary installer as per the release tag for SGX Caching Service              | no               | no                     | no                        | no                                        | no                                                | Yes     | Yes    | Yes    |
-| scs_installer_file_src                 | The binary installer file source for SGX Caching Service              | no               | no                     | no                        | no                                        | no                                                | Yes     | Yes    | Yes    |
-| intel_provisioning_server_sandbox    | The URL for Intel Provisioning Server              | no               | no                     | no                        | no                                        | no                                                | Yes     | Yes    | Yes    |
-| intel_provisioning_server_api_key_sandbox | The API for Intel Provisioning Server              | no               | no                     | no                        | no                                        | no                                                | Yes     | Yes    | Yes    |
-
-
-**SGX Host Verification Service**
-
-| Default variable (defaults/main.yml) | Description                                                  | Host Attestation | Application  Integrity | Data Fencing & Asset Tags | Launch Time Protection - VM Confidentiality | Launch Time Protection - Container Confidentiality | Secure Key Caching | SGX Orchestration | SGX Attestation  |
-| ------------------------------------ | ------------------------------------------------------------ | ---------------- | ---------------------- | ------------------------- | ------------------------------------------ | -------------------------------------------------- | ------------------- | ----------------- |----------------- |
-| shvs_port               | The port for running the SGX Host Verification Service          | no               | no                     | no                        | no                                        | no                                                | Yes     | Yes    | Yes    |
-| shvs_admin_username              | The service account username for SGX Host Verification Service | no               | no                     | no                        | no                                        | no                                                           | Yes     | Yes    | Yes    |
-| shvs_admin_password                 | The service account password for SGX Host Verification Service        | no               | no                     | no                        | no                                        | no                                                | Yes     | Yes    | Yes    |
-| shvs_installer_name                 | The name of the binary installer as per the release tag for SGX Host Verification Service              | no               | no                     | no                        | no                                        | no                                                | Yes     | Yes    | Yes    |
-| shvs_installer_file_src                 | The binary installer file source for SGX Host Verification Service              | no               | no                     | no                        | no                                        | no                                                | Yes     | Yes    | Yes    |
-
-
-**SGX Quote Verification Service**
-
-| Default variable (defaults/main.yml) | Description                                                  | Host Attestation | Application  Integrity | Data Fencing & Asset Tags | Launch Time Protection - VM Confidentiality | Launch Time Protection - Container Confidentiality | Secure Key Caching | SGX Orchestration | SGX Attestation |
-| ------------------------------------ | ------------------------------------------------------------ | ---------------- | ---------------------- | ------------------------- | ------------------------------------------ | -------------------------------------------------- | ------------------- | ------------------| --------------- |
-| sqvs_port               | The port for running the SGX Quote Verification Service          | no               | no                     | no                        | no                                        | no                                                | Yes     | Yes    | Yes    |
-| sqvs_admin_username              | The service account username for SGX Quote Verification Service | no               | no                     | no                        | no                                        | no                                                           | Yes     | Yes    | Yes    |
-| sqvs_admin_password                 | The service account password for SGX Quote Verification Service        | no               | no                     | no                        | no                                        | no                                                | Yes     | Yes    | Yes    |
-| sqvs_installer_name                 | The name of the binary installer as per the release tag for SGX Quote Verification Service              | no               | no                     | no                        | no                                        | no                                                | Yes     | Yes    | Yes    |
-| sqvs_installer_file_src                 | The binary installer file source for SGX Quote Verification Service              | no               | no                     | no                        | no                                        | no                                                | Yes     | Yes    | Yes    |
-| sqvs_trusted_rootca_filename                 | The name of the trusted root ca file for SGX Quote Verification Service              | no               | no                     | no                        | no                                        | no                                                | Yes     | Yes    | Yes    |
-| sqvs_trusted_rootca_file_src                 | The trusted root ca file source for SGX Quote Verification Service              | no               | no                     | no                        | no                                        | no                                                | Yes     | Yes    | Yes    |
-
-
-**SGX Agent**
-
-| Default variable (defaults/main.yml) | Description                                                  | Host Attestation | Application  Integrity | Data Fencing & Asset Tags | Launch Time Protection - VM Confidentiality | Launch Time Protection - Container Confidentiality | Secure Key Caching | SGX Orchestration | SGX Attestation |
-| ------------------------------------ | ------------------------------------------------------------ | ---------------- | ---------------------- | ------------------------- | ------------------------------------------ | -------------------------------------------------- | ------------------- | ------------------|---------------- |
-| sgxagent_installer_name               | The name of the binary installer as per release tag for SGX Agent         | no               | no                     | no                        | no                                        | no                                                | Yes     | Yes    | Yes    |
-| sgxagent_installer_file_src              | The binary installer file source for SGX Agent | no               | no                     | no                        | no                                        | no                                                           | Yes     | Yes    | Yes    |
-| sgxagent_admin_username               | The service account username for  SGX Agent         | no               | no                     | no                        | no                                        | no                                                | Yes     | Yes    | Yes    |
-| sgxagent_admin_password               | The service account password for  SGX Agent | no               | no                     | no                        | no                                        | no                                                           | Yes     | Yes    | Yes    |
-
-
-**SKC Library**
-
-| Default variable (defaults/main.yml) | Description                                                  | Host Attestation | Application  Integrity | Data Fencing & Asset Tags | Launch Time Protection - VM Confidentiality | Launch Time Protection - Container Confidentiality | Secure Key Caching | SGX Orchestration | SGX Attestation |
-| ------------------------------------ | ------------------------------------------------------------ | ---------------- | ---------------------- | ------------------------- | ------------------------------------------ | -------------------------------------------------- | ------------------- | ------------------|---------------- |
-| skclib_installer_name               | The name of the binary installer as per release tag for SKC Library         | no               | no                     | no                        | no                                        | no                                                | Yes     | Yes    | No    |
-| skclib_installer_file_src              | The binary installer file source for SKC Library | no               | no                     | no                        | no                                        | no                                                           | Yes     | Yes    | No    |
-| skclib_admin_username               | The service account username for SKC Library         | no               | no                     | no                        | no                                        | no                                                | Yes     | Yes    | No    |
-| skclib_admin_password              | The service account password for SKC Library | no               | no                     | no                        | no                                        | no                                                           | Yes     | Yes    | No    |
-
-**SGX Dependencies**
-
-| Default variable (defaults/main.yml) | Description                                                  | Host Attestation | Application  Integrity | Data Fencing & Asset Tags | Launch Time Protection - VM Confidentiality | Launch Time Protection - Container Confidentiality | Secure Key Caching | SGX Orchestration | SGX Attestation |
-| ------------------------------------ | ------------------------------------------------------------ | ---------------- | ---------------------- | ------------------------- | ------------------------------------------ | -------------------------------------------------- | ------------------- | ------------------|---------------- |
-| sgxdep_installer_file_name             | The name of the binary installer as per release tag for SKC Library         | no               | no                     | no                        | no                                        | no                                                | No     | No    | Yes    |
-| sgxdep_installer_file_src              | The binary installer file source for SKC Library | no               | no                     | no                        | no                                        | no                                                           | No     | No    | Yes    |
-
-
-**Other Variables**
-
-| variable(vars/main.yml) | Description                                                  | Host Attestation | Application  Integrity | Data Fencing & Asset Tags | Launch Time Protection - VM Confidentiality | Launch Time Protection - Container Confidentiality | Secure Key Caching | SGX Orchestration | SGX Attestation |
-| ----------------------- | ------------------------------------------------------------ | ---------------- | ---------------------- | ------------------------- | ------------------------------------------- | -------------------------------------------------- | ------------------- | ------------------|---------------- |
-| postgres_db_rpm         | The RPM download URL for postgresql                          | yes              | yes                    | yes                       | yes                                         | yes                                                | yes                 | yes               | yes             |
-| postgres_rpm_name       | The postgresql RPM  file name                                | yes              | yes                    | yes                       | yes                                         | yes                                                | yes                 | yes               | yes             |
-| postgres_db_apt_repo    | The apt repo for postgresql on Ubuntu OS                     | no               | no                     | no                        | no                                          | no                                                 | yes                 | no               | no             |
-| postgres_db_apt_repo_signing_key       | The apt repo signing key for postgresql on Ubuntu OS                                | no              | no                    | no                       | no                                         | no                                                | yes                 | no               | no             |
-| http_proxy              | The http_proxy for setting up Intel® SecL-DC libraries       | yes*             | yes*                   | yes*                      | yes*                                        | yes*                                               | yes                 | yes               | yes             |
-| https_proxy             | The http_proxy for setting up Intel® SecL-DC libraries       | yes*             | yes*                   | yes*                      | yes*                                        | yes*                                               | yes                 | yes               | yes             |
-| no_proxy                | The no_proxy (comma separated) for setting up Intel® SecL-DC libraries | yes*             | yes*                   | yes*                      | yes*                                        | yes*                                               | yes                 | yes               | yes             |
-
-> **Note:** `*` required only if running behind a proxy
-
-
 
 License
 -------
 
 BSD
-
 
 
 Author Information
