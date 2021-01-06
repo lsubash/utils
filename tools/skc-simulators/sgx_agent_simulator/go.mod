@@ -1,7 +1,5 @@
 module intel/isecl/sgx_agent/v3
 
-go 1.14
-
 require (
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/handlers v1.4.0
