@@ -36,9 +36,6 @@ insecure_skip_verify: "{{insecure_verify | default('')}}"
 # The registry IP for the Docker registry from where container images are pulled
 registry_ip: "{{registry_ipaddr | default('')}}"
 
-# Proxy details if running behind a proxy
-https_proxy: "{{https_proxy | default('')}}"
-
 # The registry protocol for talking to the remote registry 
 # [http - When registry is configured with http , https - When registry is configured with https]
 registry_scheme_type: "{{registry_scheme | default('')}}"
