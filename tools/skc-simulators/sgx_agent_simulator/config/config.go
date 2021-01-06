@@ -59,6 +59,7 @@ type Configuration struct {
 
 	TrustedRootCA *x509.Certificate
 	NumberOfHosts int
+	HostStartId   int
 	SGXAgentMode  string
 	WaitTime      int
 	RetryCount    int
@@ -182,6 +183,13 @@ func (conf *Configuration) SaveConfiguration(c setup.Context) error {
 	} else if conf.NumberOfHosts == 0 {
 		conf.NumberOfHosts = constants.NumberOfHosts
 	}
+	hostStartId, err := c.GetenvString("HOST_START_ID", "Hosts Starts from")
+        if err == nil && hostStartId != "" {
+                conf.HostStartId, err = strconv.Atoi(hostStartId)
+        } else if conf.HostStartId == 0 {
+                conf.HostStartId = constants.DefaultHostStartId
+        }
+
 	sgx_agent_mode, err := c.GetenvString("SGX_AGENT_MODE", "SGX Agent Mode")
 	if err == nil && sgx_agent_mode != "" {
 		conf.SGXAgentMode = sgx_agent_mode

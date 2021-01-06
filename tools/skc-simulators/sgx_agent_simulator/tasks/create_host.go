@@ -85,7 +85,7 @@ func (task CreateHost) Run(c setup.Context) error {
 	if err != nil {
 		return err
 	}
-	for i := 1; i <= conf.NumberOfHosts; i++ {
+	for i := conf.HostStartId; i < conf.HostStartId + conf.NumberOfHosts; i++ {
 		hostCountInString := strconv.Itoa(i)
 		host_info.HostName = task.hostName + hostCountInString
 		host_info.Description = "demo0" + hostCountInString

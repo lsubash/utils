@@ -50,4 +50,5 @@ const (
 	DefaultSgxAgentMode       = "Orchestration"
 	DefaultWaitTime           = 5
 	DefaultRetryCount         = 5
+	DefaultHostStartId	  = 1
 )

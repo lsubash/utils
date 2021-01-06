@@ -79,6 +79,9 @@ cd tools/skc-simulators/sgx_agent_simulator/sgx_agent_simulator_automation/build
 #./agent_untar.sh
 - update HOST_COUNT in env file.
 - update agent.conf
+- update HOST_START_ID and HOST_COUNT in sgx_agent.env
+HOST_START_ID=<start id of agent greater than zero>
+HOST_COUNT=<number of host to register in agent>
 - To deploy SGX Agent Simulator
 #./deploy_sgx_agent.sh.
 ```
