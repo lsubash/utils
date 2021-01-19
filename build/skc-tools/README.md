@@ -201,4 +201,4 @@ ssl_certificate_key "engine:pkcs11:pkcs11:token=KMS;id=164b41ae-be61-4c7c-a027-4
 
 **Product Guide**
 
-https://github.com/intel-secl/docs/blob/v3.3/develop/product-guides/Product%20Guide%20-%20Intel%C2%AE%20Security%20Libraries%20-%20Secure%20Key%20Caching.md
+https://github.com/intel-secl/docs/blob/v3.3.1/develop/product-guides/Product%20Guide%20-%20Intel%C2%AE%20Security%20Libraries%20-%20Secure%20Key%20Caching.md
