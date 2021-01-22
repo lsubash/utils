@@ -93,7 +93,7 @@ Usecase and Playbook Support on Ubuntu
 | Usecase                                            | Playbook Support |
 | -------------------------------------------------- | ---------------- |
 | Secure Key Caching                                 | Yes              |
-
+| SGX Orchestration                                  | Yes(partial*)    |
 
 Supported Deployment Model
 ---------------------------
@@ -670,15 +670,6 @@ Service files: `/opt/sqvs`<br>
 Configuration files: `/etc/sqvs`<br>
 Log files: `/var/log/sqvs`<br>
 Default Port: `12000`<br>
-<br>
-
-**SKC Integration Hub**<br>
-
-Installation log file: `/root/integration_hub-install.log`<br>
-Service files: `/opt/ihub`<br>
-Configuration files: `/etc/ihub`<br>
-Log files: `/var/log/ihub`<br>
-Default Port: `none`<br>
 <br>
 
 **SGX Agent**<br>

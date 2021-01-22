@@ -209,7 +209,6 @@ SHVS_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/token -H "
 echo "SHVS Token $SHVS_TOKEN"
 
 #  IHUB User and Roles
-if [[ "$OS" != "ubuntu" ]]; then
 IHUB_USER=`curl --noproxy "*" -k  -X POST https://$SYSTEM_IP:8444/aas/users -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"username": "admin@hub","password": "hubAdminPass"}'`
 IHUB_USER_ID=`curl --noproxy "*" -k https://$SYSTEM_IP:8444/aas/users?name=admin@hub -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' | jq -r '.[0].user_id'`
 echo "Created IHUB User with user ID $IHUB_USER_ID"
@@ -222,7 +221,6 @@ fi
 
 IHUB_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/token -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"username": "admin@hub","password": "hubAdminPass"}'`
 echo "IHUB Token $IHUB_TOKEN"
-fi
 
 # SGX Quote Verification Service User and Roles
 
@@ -299,7 +297,6 @@ if [ $? -ne 0 ]; then
 fi
 echo "################ Installed SHVS....  #################"
 
-if [[ "$OS" != "ubuntu" ]]; then
 echo "################ Update IHUB env....  #################"
 sed -i "s/^\(TLS_SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_IP/" ~/ihub.env
 sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$IHUB_TOKEN/" ~/ihub.env
@@ -310,10 +307,12 @@ SHVS_URL=https://$SYSTEM_IP:13000/sgx-hvs/v1
 K8S_URL=https://$K8S_IP:6443/
 sed -i "s@^\(ATTESTATION_SERVICE_URL\s*=\s*\).*\$@\1$SHVS_URL@" ~/ihub.env
 sed -i "s@^\(KUBERNETES_URL\s*=\s*\).*\$@\1$K8S_URL@" ~/ihub.env
+if [[ "$OS" != "ubuntu" ]]; then
 OPENSTACK_AUTH_URL=http://$OPENSTACK_IP:5000/
 OPENSTACK_PLACEMENT_URL=http://$OPENSTACK_IP:8778/
 sed -i "s@^\(OPENSTACK_AUTH_URL\s*=\s*\).*\$@\1$OPENSTACK_AUTH_URL@" ~/ihub.env
 sed -i "s@^\(OPENSTACK_PLACEMENT_URL\s*=\s*\).*\$@\1$OPENSTACK_PLACEMENT_URL@" ~/ihub.env
+fi
 sed -i "s@^\(TENANT\s*=\s*\).*\$@\1$TENANT@" ~/ihub.env
 
 echo "################ Installing IHUB....  #################"
@@ -323,7 +322,6 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 echo "################ Installed IHUB....  #################"
-fi
 
 echo "################ Update SQVS env....  #################"
 sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_IP/"  ~/sqvs.env
