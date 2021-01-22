@@ -95,6 +95,7 @@ Usecase and Playbook Support on Ubuntu
 | Secure Key Caching                                 | Yes              |
 | SGX Orchestration                                  | Yes(partial*)    |
 
+
 Supported Deployment Model
 ---------------------------
 
