@@ -4,21 +4,21 @@
     src: "{{binaries_path}}/aas-util_user-role.sh"
     dest: "/root/aas-util_user-role.sh"
     mode: "u+x"
-  when: setup == 'secure-key-caching' or setup == 'sgx-orchestration'
+  when: setup == 'secure-key-caching' or setup == 'sgx-orchestration-kubernetes' or setup == 'sgx-orchestration-openstack'
 
 - name: ISECL - KEY BROKER SERVICE | Copying default_roles.conf
   template:
     src: "kbs_user_roles.conf.j2"
     dest: "/root/kbs_user_roles.conf"
     mode: "u+x"
-  when: setup == 'secure-key-caching' or setup == 'sgx-orchestration'
+  when: setup == 'secure-key-caching' or setup == 'sgx-orchestration-kubernetes' or setup == 'sgx-orchestration-openstack'
 
 - name: ISECL - KEY BROKER SERVICE | Copying aas-util_user-role.sh
   shell: "bash -x aas-util_user-role.sh -ru -c kbs_user_roles.conf"  
   args:
     chdir: /root
     executable: /bin/bash 
-  when: setup == 'secure-key-caching' or setup == 'sgx-orchestration'
+  when: setup == 'secure-key-caching' or setup == 'sgx-orchestration-kubernetes' or setup == 'sgx-orchestration-openstack'
 
 - name: ISECL - KEY BROKER SERVICE | Create token for KBS user
   uri:
@@ -34,7 +34,7 @@
     validate_certs: no
     return_content: yes
   register: setup_admin_token_sgx
-  when: setup == 'secure-key-caching' or setup == 'sgx-orchestration'
+  when: setup == 'secure-key-caching' or setup == 'sgx-orchestration-kubernetes' or setup == 'sgx-orchestration-openstack'
 
 - name: ISECL - KEY BROKER SERVICE | Generate kbs.env file
   template:
