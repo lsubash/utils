@@ -245,6 +245,38 @@ ta_installer_file_name: trustagent-v3.3.1.bin
 # The binary installer file source for Trust Agent
 ta_installer_file_src: "{{binaries_path}}/{{ta_installer_file_name}}"
 
+<<<<<<< HEAD
+=======
+# The TPM Storage Root Key(SRK) Password to be used if TPM is already owned
+tpm_owner_secret: "{{tpm_secret | default('')}}"
+
+# The grub file path for Legacy mode & UEFI Mode. Default is Legacy mode path. Update the below path for UEFI mode with UEFI SecureBoot
+grub_file_path: /boot/grub2/grub.cfg
+
+# TRUST AGENT - Below is Only for Launch Time Protection - Container Confidentiality 
+# with Docker Containers and Launch Time Protection - Container Confidentiality with Docker Containers
+
+# Enable/disable container security for Docker runtime or CRIO runtime
+# [yes - Launch Time Protection with Docker Containers, NA - others]
+wa_with_container_security: 'yes'
+
+# [TRUE/FALSE based on registry configured with http/https respectively]
+# Required for Workload Integrity with containers
+insecure_skip_verify: "{{insecure_verify | default('')}}"
+
+# The registry IP for the Docker registry from where container images are pulled
+# Required for Workload Integrity with containers
+registry_ip: "{{registry_ipaddr | default('')}}"
+
+# Proxy details if running behind a proxy
+# Required for Workload Integrity with containers
+https_proxy: "{{https_proxy | default('')}}"
+
+# The registry protocol for talking to the remote registry [http/https]
+# Required for Workload Integrity with containers
+registry_scheme_type: "{{registry_scheme | default('')}}"
+
+>>>>>>> updatedWPMAndWLADockerCrioVars
 
 # ---------------------------------------- CRIO -----------------------------------------------------#
 
