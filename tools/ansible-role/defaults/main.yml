@@ -255,10 +255,6 @@ grub_file_path: /boot/grub2/grub.cfg
 # [yes - Launch Time Protection with Docker Containers, NA - others]
 wa_with_container_security: 'yes'
 
-# Enable/disable container security for CRIO runtime
-# [yes - Launch Time Protection with CRIO Containers, NA - others]
-skip_secure_docker_daemon: "{{skip_sdd | default('no')}}"
-
 # [TRUE/FALSE based on registry configured with http/https respectively]
 # Required for Workload Integrity with containers
 insecure_skip_verify: "{{insecure_verify | default('')}}"
