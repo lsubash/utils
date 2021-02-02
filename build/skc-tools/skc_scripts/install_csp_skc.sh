@@ -28,6 +28,10 @@ SKC_BINARY_DIR=$HOME_DIR/binaries
 if [ -f ./csp_skc.conf ]; then
     echo "Reading Installation variables from $(pwd)/csp_skc.conf"
     source csp_skc.conf
+    if [[ "$SCS_DB_NAME" == "$SHVS_DB_NAME" || "$AAS_DB_NAME" == "$SHVS_DB_NAME" || "$SCS_DB_NAME" == "$AAS_DB_NAME" ]]; then
+        echo "value of SCS_DB_NAME & SHVS_DB_NAME & AAS_DB_NAME should not be same Please change in csp_skc.conf"
+        exit 1
+    fi
     env_file_exports=$(cat ./csp_skc.conf | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
     if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
 fi
