@@ -20,10 +20,12 @@ KBS_HOSTNAME=$("hostname")
 \cp -pf $SKC_BINARY_DIR/env/sqvs.env $HOME_DIR
 \cp -pf $SKC_BINARY_DIR/env/kbs.env $HOME_DIR
 \cp -pf $SKC_BINARY_DIR/env/iseclpgdb.env $HOME_DIR
+\cp -pf $SKC_BINARY_DIR/env/populate-users.env $HOME_DIR
 
 # Copy DB scripts to Home directory
 \cp -pf $SKC_BINARY_DIR/install_pg.sh $HOME_DIR
 \cp -pf $SKC_BINARY_DIR/install_pgscsdb.sh $HOME_DIR
+\cp -pf $SKC_BINARY_DIR/populate-users.sh $HOME_DIR
 
 \cp -pf $SKC_BINARY_DIR/trusted_rootca.pem /tmp
 # read from environment variables file if it exists
@@ -136,70 +138,65 @@ if [ $? -ne 0 ]; then
 fi
 echo "################ Installed AuthService....  #################"
 
-echo "################ Create user and role on AuthService....  #################"
-TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/token -d '{"username": "admin@aas", "password": "aasAdminPass" }'`
+echo "################ Update Populate users env ....  #################"
+ISECL_INSTALL_COMPONENTS=AAS,SCS,SQVS,SKBS,SKC-LIBRARY
+sed -i "s@^\(ISECL_INSTALL_COMPONENTS\s*=\s*\).*\$@\1$ISECL_INSTALL_COMPONENTS@" ~/populate-users.env
+sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/populate-users.env
 
+AAS_ADMIN_USERNAME=$(cat ~/authservice.env | grep ^AAS_ADMIN_USERNAME= | cut -d'=' -f2)
+AAS_ADMIN_PASSWORD=$(cat ~/authservice.env | grep ^AAS_ADMIN_PASSWORD= | cut -d'=' -f2)
+sed -i "s/^\(AAS_ADMIN_USERNAME\s*=\s*\).*\$/\1$AAS_ADMIN_USERNAME/" ~/populate-users.env
+sed -i "s/^\(AAS_ADMIN_PASSWORD\s*=\s*\).*\$/\1$AAS_ADMIN_PASSWORD/" ~/populate-users.env
+
+sed -i "s@^\(KBS_CERT_SAN_LIST\s*=\s*\).*\$@\1$SYSTEM_IP@" ~/populate-users.env
+sed -i "s@^\(SCS_CERT_SAN_LIST\s*=\s*\).*\$@\1$SYSTEM_IP@" ~/populate-users.env
+sed -i "s@^\(SQVS_CERT_SAN_LIST\s*=\s*\).*\$@\1$SYSTEM_IP@" ~/populate-users.env
+
+KBS_SERVICE_USERNAME=$(cat ~/kbs.env | grep ^KBS_SERVICE_USERNAME= | cut -d'=' -f2)
+KBS_SERVICE_PASSWORD=$(cat ~/kbs.env | grep ^KBS_SERVICE_PASSWORD= | cut -d'=' -f2)
+sed -i "s/^\(KBS_SERVICE_USERNAME\s*=\s*\).*\$/\1$KBS_SERVICE_USERNAME/" ~/populate-users.env
+sed -i "s/^\(KBS_SERVICE_PASSWORD\s*=\s*\).*\$/\1$KBS_SERVICE_PASSWORD/" ~/populate-users.env
+
+SCS_ADMIN_USERNAME=$(cat ~/scs.env | grep ^SCS_ADMIN_USERNAME= | cut -d'=' -f2)
+SCS_ADMIN_PASSWORD=$(cat ~/scs.env | grep ^SCS_ADMIN_PASSWORD= | cut -d'=' -f2)
+sed -i "s/^\(SCS_SERVICE_USERNAME\s*=\s*\).*\$/\1$SCS_ADMIN_USERNAME/" ~/populate-users.env
+sed -i "s/^\(SCS_SERVICE_PASSWORD\s*=\s*\).*\$/\1$SCS_ADMIN_PASSWORD/" ~/populate-users.env
+
+sed -i "s/^\(SKC_LIBRARY_USERNAME\s*=\s*\).*\$/\1$SKC_USER/" ~/populate-users.env
+sed -i "s/^\(SKC_LIBRARY_PASSWORD\s*=\s*\).*\$/\1$SKC_USER_PASSWORD/" ~/populate-users.env
+
+sed -i "s/^\(SKC_LIBRARY_CERT_COMMON_NAME\s*=\s*\).*\$/\1$SKC_USER/" ~/populate-users.env
+SKC_LIBRARY_KEY_TRANSFER_CONTEXT=permissions=nginx,USA
+sed -i "s/^\(SKC_LIBRARY_KEY_TRANSFER_CONTEXT\s*=\s*\).*\$/\1$SKC_LIBRARY_KEY_TRANSFER_CONTEXT/" ~/populate-users.env
+
+sed -i "/GLOBAL_ADMIN_USERNAME/d" ~/populate-users.env
+sed -i "/GLOBAL_ADMIN_PASSWORD/d" ~/populate-users.env
+
+sed -i '$ a INSTALL_ADMIN_USERNAME=superadmin' ~/populate-users.env
+sed -i '$ a INSTALL_ADMIN_PASSWORD=superAdminPass' ~/populate-users.env
+
+echo "################ Call populate users script....  #################"
+cd ~
+./populate-users.sh || exit 1
 if [ $? -ne 0 ]; then
-  echo "############ Could not get TOKEN from AuthService "
+  echo "############ Failed to run populate user script  ####################3"
   exit 1
 fi
 
-USER_ID=`curl --noproxy "*" -k https://$SYSTEM_IP:8444/aas/users?name=admin@aas -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' | jq -r '.[0].user_id'`
-echo "Got admin user ID $USER_ID"
+echo "################ Install Admin user token....  #################"
+INSTALL_ADMIN_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/token -d '{"username": "superadmin", "password": "superAdminPass" }'`
 
-# SGX Caching Service User and Roles
-
-SCS_USER=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/users -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"username": "scsuser@scs","password": "scspassword"}'`
-SCS_USER_ID=`curl --noproxy "*" -k https://$SYSTEM_IP:8444/aas/users?name=scsuser@scs -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' | jq -r '.[0].user_id'`
-echo "Created SCS User with user ID $SCS_USER_ID"
-SCS_ROLE_ID1=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"service": "CMS","name": "CertApprover","context": "CN=SCS TLS Certificate;SAN='$SYSTEM_IP';certType=TLS"}' | jq -r ".role_id"`
-echo "Created SCS TLS cert role with ID $SCS_ROLE_ID1"
-SCS_ROLE_ID2=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"service": "SCS","name": "CacheManager","context": ""}' | jq -r ".role_id"`
-echo "Created SCS CacheManager role with ID $SCS_ROLE_ID2"
-
-if [ $? -eq 0 ]; then
-  curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/users/$SCS_USER_ID/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"role_ids": ["'"$SCS_ROLE_ID1"'", "'"$SCS_ROLE_ID2"'"]}'
+if [ $? -ne 0 ]; then
+  echo "############ Could not get token for Install Admin User ####################"
+  exit 1
 fi
 
-SCS_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/token -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"username": "scsuser@scs","password": "scspassword"}'`
-echo "SCS Token $SCS_TOKEN"
-
-# SGX Quote Verification Service User and Roles
-
-SQVS_USER=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/users -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"username": "sqvsuser@sqvs","password": "sqvspassword"}'`
-SQVS_USER_ID=`curl --noproxy "*" -k https://$SYSTEM_IP:8444/aas/users?name=sqvsuser@sqvs -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' | jq -r '.[0].user_id'`
-echo "Created SQVS User with user ID $SQVS_USER_ID"
-SQVS_ROLE_ID1=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"service": "CMS","name": "CertApprover","context": "CN=SQVS TLS Certificate;SAN='$SYSTEM_IP';certType=TLS"}' | jq -r ".role_id"`
-echo "Created SQVS TLS cert role with ID $SQVS_ROLE_ID1"
-
-if [ $? -eq 0 ]; then
-  curl --noproxy "*" -k  -X POST https://$SYSTEM_IP:8444/aas/users/$SQVS_USER_ID/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"role_ids": ["'"$SQVS_ROLE_ID1"'"]}'
-fi
-
-SQVS_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/token -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"username": "sqvsuser@sqvs","password": "sqvspassword"}'`
-echo "SQVS Token $SQVS_TOKEN"
-
-# KBS User and Roles
-
-KBS_USER=`curl --noproxy "*" -k  -X POST https://$SYSTEM_IP:8444/aas/users -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"username": "admin@kbs","password": "kbsAdminPass"}'`
-KBS_USER_ID=`curl --noproxy "*" -k https://$SYSTEM_IP:8444/aas/users?name=admin@kbs -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' | jq -r '.[0].user_id'`
-echo "Created KBS User with user ID $KBS_USER_ID"
-KBS_ROLE_ID1=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"service": "CMS","name": "CertApprover","context": "CN=KBS TLS Certificate;SAN='$KBS_DOMAIN';certType=TLS"}' | jq -r ".role_id"`
-echo "Created KBS TLS cert role with ID $KBS_ROLE_ID1"
-KBS_ROLE_ID2=`curl --noproxy "*" -k -X GET https://$SYSTEM_IP:8444/aas/roles?name=Administrator -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' | jq -r '.[0].role_id'`
-echo "Retrieved KBS Administrator role with ID $KBS_ROLE_ID2"
-KBS_ROLE_ID3=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"service": "SQVS","name": "QuoteVerifier","context": ""}' | jq -r ".role_id"`
-
-if [ $? -eq 0 ]; then
-  curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/users/$KBS_USER_ID/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"role_ids": ["'"$KBS_ROLE_ID1"'", "'"$KBS_ROLE_ID2"'", "'"$KBS_ROLE_ID3"'"]}'
-fi
-
-KBS_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/token -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"username": "admin@kbs","password": "kbsAdminPass"}'`
-echo "KBS Token $KBS_TOKEN"
+pushd $PWD
+cd $SKC_BINARY_DIR
 
 echo "################ Update SCS env....  #################"
 sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_IP/"  ~/scs.env
-sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$SCS_TOKEN/"  ~/scs.env
+sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$INSTALL_ADMIN_TOKEN/"  ~/scs.env
 sed -i "s/^\(CMS_TLS_CERT_SHA384\s*=\s*\).*\$/\1$CMS_TLS_SHA/" ~/scs.env
 sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/scs.env
 sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@" ~/scs.env
@@ -219,7 +216,7 @@ echo "################ Installed SCS....  #################"
 
 echo "################ Update SQVS env....  #################"
 sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_IP/"  ~/sqvs.env
-sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$SQVS_TOKEN/"  ~/sqvs.env
+sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$INSTALL_ADMIN_TOKEN/"  ~/sqvs.env
 sed -i "s/^\(CMS_TLS_CERT_SHA384\s*=\s*\).*\$/\1$CMS_TLS_SHA/" ~/sqvs.env
 sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/sqvs.env
 sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@" ~/sqvs.env
@@ -236,7 +233,7 @@ echo "################ Installed SQVS....  #################"
 
 echo "################ Update KBS env....  #################"
 sed -i "s/^\(TLS_SAN_LIST\s*=\s*\).*\$/\1$KBS_DOMAIN/" ~/kbs.env
-sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$KBS_TOKEN/" ~/kbs.env
+sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$INSTALL_ADMIN_TOKEN/" ~/kbs.env
 sed -i "s/^\(CMS_TLS_CERT_SHA384\s*=\s*\).*\$/\1$CMS_TLS_SHA/" ~/kbs.env
 sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/kbs.env
 sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@" ~/kbs.env
