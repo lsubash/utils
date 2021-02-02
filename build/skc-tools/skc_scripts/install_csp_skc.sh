@@ -12,17 +12,17 @@ HOME_DIR=~/
 SKC_BINARY_DIR=$HOME_DIR/binaries
 
 # Copy env files to Home directory
-\cp -pf $SKC_BINARY_DIR/env/cms.env $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/env/authservice.env $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/env/scs.env $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/env/shvs.env $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/env/ihub.env $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/env/iseclpgdb.env $HOME_DIR
+\cp -pf ./env/cms.env $HOME_DIR
+\cp -pf ./env/authservice.env $HOME_DIR
+\cp -pf ./env/scs.env $HOME_DIR
+\cp -pf ./env/shvs.env $HOME_DIR
+\cp -pf ./env/ihub.env $HOME_DIR
+\cp -pf ./env/iseclpgdb.env $HOME_DIR
 
 # Copy DB scripts to Home directory
-\cp -pf $SKC_BINARY_DIR/install_pg.sh $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/install_pgscsdb.sh $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/install_pgshvsdb.sh $HOME_DIR
+\cp -pf ./install_pg.sh $HOME_DIR
+\cp -pf ./install_pgscsdb.sh $HOME_DIR
+\cp -pf ./install_pgshvsdb.sh $HOME_DIR
 
 # read from environment variables file if it exists
 if [ -f ./csp_skc.conf ]; then
