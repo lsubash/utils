@@ -17,7 +17,7 @@ authservice_port: 8444
 # ----------------------------- BOOTSTRAP DB -------------------------------------- #
 
 # The RPM download URL for postgresql on RHEL OS
-postgres_db_rpm: https://download.postgresql.org/pub/repos/yum/11/redhat/rhel-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+postgres_db_rpm: https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
 
 # The postgresql RPM  file name for RHEL OS
 postgres_rpm_name: pgdg-redhat-repo-latest.noarch.rpm
