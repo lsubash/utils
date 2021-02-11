@@ -370,6 +370,9 @@ skclib_admin_username: skcuser
 # The service account password for SKC Library
 skclib_admin_password: password
 
+# SKC Library KeyTransfer Role Context 
+skclib_key_transfer_context: permissions=nginx,USA
+
 # --------------------------------------- SGX Dependency ----------------------------------------------- #
 #
 # The name of the binary installer as per release tag for SGX Dependency
