@@ -1,8 +1,8 @@
 #!/bin/bash
-SGX_DRIVER_VERSION=1.36.2
+SGX_DRIVER_VERSION=1.41
 KDIR=/lib/modules/$(uname -r)/build
 SGX_INSTALL_DIR=/opt/intel
-MP_RPM_VER=1.9.100.3-1
+MP_RPM_VER=1.10.100.4-1
 SGX_AGENT_BIN=bin
 
 cat $KDIR/.config | grep "CONFIG_INTEL_SGX=y" > /dev/null
@@ -32,7 +32,7 @@ install_dcap_driver()
 	chmod u+x $SGX_AGENT_BIN/sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin
 	echo "$INKERNEL_SGX"
 	echo "$SGX_DRIVER_INSTALLED"
-	if [[ "$INKERNEL_SGX" -ne 0 && "$SGX_DRIVER_INSTALLED" -ne 0 ]]; then
+	if [[ "$INKERNEL_SGX" -eq 1 && "$SGX_DRIVER_INSTALLED" -eq 1 ]]; then
 		./$SGX_AGENT_BIN/sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin -prefix=$SGX_INSTALL_DIR || exit 1
 		echo "sgx dcap driver installed"
 	else

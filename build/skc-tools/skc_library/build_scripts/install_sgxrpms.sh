@@ -1,7 +1,7 @@
 #!/bin/bash
 SKCLIB_DIR=$PWD/skc_library
 SKCLIB_BIN_DIR=$SKCLIB_DIR/bin
-SGX_VERSION=2.12
+SGX_VERSION=2.13
 
 # Check OS and VERSION
 OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)

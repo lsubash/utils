@@ -1,6 +1,6 @@
 #!/bin/bash
 SKCLIB_BIN=bin
-SGX_DRIVER_VERSION=1.36.2
+SGX_DRIVER_VERSION=1.41
 SGX_INSTALL_DIR=/opt/intel
 
 source skc_library.conf
