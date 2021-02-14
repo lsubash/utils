@@ -74,4 +74,11 @@ then
         exit
 fi
 
+source build_sgx_agent_docker.sh
+if [ $? -ne 0 ]
+then
+        echo "sgx agent docker build failed"
+        exit
+fi
+
 create_sgx_agent_tar
