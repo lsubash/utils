@@ -174,8 +174,10 @@ SCS_ADMIN_PASSWORD=$(cat ~/scs.env | grep ^SCS_ADMIN_PASSWORD= | cut -d'=' -f2)
 sed -i "s/^\(SCS_SERVICE_USERNAME\s*=\s*\).*\$/\1$SCS_ADMIN_USERNAME/" ~/populate-users.env
 sed -i "s/^\(SCS_SERVICE_PASSWORD\s*=\s*\).*\$/\1$SCS_ADMIN_PASSWORD/" ~/populate-users.env
 
-sed -i "/SHVS_SERVICE_USERNAME/d" ~/populate-users.env
-sed -i "/SHVS_SERVICE_PASSWORD/d" ~/populate-users.env
+SHVS_ADMIN_USERNAME=$(cat ~/shvs.env | grep ^SHVS_ADMIN_USERNAME= | cut -d'=' -f2)
+SHVS_ADMIN_PASSWORD=$(cat ~/shvs.env | grep ^SHVS_ADMIN_PASSWORD= | cut -d'=' -f2)
+sed -i "s/^\(SHVS_SERVICE_USERNAME\s*=\s*\).*\$/\1$SHVS_ADMIN_USERNAME/" ~/populate-users.env
+sed -i "s/^\(SHVS_SERVICE_PASSWORD\s*=\s*\).*\$/\1$SHVS_ADMIN_PASSWORD/" ~/populate-users.env
 
 sed -i "s@^\(SGX_AGENT_USERNAME\s*=\s*\).*\$@\1$SGX_AGENT_USERNAME@" ~/populate-users.env
 sed -i "s@^\(SGX_AGENT_PASSWORD\s*=\s*\).*\$@\1$SGX_AGENT_PASSWORD@" ~/populate-users.env
