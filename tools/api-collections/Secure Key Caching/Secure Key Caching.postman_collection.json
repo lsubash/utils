@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "0bee59fc-5066-408d-b729-2972292108f1",
+		"_postman_id": "652ddfc2-2547-4175-86a6-781a5476b8a8",
 		"name": "Secure Key Caching",
 		"description": "Key Protection is implemented by the SKC Client -- a set of libraries - which must be linked with a\ntenant workload, like Nginx, deployed in a CSP environment and the Key Broker Service (KBS)\ndeployed in the tenant's enterprise environment. The SKC Client retrieves the keys needed by the\nworkload from KBS after proving that the key can be protected in an SGX enclave.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -15,7 +15,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "430ff79e-8c59-4527-871f-37c2457b36ad",
 								"exec": [
 									"pm.environment.set(\"bearerTokenKbs\", pm.response.text());"
 								],
@@ -127,7 +126,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "b9f859a0-b865-4aae-8838-4ae837e89977",
 								"exec": [
 									"pm.environment.set(\"bearerTokenEa\", pm.response.text());"
 								],
@@ -239,7 +237,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "7842bdff-9648-4019-a939-544f2afceb7d",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -249,15 +246,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "56ec2334-ba37-47aa-82ed-ad19ce18a77a",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Verify Services",
@@ -267,7 +262,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "e7f324ae-ea68-4576-a01e-337c7ef49300",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -277,15 +271,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "645d2bde-d04d-4c1b-942a-903960c1a9ff",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Creating RSA Keys in Key Broker Service",
@@ -296,7 +288,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "86b55a34-51b8-4d62-bab5-d8e33697121d",
 								"exec": [
 									"pm.environment.set(\"keyTransferPolicyId\", pm.response.json().id)"
 								],
@@ -528,7 +519,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "9ec6d845-034d-41fb-aa00-a788f75a3ec9",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -538,15 +528,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "fccf341c-3269-4b51-98ad-8b4663041be1",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Configuration for NGINX testing",
@@ -556,7 +544,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "a015fdd2-72d3-4a98-9a04-dbcb9af7d4ce",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -566,52 +553,47 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "fa0eecb6-6101-4c64-84ff-c2d277779644",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "KBS key-transfer flow",
 			"item": [
 				{
-					"name": "verifyQuote",
+					"name": "quoteVerify",
 					"request": {
+						"auth": {
+							"type": "noauth"
+						},
 						"method": "POST",
 						"header": [
 							{
-								"key": "Authorization",
-								"value": "Bearer {{bearerTokenKbs}}",
-								"type": "text",
-								"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**"
+								"key": "Content-Type",
+								"value": "application/json"
 							},
 							{
 								"key": "Accept",
 								"value": "application/json",
-								"type": "text",
-								"description": "(Required) Accept header"
+								"type": "text"
 							},
 							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text",
-								"description": "(Required) Content-Type header"
+								"key": "Authorization",
+								"value": "Bearer {{bearerTokenKbs}}",
+								"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+								"type": "text"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"quote\": \"<string>\"\r\n}",
-							"options": {
-								"raw": {}
-							}
+							"raw": "{\n    \"quote\": \"<string>\",\n    \"userData\": \"<optional>\"\n}"
 						},
 						"url": {
-							"raw": "https://{{sqvs}}:{{sqvsPort}}/svs/v1/verifyQuote",
+							"raw": "https://{{sqvs}}:{{sqvsPort}}/svs/v1/sgx_qv_verify_quote",
 							"protocol": "https",
 							"host": [
 								"{{sqvs}}"
@@ -620,10 +602,10 @@
 							"path": [
 								"svs",
 								"v1",
-								"verifyQuote"
+								"sgx_qv_verify_quote"
 							]
 						},
-						"description": "Verifies the quote provided in the request body by checking whether the quote is ECDSA or software quote (for testing purpose) and performs the set of validation steps if the quote is ECDSA. Quote verifier requests SGX Quote Verification Service (SQVS) to verify a quote. SQVS parses the quote, verifies all the parameters in the quote and returns the response."
+						"description": "Verifies the SGX ECDSA quote provided in the request body.\nQuote verifier requests SGX Quote Verification Service (SQVS) to verify quote.\nSQVS parses the quote, verifies all the parameters in the quote and returns the response.\n"
 					},
 					"response": [
 						{
@@ -632,28 +614,26 @@
 								"method": "POST",
 								"header": [
 									{
-										"key": "Authorization",
-										"value": "Bearer {{bearerTokenKbs}}",
-										"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
 										"type": "text"
 									},
 									{
 										"key": "Accept",
 										"value": "application/json",
-										"type": "text",
-										"description": "(Required) Accept header"
+										"type": "text"
 									},
 									{
-										"key": "Content-Type",
-										"name": "Content-Type",
-										"value": "application/json",
-										"type": "text",
-										"description": "(Required) Content-Type header"
+										"key": "Authorization",
+										"value": "Bearer {{bearerTokenKbs}}",
+										"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+										"type": "text"
 									}
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"quote\": \"AQAAAAAAAAB7EwAAAQAAAAEAAAADAAAAAAEAANwGAAAtLS0tLUJFR0lOIENFUlRJRklDQVRFLS0tLS0KTUlJRTZEQ0NCSTJnQXdJQkFnSVVMYW1oN3R6RWpZSm5qUVl6U2syOWV3a0FGT1l3Q2dZSUtvWkl6ajBFQXdJd2NERWlNQ0FHQTFVRQpBd3daU1c1MFpXd2dVMGRZSUZCRFN5QlFiR0YwWm05eWJTQkRRVEVhTUJnR0ExVUVDZ3dSU1c1MFpXd2dRMjl5Y0c5eVlYUnBiMjR4CkZEQVNCZ05WQkFjTUMxTmhiblJoSUVOc1lYSmhNUXN3Q1FZRFZRUUlEQUpEUVRFTE1Ba0dBMVVFQmhNQ1ZWTXdIaGNOTWpBd05qRTEKTURjME9ETTFXaGNOTWpjd05qRTFNRGMwT0RNMVdqQndNU0l3SUFZRFZRUUREQmxKYm5SbGJDQlRSMWdnVUVOTElFTmxjblJwWm1sagpZWFJsTVJvd0dBWURWUVFLREJGSmJuUmxiQ0JEYjNKd2IzSmhkR2x2YmpFVU1CSUdBMVVFQnd3TFUyRnVkR0VnUTJ4aGNtRXhDekFKCkJnTlZCQWdNQWtOQk1Rc3dDUVlEVlFRR0V3SlZVekJaTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEEwSUFCS1c5K3JYNmF5UmkKN2lTbG1HalVRMHlKYzRFUDNOMnBkY3BucVR4Y0ROTzhZOHRtVnZ1SHNnUml5WmVPd25jUVByVHlWUm44QWpoNkJ2QXl6L1RXRmR1agpnZ01ETUlJQy96QWZCZ05WSFNNRUdEQVdnQlJaSTlPblNxaGpWQzQ1Y0szZ0R3Y3JWeVFxdHpCaUJnTlZIUjhFV3pCWk1GZWdWYUJUCmhsRm9kSFJ3Y3pvdkwzTmllQzVoY0drdWRISjFjM1JsWkhObGNuWnBZMlZ6TG1sdWRHVnNMbU52YlM5elozZ3ZZMlZ5ZEdsbWFXTmgKZEdsdmJpOTJNeTl3WTJ0amNtdy9ZMkU5Y0d4aGRHWnZjbTB3SFFZRFZSME9CQllFRklOVENPUWVqVVl6MkFYV0ZxRUJEdmZsN0tKcQpNQTRHQTFVZER3RUIvd1FFQXdJR3dEQU1CZ05WSFJNQkFmOEVBakFBTUlJQ09RWUpLb1pJaHZoTkFRMEJCSUlDS2pDQ0FpWXdIZ1lLCktvWklodmhOQVEwQkFRUVF3akR6OUFPZ0V0emJUMU9ORDNOcXlUQ0NBV01HQ2lxR1NJYjRUUUVOQVFJd2dnRlRNQkFHQ3lxR1NJYjQKVFFFTkFRSUJBZ0VDTUJBR0N5cUdTSWI0VFFFTkFRSUNBZ0VDTUJBR0N5cUdTSWI0VFFFTkFRSURBZ0VBTUJBR0N5cUdTSWI0VFFFTgpBUUlFQWdFQU1CQUdDeXFHU0liNFRRRU5BUUlGQWdFQU1CQUdDeXFHU0liNFRRRU5BUUlHQWdFQU1CQUdDeXFHU0liNFRRRU5BUUlICkFnRUFNQkFHQ3lxR1NJYjRUUUVOQVFJSUFnRUFNQkFHQ3lxR1NJYjRUUUVOQVFJSkFnRUFNQkFHQ3lxR1NJYjRUUUVOQVFJS0FnRUEKTUJBR0N5cUdTSWI0VFFFTkFRSUxBZ0VBTUJBR0N5cUdTSWI0VFFFTkFRSU1BZ0VBTUJBR0N5cUdTSWI0VFFFTkFRSU5BZ0VBTUJBRwpDeXFHU0liNFRRRU5BUUlPQWdFQU1CQUdDeXFHU0liNFRRRU5BUUlQQWdFQU1CQUdDeXFHU0liNFRRRU5BUUlRQWdFQU1CQUdDeXFHClNJYjRUUUVOQVFJUkFnRUtNQjhHQ3lxR1NJYjRUUUVOQVFJU0JCQUNBZ0FBQUFBQUFBQUFBQUFBQUFBQU1CQUdDaXFHU0liNFRRRU4KQVFNRUFnQUFNQlFHQ2lxR1NJYjRUUUVOQVFRRUJpQmdhZ0FBQURBUEJnb3Foa2lHK0UwQkRRRUZDZ0VCTUI0R0NpcUdTSWI0VFFFTgpBUVlFRVBoRTdjQWpscElwRVEraXlPY0RUa1V3UkFZS0tvWklodmhOQVEwQkJ6QTJNQkFHQ3lxR1NJYjRUUUVOQVFjQkFRSC9NQkFHCkN5cUdTSWI0VFFFTkFRY0NBUUgvTUJBR0N5cUdTSWI0VFFFTkFRY0RBUUgvTUFvR0NDcUdTTTQ5QkFNQ0Ewa0FNRVlDSVFDZk5CVDMKZnRpdzR4eXNsWWVSRnVCaXg0Z1NsSm1JNEF3L0l2MVZuYU9PUndJaEFNSzNMSGNsdXQyaW5pRUUyQlBwQi9uYTh5bVBDQjBsc2FVTwpwZzJyVkhJbwotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tAQABtlLCWbh0Nd/KPbPVXlbRY47bTv4gHzZZTvDwjSU7iS61+sDSpS106UYnzPIyBtmxVlUV/h6L7F0EEXn4YhHw1/B1zZTlE0HvTCb1H7LYGaEbmVcnKMr6Y92f+q+gyomazAOJ9YQefK7uyciYuIIbW9Kz6yGGJr9T5S7/zNqk8iC20NYXirD8xo2MQvviUSLhwYN4dBhroou/0cB3k/4dhi8FkCFQpBCQlECnFl6238xUfeskByc7xWZhvj67N4M3yvObFxUp5Sv61yHxfB6I50OXbqsYHPJRc2eqEJWUkOJEKbVqPid5f+kZpwwDmDs8cS95CpgQShFJG+rbL0cXwwMAAgAAAAAABQAKAJOacjP3nEyplAoNs5V/BgeBQLt6zEGoQQnp6JTMP8nEAAAAAAICAAEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAcAAAAAAAAA5wAAAAAAAAABxguWF7L5blPLde8B4NzOo6/Ht5kml+q7j3FLLM0ZUwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAzRccVpQcbOSWkLRV9pHZyKBMLkPgpNMPdS+lKFx+5X8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAvDSDf0Bdju4V2/odzPVoOQjq7SqbzOKKqVE8qCVj1KEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMQQAACssgLdcHu9LUnzApZmDsLpG33bk8A2Yrr9U7HSWP4D48nAGbwDZ+55iBMkd+caeDgSHNX42Z1cJRiPkWIthgSi+cO+GrWWavHXxFEyUf5yu1bW7y44gZWDuckM1jlKGgLUhWQ+zDL0dgmIMjMeTqhN7jxc0O1MCQ5j6PS6EgGIewICAAEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABUAAAAAAAAA5wAAAAAAAADNyt+32yKtpf1gNFXN4b+folj6XyhNzW4MYzkvYzoRBQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAjE9XddeWUD6WE393xoqCmgBWrI3tcBQLCBsJRJDFe/8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0aaKNxd+jk3SIzWQ3uCbO0ORrDDyRNGRDqoyqUKQHmEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB9H+9x+f2Ilttd1qg1E1NRybnoV66QS3pTCGOsuH4buHe2oRRNvr5zM0TGTS3UbCupbV3EyZhzbkqko+jNfcUYgAAABAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fBQBcDgAALS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUU2RENDQkkyZ0F3SUJBZ0lVTGFtaDd0ekVqWUpualFZelNrMjlld2tBRk9Zd0NnWUlLb1pJemowRUF3SXdjREVpTUNBR0ExVUUKQXd3WlNXNTBaV3dnVTBkWUlGQkRTeUJRYkdGMFptOXliU0JEUVRFYU1CZ0dBMVVFQ2d3UlNXNTBaV3dnUTI5eWNHOXlZWFJwYjI0eApGREFTQmdOVkJBY01DMU5oYm5SaElFTnNZWEpoTVFzd0NRWURWUVFJREFKRFFURUxNQWtHQTFVRUJoTUNWVk13SGhjTk1qQXdOakUxCk1EYzBPRE0xV2hjTk1qY3dOakUxTURjME9ETTFXakJ3TVNJd0lBWURWUVFEREJsSmJuUmxiQ0JUUjFnZ1VFTkxJRU5sY25ScFptbGoKWVhSbE1Sb3dHQVlEVlFRS0RCRkpiblJsYkNCRGIzSndiM0poZEdsdmJqRVVNQklHQTFVRUJ3d0xVMkZ1ZEdFZ1EyeGhjbUV4Q3pBSgpCZ05WQkFnTUFrTkJNUXN3Q1FZRFZRUUdFd0pWVXpCWk1CTUdCeXFHU000OUFnRUdDQ3FHU000OUF3RUhBMElBQktXOStyWDZheVJpCjdpU2xtR2pVUTB5SmM0RVAzTjJwZGNwbnFUeGNETk84WTh0bVZ2dUhzZ1JpeVplT3duY1FQclR5VlJuOEFqaDZCdkF5ei9UV0ZkdWoKZ2dNRE1JSUMvekFmQmdOVkhTTUVHREFXZ0JSWkk5T25TcWhqVkM0NWNLM2dEd2NyVnlRcXR6QmlCZ05WSFI4RVd6QlpNRmVnVmFCVApobEZvZEhSd2N6b3ZMM05pZUM1aGNHa3VkSEoxYzNSbFpITmxjblpwWTJWekxtbHVkR1ZzTG1OdmJTOXpaM2d2WTJWeWRHbG1hV05oCmRHbHZiaTkyTXk5d1kydGpjbXcvWTJFOWNHeGhkR1p2Y20wd0hRWURWUjBPQkJZRUZJTlRDT1FlalVZejJBWFdGcUVCRHZmbDdLSnEKTUE0R0ExVWREd0VCL3dRRUF3SUd3REFNQmdOVkhSTUJBZjhFQWpBQU1JSUNPUVlKS29aSWh2aE5BUTBCQklJQ0tqQ0NBaVl3SGdZSwpLb1pJaHZoTkFRMEJBUVFRd2pEejlBT2dFdHpiVDFPTkQzTnF5VENDQVdNR0NpcUdTSWI0VFFFTkFRSXdnZ0ZUTUJBR0N5cUdTSWI0ClRRRU5BUUlCQWdFQ01CQUdDeXFHU0liNFRRRU5BUUlDQWdFQ01CQUdDeXFHU0liNFRRRU5BUUlEQWdFQU1CQUdDeXFHU0liNFRRRU4KQVFJRUFnRUFNQkFHQ3lxR1NJYjRUUUVOQVFJRkFnRUFNQkFHQ3lxR1NJYjRUUUVOQVFJR0FnRUFNQkFHQ3lxR1NJYjRUUUVOQVFJSApBZ0VBTUJBR0N5cUdTSWI0VFFFTkFRSUlBZ0VBTUJBR0N5cUdTSWI0VFFFTkFRSUpBZ0VBTUJBR0N5cUdTSWI0VFFFTkFRSUtBZ0VBCk1CQUdDeXFHU0liNFRRRU5BUUlMQWdFQU1CQUdDeXFHU0liNFRRRU5BUUlNQWdFQU1CQUdDeXFHU0liNFRRRU5BUUlOQWdFQU1CQUcKQ3lxR1NJYjRUUUVOQVFJT0FnRUFNQkFHQ3lxR1NJYjRUUUVOQVFJUEFnRUFNQkFHQ3lxR1NJYjRUUUVOQVFJUUFnRUFNQkFHQ3lxRwpTSWI0VFFFTkFRSVJBZ0VLTUI4R0N5cUdTSWI0VFFFTkFRSVNCQkFDQWdBQUFBQUFBQUFBQUFBQUFBQUFNQkFHQ2lxR1NJYjRUUUVOCkFRTUVBZ0FBTUJRR0NpcUdTSWI0VFFFTkFRUUVCaUJnYWdBQUFEQVBCZ29xaGtpRytFMEJEUUVGQ2dFQk1CNEdDaXFHU0liNFRRRU4KQVFZRUVQaEU3Y0FqbHBJcEVRK2l5T2NEVGtVd1JBWUtLb1pJaHZoTkFRMEJCekEyTUJBR0N5cUdTSWI0VFFFTkFRY0JBUUgvTUJBRwpDeXFHU0liNFRRRU5BUWNDQVFIL01CQUdDeXFHU0liNFRRRU5BUWNEQVFIL01Bb0dDQ3FHU000OUJBTUNBMGtBTUVZQ0lRQ2ZOQlQzCmZ0aXc0eHlzbFllUkZ1Qml4NGdTbEptSTRBdy9JdjFWbmFPT1J3SWhBTUszTEhjbHV0MmluaUVFMkJQcEIvbmE4eW1QQ0IwbHNhVU8KcGcyclZISW8KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLS0tLS0tQkVHSU4gQ0VSVElGSUNBVEUtLS0tLQpNSUlDbXpDQ0FrQ2dBd0lCQWdJVVdTUFRwMHFvWTFRdU9YQ3Q0QThISzFja0tyY3dDZ1lJS29aSXpqMEVBd0l3CmFERWFNQmdHQTFVRUF3d1JTVzUwWld3Z1UwZFlJRkp2YjNRZ1EwRXhHakFZQmdOVkJBb01FVWx1ZEdWc0lFTnYKY25CdmNtRjBhVzl1TVJRd0VnWURWUVFIREF0VFlXNTBZU0JEYkdGeVlURUxNQWtHQTFVRUNBd0NRMEV4Q3pBSgpCZ05WQkFZVEFsVlRNQjRYRFRFNU1UQXpNVEV5TXpRek1Wb1hEVE0wTVRBek1URXlNelF6TVZvd2NERWlNQ0FHCkExVUVBd3daU1c1MFpXd2dVMGRZSUZCRFN5QlFiR0YwWm05eWJTQkRRVEVhTUJnR0ExVUVDZ3dSU1c1MFpXd2cKUTI5eWNHOXlZWFJwYjI0eEZEQVNCZ05WQkFjTUMxTmhiblJoSUVOc1lYSmhNUXN3Q1FZRFZRUUlEQUpEUVRFTApNQWtHQTFVRUJoTUNWVk13V1RBVEJnY3Foa2pPUFFJQkJnZ3Foa2pPUFFNQkJ3TkNBQVF3cCtMYytUVUJ0ZzFICitVOEpJc01zYmpIakNrVHRYYjhqUE02cjJkaHU5eklibGhEWjdJTmZxdDNJeDhYY0ZLRDhrME5FWHJrWjY2cUoKWGExS3pMSUtvNEcvTUlHOE1COEdBMVVkSXdRWU1CYUFGT25vUkZKVE5seExHSm9SL0VNWUxLWGNJSUJJTUZZRwpBMVVkSHdSUE1FMHdTNkJKb0VlR1JXaDBkSEJ6T2k4dmMySjRMV05sY25ScFptbGpZWFJsY3k1MGNuVnpkR1ZrCmMyVnlkbWxqWlhNdWFXNTBaV3d1WTI5dEwwbHVkR1ZzVTBkWVVtOXZkRU5CTG1OeWJEQWRCZ05WSFE0RUZnUVUKV1NQVHAwcW9ZMVF1T1hDdDRBOEhLMWNrS3Jjd0RnWURWUjBQQVFIL0JBUURBZ0VHTUJJR0ExVWRFd0VCL3dRSQpNQVlCQWY4Q0FRQXdDZ1lJS29aSXpqMEVBd0lEU1FBd1JnSWhBSVJvWHUzWTQ1VkY5YUNpSzBaMks2RVFLQ3RDCnJ4VFRpWjRKWWJFeWZCR3NBaUVBaVZvWW14RjdLL1NvcUlqZmYxekcwL0xpdi9SSU9SL1FCSjUrZDg4SEFZST0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQotLS0tLUJFR0lOIENFUlRJRklDQVRFLS0tLS0KTUlJQ2xEQ0NBam1nQXdJQkFnSVZBT25vUkZKVE5seExHSm9SL0VNWUxLWGNJSUJJTUFvR0NDcUdTTTQ5QkFNQwpNR2d4R2pBWUJnTlZCQU1NRVVsdWRHVnNJRk5IV0NCU2IyOTBJRU5CTVJvd0dBWURWUVFLREJGSmJuUmxiQ0JECmIzSndiM0poZEdsdmJqRVVNQklHQTFVRUJ3d0xVMkZ1ZEdFZ1EyeGhjbUV4Q3pBSkJnTlZCQWdNQWtOQk1Rc3cKQ1FZRFZRUUdFd0pWVXpBZUZ3MHhPVEV3TXpFd09UUTVNakZhRncwME9URXlNekV5TXpVNU5UbGFNR2d4R2pBWQpCZ05WQkFNTUVVbHVkR1ZzSUZOSFdDQlNiMjkwSUVOQk1Sb3dHQVlEVlFRS0RCRkpiblJsYkNCRGIzSndiM0poCmRHbHZiakVVTUJJR0ExVUVCd3dMVTJGdWRHRWdRMnhoY21FeEN6QUpCZ05WQkFnTUFrTkJNUXN3Q1FZRFZRUUcKRXdKVlV6QlpNQk1HQnlxR1NNNDlBZ0VHQ0NxR1NNNDlBd0VIQTBJQUJFLzZELzFXSE5yV3dQbU5NSXlCS01XNQpKNkp6TXNqbzZ4UDJ2a0sxY2RaR2IxUEdSUC9DLzhFQ2dpRGtta2xtendMekxpKzAwMG03TExydEtKQTNvQzJqCmdiOHdnYnd3SHdZRFZSMGpCQmd3Rm9BVTZlaEVVbE0yWEVzWW1oSDhReGdzcGR3Z2dFZ3dWZ1lEVlIwZkJFOHcKVFRCTG9FbWdSNFpGYUhSMGNITTZMeTl6WW5ndFkyVnlkR2xtYVdOaGRHVnpMblJ5ZFhOMFpXUnpaWEoyYVdObApjeTVwYm5SbGJDNWpiMjB2U1c1MFpXeFRSMWhTYjI5MFEwRXVZM0pzTUIwR0ExVWREZ1FXQkJUcDZFUlNVelpjClN4aWFFZnhER0N5bDNDQ0FTREFPQmdOVkhROEJBZjhFQkFNQ0FRWXdFZ1lEVlIwVEFRSC9CQWd3QmdFQi93SUIKQVRBS0JnZ3Foa2pPUFFRREFnTkpBREJHQWlFQTBSV3JzR3JHbERwNzZsOUxRanQrek1xUVpQQi8yWXV1dWVGVQpnTjlBZGtNQ0lRRG85QU5VaGNTdEFCQ2hSNnJsVm9CbzZNUTZRdW1DbmsrcGRHQkV5OC9zUWc9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==\"\r\n}",
+									"raw": "{\n    \"quote\": \"AwACAAAAAAAFAAoAk5pyM/ecTKmUCg2zlX8GB3HHO7ubYF/PJVbCISbSSAYAAAAAAgIAAgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABwAAAAAAAADnAAAAAAAAAD708T5CMYqlBj/XQN5SkwSIu/+GIzYcaGw4HETKqHk9AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADNFxxWlBxs5JaQtFX2kdnIoEwuQ+Ck0w91L6UoXH7lfwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABT9iwCApadupRBkF6TjjvN+79hY/cURtoFb0N+tQQyDwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA2BAAAJebwh/oA8bfeD/7labQe/F7QldB20tL5lSz75DMYrkqe03HqBfx9I8Ea7/k0eMW7A+L/y8qwL/kUtc5eNPX+o/jyVSxJEHZ7uLmoxVdtTBiQpSv5JR5M2qem33SYcVB9uycLbAd0iOrWpE2Hnm7q/qLAVj//UbB/+dThPvPvWFkAgIAAgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFQAAAAAAAADnAAAAAAAAAGDYWvKL6NHECgjZiwCdX4rME4Sjhc9GCADkeHkdGpecAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACMT1d115ZQPpYTf3fGioKaAFasje1wFAsIGwlEkMV7/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAtUZdwWxK4I7b//LXQQxF/XgH8vIUXGer+OwNKaOBjKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAiSP8Nr+QcNR3EvCQ7pbDROOG2Th43bmKTtWLFCuYx1S8qvtzEro7hKxgUS68j7yfxe0/1su+xo7lR3jX94ntQSAAAAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8FAHAOAAAtLS0tLUJFR0lOIENFUlRJRklDQVRFLS0tLS0KTUlJRTlUQ0NCSnFnQXdJQkFnSVVlVERLVXZ5V2h4TmRsbWhFVXM1eGhSUEJUWlV3Q2dZSUtvWkl6ajBFQXdJd2NERWlNQ0FHQTFVRQpBd3daU1c1MFpXd2dVMGRZSUZCRFN5QlFiR0YwWm05eWJTQkRRVEVhTUJnR0ExVUVDZ3dSU1c1MFpXd2dRMjl5Y0c5eVlYUnBiMjR4CkZEQVNCZ05WQkFjTUMxTmhiblJoSUVOc1lYSmhNUXN3Q1FZRFZRUUlEQUpEUVRFTE1Ba0dBMVVFQmhNQ1ZWTXdIaGNOTWpFd01qRXkKTVRjeE16UTFXaGNOTWpnd01qRXlNVGN4TXpRMVdqQndNU0l3SUFZRFZRUUREQmxKYm5SbGJDQlRSMWdnVUVOTElFTmxjblJwWm1sagpZWFJsTVJvd0dBWURWUVFLREJGSmJuUmxiQ0JEYjNKd2IzSmhkR2x2YmpFVU1CSUdBMVVFQnd3TFUyRnVkR0VnUTJ4aGNtRXhDekFKCkJnTlZCQWdNQWtOQk1Rc3dDUVlEVlFRR0V3SlZVekJaTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEEwSUFCT0NjNHdiRzI4SjkKcWNXUjg1Zzl6YmFWbXViemxnc2szbkZOZUhvVW5OR3lHOXFoU1BXdVg5clRLYk1hdFdBbi8xdXY2UzFOTmFPaDNxcmdyb0pIUnRxagpnZ01RTUlJREREQWZCZ05WSFNNRUdEQVdnQlJaSTlPblNxaGpWQzQ1Y0szZ0R3Y3JWeVFxdHpCdkJnTlZIUjhFYURCbU1HU2dZcUJnCmhsNW9kSFJ3Y3pvdkwzTmllQzVoY0drdWRISjFjM1JsWkhObGNuWnBZMlZ6TG1sdWRHVnNMbU52YlM5elozZ3ZZMlZ5ZEdsbWFXTmgKZEdsdmJpOTJNeTl3WTJ0amNtdy9ZMkU5Y0d4aGRHWnZjbTBtWlc1amIyUnBibWM5WkdWeU1CMEdBMVVkRGdRV0JCUjNIbkZYczJMcApPVmkwVWhwVk9qeGNnclF2VmpBT0JnTlZIUThCQWY4RUJBTUNCc0F3REFZRFZSMFRBUUgvQkFJd0FEQ0NBamtHQ1NxR1NJYjRUUUVOCkFRU0NBaW93Z2dJbU1CNEdDaXFHU0liNFRRRU5BUUVFRUtwVWpKSmk4Q0xoa0h3em15d1dnQWN3Z2dGakJnb3Foa2lHK0UwQkRRRUMKTUlJQlV6QVFCZ3NxaGtpRytFMEJEUUVDQVFJQkFqQVFCZ3NxaGtpRytFMEJEUUVDQWdJQkFqQVFCZ3NxaGtpRytFMEJEUUVDQXdJQgpBREFRQmdzcWhraUcrRTBCRFFFQ0JBSUJBREFRQmdzcWhraUcrRTBCRFFFQ0JRSUJBREFRQmdzcWhraUcrRTBCRFFFQ0JnSUJBREFRCkJnc3Foa2lHK0UwQkRRRUNCd0lCQURBUUJnc3Foa2lHK0UwQkRRRUNDQUlCQURBUUJnc3Foa2lHK0UwQkRRRUNDUUlCQURBUUJnc3EKaGtpRytFMEJEUUVDQ2dJQkFEQVFCZ3NxaGtpRytFMEJEUUVDQ3dJQkFEQVFCZ3NxaGtpRytFMEJEUUVDREFJQkFEQVFCZ3NxaGtpRworRTBCRFFFQ0RRSUJBREFRQmdzcWhraUcrRTBCRFFFQ0RnSUJBREFRQmdzcWhraUcrRTBCRFFFQ0R3SUJBREFRQmdzcWhraUcrRTBCCkRRRUNFQUlCQURBUUJnc3Foa2lHK0UwQkRRRUNFUUlCQ2pBZkJnc3Foa2lHK0UwQkRRRUNFZ1FRQWdJQUFBQUFBQUFBQUFBQUFBQUEKQURBUUJnb3Foa2lHK0UwQkRRRURCQUlBQURBVUJnb3Foa2lHK0UwQkRRRUVCQVlRWUdvQUFBQXdEd1lLS29aSWh2aE5BUTBCQlFvQgpBVEFlQmdvcWhraUcrRTBCRFFFR0JCQ2NTcUM0NW5KWWJuMXpHSEdVWFJoK01FUUdDaXFHU0liNFRRRU5BUWN3TmpBUUJnc3Foa2lHCitFMEJEUUVIQVFFQi96QVFCZ3NxaGtpRytFMEJEUUVIQWdFQkFEQVFCZ3NxaGtpRytFMEJEUUVIQXdFQi96QUtCZ2dxaGtqT1BRUUQKQWdOSkFEQkdBaUVBN3JXamVieTltZDNBWmk4bnJSR2NpdnRZYWZnOERObEVRUlhVQS9RQ0NJY0NJUUNxeGM0YjcveVczOFp2aytFSwpSQWY2aVJhdmNEbk1rcE9ZbmJ3TFJ4Q05OZz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0tLS0tLUJFR0lOIENFUlRJRklDQVRFLS0tLS0KTUlJQ21qQ0NBa0NnQXdJQkFnSVVXU1BUcDBxb1kxUXVPWEN0NEE4SEsxY2tLcmN3Q2dZSUtvWkl6ajBFQXdJdwphREVhTUJnR0ExVUVBd3dSU1c1MFpXd2dVMGRZSUZKdmIzUWdRMEV4R2pBWUJnTlZCQW9NRVVsdWRHVnNJRU52CmNuQnZjbUYwYVc5dU1SUXdFZ1lEVlFRSERBdFRZVzUwWVNCRGJHRnlZVEVMTUFrR0ExVUVDQXdDUTBFeEN6QUoKQmdOVkJBWVRBbFZUTUI0WERURTVNVEF6TVRFeU16TTBOMW9YRFRNME1UQXpNVEV5TXpNME4xb3djREVpTUNBRwpBMVVFQXd3WlNXNTBaV3dnVTBkWUlGQkRTeUJRYkdGMFptOXliU0JEUVRFYU1CZ0dBMVVFQ2d3UlNXNTBaV3dnClEyOXljRzl5WVhScGIyNHhGREFTQmdOVkJBY01DMU5oYm5SaElFTnNZWEpoTVFzd0NRWURWUVFJREFKRFFURUwKTUFrR0ExVUVCaE1DVlZNd1dUQVRCZ2NxaGtqT1BRSUJCZ2dxaGtqT1BRTUJCd05DQUFRd3ArTGMrVFVCdGcxSAorVThKSXNNc2JqSGpDa1R0WGI4alBNNnIyZGh1OXpJYmxoRFo3SU5mcXQzSXg4WGNGS0Q4azBORVhya1o2NnFKClhhMUt6TElLbzRHL01JRzhNQjhHQTFVZEl3UVlNQmFBRk9ub1JGSlRObHhMR0pvUi9FTVlMS1hjSUlCSU1GWUcKQTFVZEh3UlBNRTB3UzZCSm9FZUdSV2gwZEhCek9pOHZjMko0TFdObGNuUnBabWxqWVhSbGN5NTBjblZ6ZEdWawpjMlZ5ZG1salpYTXVhVzUwWld3dVkyOXRMMGx1ZEdWc1UwZFlVbTl2ZEVOQkxtUmxjakFkQmdOVkhRNEVGZ1FVCldTUFRwMHFvWTFRdU9YQ3Q0QThISzFja0tyY3dEZ1lEVlIwUEFRSC9CQVFEQWdFR01CSUdBMVVkRXdFQi93UUkKTUFZQkFmOENBUUF3Q2dZSUtvWkl6ajBFQXdJRFNBQXdSUUloQUoxcStGVHorZ1V1VmZCUXVDZ0pzRnJMMlRUUwplMWFCWjUzTzUyVGpGaWU2QWlBcmlQYVJhaFVYOU9hOWtHTGxBY2hXWEtUNmo0UldTUjUwQnFock4zVVQ0QT09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0KLS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUNsRENDQWptZ0F3SUJBZ0lWQU9ub1JGSlRObHhMR0pvUi9FTVlMS1hjSUlCSU1Bb0dDQ3FHU000OUJBTUMKTUdneEdqQVlCZ05WQkFNTUVVbHVkR1ZzSUZOSFdDQlNiMjkwSUVOQk1Sb3dHQVlEVlFRS0RCRkpiblJsYkNCRApiM0p3YjNKaGRHbHZiakVVTUJJR0ExVUVCd3dMVTJGdWRHRWdRMnhoY21FeEN6QUpCZ05WQkFnTUFrTkJNUXN3CkNRWURWUVFHRXdKVlV6QWVGdzB4T1RFd016RXdPVFE1TWpGYUZ3MDBPVEV5TXpFeU16VTVOVGxhTUdneEdqQVkKQmdOVkJBTU1FVWx1ZEdWc0lGTkhXQ0JTYjI5MElFTkJNUm93R0FZRFZRUUtEQkZKYm5SbGJDQkRiM0p3YjNKaApkR2x2YmpFVU1CSUdBMVVFQnd3TFUyRnVkR0VnUTJ4aGNtRXhDekFKQmdOVkJBZ01Ba05CTVFzd0NRWURWUVFHCkV3SlZVekJaTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEEwSUFCRS82RC8xV0hOcld3UG1OTUl5QktNVzUKSjZKek1zam82eFAydmtLMWNkWkdiMVBHUlAvQy84RUNnaURrbWtsbXp3THpMaSswMDBtN0xMcnRLSkEzb0MyagpnYjh3Z2J3d0h3WURWUjBqQkJnd0ZvQVU2ZWhFVWxNMlhFc1ltaEg4UXhnc3Bkd2dnRWd3VmdZRFZSMGZCRTh3ClRUQkxvRW1nUjRaRmFIUjBjSE02THk5elluZ3RZMlZ5ZEdsbWFXTmhkR1Z6TG5SeWRYTjBaV1J6WlhKMmFXTmwKY3k1cGJuUmxiQzVqYjIwdlNXNTBaV3hUUjFoU2IyOTBRMEV1WkdWeU1CMEdBMVVkRGdRV0JCVHA2RVJTVXpaYwpTeGlhRWZ4REdDeWwzQ0NBU0RBT0JnTlZIUThCQWY4RUJBTUNBUVl3RWdZRFZSMFRBUUgvQkFnd0JnRUIvd0lCCkFUQUtCZ2dxaGtqT1BRUURBZ05KQURCR0FpRUF6dzl6ZFVpVUhQTVVkMEM0bXg0MWpsRlprck0zeTVmMWxnblYKTzdGYmpPb0NJUUNvR3RVbVQ0Y1h0N1YreVNIYko4SG9iOUFhbnB2WE5IMUVSKy9nWkYrb3BRPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=\",\n    \"userData\": \"\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -661,7 +641,7 @@
 									}
 								},
 								"url": {
-									"raw": "https://{{sqvs}}:{{sqvsPort}}/svs/v1/verifyQuote",
+									"raw": "https://{{sqvs}}:{{sqvsPort}}/svs/v1/sgx_qv_verify_quote",
 									"protocol": "https",
 									"host": [
 										"{{sqvs}}"
@@ -670,7 +650,7 @@
 									"path": [
 										"svs",
 										"v1",
-										"verifyQuote"
+										"sgx_qv_verify_quote"
 									]
 								}
 							},
@@ -684,25 +664,24 @@
 								},
 								{
 									"key": "Date",
-									"value": "Wed, 09 Sep 2020 18:00:59 GMT"
+									"value": "Fri, 12 Feb 2021 18:09:23 GMT"
 								},
 								{
 									"key": "Content-Length",
-									"value": "1037"
+									"value": "591"
 								}
 							],
 							"cookie": [],
-							"body": "{\n    \"Status\": \"Success\",\n    \"Message\": \"SGX ECDSA Quote Verification Successful\",\n    \"ChallengeKeyType\": \"RSA\",\n    \"ChallengeRsaPublicKey\": \"-----BEGIN PUBLIC KEY-----\\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtlLCWbh0Nd/KPbPVXlbR\\nY47bTv4gHzZZTvDwjSU7iS61+sDSpS106UYnzPIyBtmxVlUV/h6L7F0EEXn4YhHw\\n1/B1zZTlE0HvTCb1H7LYGaEbmVcnKMr6Y92f+q+gyomazAOJ9YQefK7uyciYuIIb\\nW9Kz6yGGJr9T5S7/zNqk8iC20NYXirD8xo2MQvviUSLhwYN4dBhroou/0cB3k/4d\\nhi8FkCFQpBCQlECnFl6238xUfeskByc7xWZhvj67N4M3yvObFxUp5Sv61yHxfB6I\\n50OXbqsYHPJRc2eqEJWUkOJEKbVqPid5f+kZpwwDmDs8cS95CpgQShFJG+rbL0cX\\nwwIDAQAB\\n-----END PUBLIC KEY-----\\n\",\n    \"EnclaveIssuer\": \"cd171c56941c6ce49690b455f691d9c8a04c2e43e0a4d30f752fa5285c7ee57f\",\n    \"EnclaveIssuerProdID\": \"00\",\n    \"EnclaveIssuerExtProdID\": \"00000000000000000000000000000000\",\n    \"EnclaveMeasurement\": \"01c60b9617b2f96e53cb75ef01e0dccea3afc7b7992697eabb8f714b2ccd1953\",\n    \"ConfigSvn\": \"00\",\n    \"IsvSvn\": \"01\",\n    \"ConfigId\": \"00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\n    \"TcbLevel\": \"UpToDate\"\n}"
+							"body": "{\n    \"Message\": \"SGX_QL_QV_RESULT_OK\",\n    \"reportData\": \"53f62c0202969dba9441905e938e3bcdfbbf6163f71446da056f437eb504320f\",\n    \"userDataMatch\": \"false\",\n    \"EnclaveIssuer\": \"cd171c56941c6ce49690b455f691d9c8a04c2e43e0a4d30f752fa5285c7ee57f\",\n    \"EnclaveMeasurement\": \"3ef4f13e42318aa5063fd740de52930488bbff8623361c686c381c44caa8793d\",\n    \"EnclaveIssuerProdID\": \"00\",\n    \"EnclaveIssuerExtProdID\": \"00000000000000000000000000000000\",\n    \"ConfigSvn\": \"00\",\n    \"IsvSvn\": \"01\",\n    \"ConfigId\": \"00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\n    \"TcbLevel\": \"OutOfDate\"\n}"
 						}
 					]
 				}
 			],
-			"description": "1. Nginx will initiate a Key Transfer with the new Key id by calling Key Broker Service (KBS) REST endpoint (GET /v1/keys/:keyId/dhsm2-transfer) and will get a 401 HTTP response from KBS since the session is not established. \n2. Nginx will create a new session key by calling the KBS REST endpoint (POST /v1/session).\n3. SKC Client will send the SGX Quote to KBS, then KBS will verify the quote by calling SGX Quote Verification Service(SQVS) REST endpoint (POST /v1/verifyQuote).\n4. SQVS checks whether the quote signature and PCK Certificate are valid checks other parameters in the quote and returns the verification result. SQVS contacts SGX Caching service (SCS) to make sure that PCKCRL, TCBInfo, and QEIdentity in the quote are correct. \n5. Once the session is successfully established, Again Nginx will initiate a Key Transfer with the key id by calling KBS REST endpoint (GET /v1/keys/:keyId/dhsm2-transfer) and will get the response as key transfer successful.\n \nRemove the tokens if already present.\n\n```\nrm -rf /opt/intel/cryptoapitoolkit/tokens/*\n```\n\nTo restart the Nginx, use the below commands.\n\n```\npkill nginx\n```\n\n```\nnginx \n```\n\n```\nwget -k -v https://localhost:2443 --no-check-certificate\n```",
+			"description": "1. Nginx will initiate a Key Transfer with the new Key id by calling Key Broker Service (KBS) REST endpoint (GET /v1/keys/:keyId/dhsm2-transfer) and will get a 401 HTTP response from KBS since the session is not established. \n2. Nginx will create a new session key by calling the KBS REST endpoint (POST /v1/session).\n3. SKC Client will send the SGX Quote to KBS, then KBS will verify the quote by calling SGX Quote Verification Service(SQVS) REST endpoint (POST /v1/sgx_qv_verify_quote).\n4. SQVS checks whether the quote signature and PCK Certificate are valid checks other parameters in the quote and returns the verification result. SQVS contacts SGX Caching service (SCS) to make sure that PCKCRL, TCBInfo, and QEIdentity in the quote are correct. \n5. Once the session is successfully established, Again Nginx will initiate a Key Transfer with the key id by calling KBS REST endpoint (GET /v1/keys/:keyId/dhsm2-transfer) and will get the response as key transfer successful.\n\nOn SGX Compute node, Execute below commands for KBS key-transfer:\n\n```\npkill nginx\n```\n \nRemove any existing pkcs11 token.\n\n```\nrm -rf /opt/intel/cryptoapitoolkit/tokens/*\n```\n\nInitiate Key transfer from KBS.\n\n```\nsystemctl restart nginx\n```\n\nChanging group ownership and permissions of pkcs11 token\n\n```\nchown -R root:intel /opt/intel/cryptoapitoolkit/tokens/ \n```\n```\nchmod -R 770 /opt/intel/cryptoapitoolkit/tokens/\n```\n\nEstablish a tls session with the nginx using the key transferred inside the enclave.\n\n```\nwget -k -v https://localhost:2443 --no-check-certificate\n```",
 			"event": [
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "55729007-3d6f-4456-a902-28f64e5d01e5",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -712,22 +691,19 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "f2edb4b9-6cbe-4f37-af33-696318fdfa62",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		}
 	],
 	"event": [
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "bcf8e201-6dc9-4a34-abad-9c62d8532d34",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -737,13 +713,11 @@
 		{
 			"listen": "test",
 			"script": {
-				"id": "2ef446a4-a551-4198-abc0-c1b0f86c3831",
 				"type": "text/javascript",
 				"exec": [
 					""
 				]
 			}
 		}
-	],
-	"protocolProfileBehavior": {}
+	]
 }
