@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "df7d3e03-ea1d-4b77-8e04-f9aecc34c25e",
+		"_postman_id": "b3213df1-e6f3-47cb-8e88-cfb1481ac587",
 		"name": "SGX Discovery, Provisioning and Orchestration",
 		"description": "For the secrets to be provisioned securely to SGX compute node on public cloud, the owner of the secret would like to ensure that the node is secure and trustworthy.\r\n\r\nSGX attestation infrastructure involves providing Platform Certification Key (PCK) certificates as part of the attestation report. To fetch the PCK certificates for a platform, platform needs to provide the platform SGX values to the Intel PCS server hosted on the internet. In addition, PCS server also provides other platform collaterals like PCK CRL, TCB Information, QE Identity Information for a platform.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -857,7 +857,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"host_name\": \"{{sagent}}\",\n    \"description\": \"Demo\",\n    \"uuid\": \"{{hostHardwareUuid}}\",\n    \"sgx_supported\": {{sgxSupported}},\n    \"sgx_enabled\": {{sgxEnabled}},\n    \"flc_enabled\": {{flcEnabled}},\n    \"epc_offset\": \"{{epcOffset}}\",\n    \"epc_size\": \"{{epcSize}}\",\n    \"tcb_upToDate\": {{tcbStatus}}\n}"
+							"raw": "{\n    \"host_name\": \"{{agentHostName}}\",\n    \"description\": \"Demo\",\n    \"uuid\": \"{{hostHardwareUuid}}\",\n    \"sgx_supported\": {{sgxSupported}},\n    \"sgx_enabled\": {{sgxEnabled}},\n    \"flc_enabled\": {{flcEnabled}},\n    \"epc_offset\": \"{{epcOffset}}\",\n    \"epc_size\": \"{{epcSize}}\",\n    \"tcb_upToDate\": {{tcbStatus}}\n}"
 						},
 						"url": {
 							"raw": "https://{{shvs}}:{{shvsPort}}/sgx-hvs/v2/hosts",
@@ -900,7 +900,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"host_name\": \"{{sagent}}\",\n    \"description\": \"Demo\",\n    \"uuid\": \"{{hostHardwareUuid}}\",\n    \"sgx_supported\": {{sgxSupported}},\n    \"sgx_enabled\": {{sgxEnabled}},\n    \"flc_enabled\": {{flcEnabled}},\n    \"epc_offset\": \"{{epcOffset}}\",\n    \"epc_size\": \"{{epcSize}}\",\n    \"tcb_upToDate\": {{tcbStatus}}\n}",
+									"raw": "{\n    \"host_name\": \"{{agentHostName}}\",\n    \"description\": \"Demo\",\n    \"uuid\": \"{{hostHardwareUuid}}\",\n    \"sgx_supported\": {{sgxSupported}},\n    \"sgx_enabled\": {{sgxEnabled}},\n    \"flc_enabled\": {{flcEnabled}},\n    \"epc_offset\": \"{{epcOffset}}\",\n    \"epc_size\": \"{{epcSize}}\",\n    \"tcb_upToDate\": {{tcbStatus}}\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -1086,7 +1086,7 @@
 									}
 								],
 								"url": {
-									"raw": "https://{{shvs}}:{{shvsPort}}/sgx-hvs/v2/platform-data?HostName={{sagent}}",
+									"raw": "https://{{shvs}}:{{shvsPort}}/sgx-hvs/v2/platform-data?HostName={{agentHostName}}",
 									"protocol": "https",
 									"host": [
 										"{{shvs}}"
@@ -1099,15 +1099,14 @@
 									],
 									"query": [
 										{
-											"key": "HostName",
-											"value": "{{sagent}}",
-											"description": "Name of the host."
-										},
-										{
 											"key": "numberOfMinutes",
 											"value": "<string>",
 											"description": "Results returned will be restricted to between the current time and number of minutes prior.",
 											"disabled": true
+										},
+										{
+											"key": "HostName",
+											"value": "{{agentHostName}}"
 										}
 									]
 								}
