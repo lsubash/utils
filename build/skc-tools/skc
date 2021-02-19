@@ -1,5 +1,4 @@
 TARGETS = sgx-caching-service sgx-verification-service sgx-hvs k8s-extensions
-TARGETS_UBUNTU = sgx-caching-service sgx-verification-service sgx-hvs
 COMMON_TARGETS = authservice cms ihub kbs
 
 all: clean $(COMMON_TARGETS) $(TARGETS) sgx_agent skc_library
@@ -28,31 +27,6 @@ all: clean $(COMMON_TARGETS) $(TARGETS) sgx_agent skc_library
 	cp -pf utils/build/skc-tools/skc_scripts/*.conf binaries/
 	cp -rpf utils/build/skc-tools/kbs_script/ binaries/
 
-ubuntu: clean $(COMMON_TARGETS) $(TARGETS_UBUNTU) sgx_agent skc_library
-	mkdir -p binaries/env
-	cp sgx-caching-service/out/*.bin binaries/
-	cp sgx-caching-service/dist/linux/scs.env binaries/env
-	cp sgx-caching-service/dist/linux/install_pgscsdb.sh binaries/
-	cp sgx-verification-service/out/*.bin binaries/
-	cp sgx-verification-service/dist/linux/sqvs.env binaries/env
-	cp sgx-verification-service/dist/linux/trusted_rootca.pem binaries/
-	cp sgx-hvs/out/*.bin binaries/
-	cp sgx-hvs/dist/linux/shvs.env binaries/env
-	cp sgx-hvs/dist/linux/install_pgshvsdb.sh binaries/
-	cp intel-secl/deployments/installer/*.bin binaries/
-	cp intel-secl/deployments/installer/*.sh binaries/
-	cp intel-secl/tools/aas-manager/populate-users.env binaries/env
-	cp utils/build/skc-tools/sgx_agent/build_scripts/sgx_agent.* binaries/
-	cp utils/build/skc-tools/sgx_agent/agent_untar.sh binaries/
-	cp utils/build/skc-tools/skc_library/build_scripts/skc_library.* binaries/
-	cp utils/build/skc-tools/skc_library/skclib_untar.sh binaries/
-	cp utils/build/skc-tools/skc_scripts/aas-util_user-role.sh binaries/
-	cp -pf utils/build/skc-tools/skc_scripts/env/*.env binaries/env
-	cp -pf utils/build/skc-tools/skc_scripts/env/install_pg.sh binaries/
-	cp -pf utils/build/skc-tools/skc_scripts/install_*.sh binaries/
-	cp -pf utils/build/skc-tools/skc_scripts/*.conf binaries/
-	cp -rpf utils/build/skc-tools/kbs_script/ binaries/
-
 clean: $(patsubst %, %-clean, $(TARGETS))
 	rm -rf binaries/
 
@@ -65,9 +39,6 @@ skc_library:
 $(TARGETS):
 	cd $@ && make installer
 
-$(TARGETS_UBUNTU):
-	cd $@ && make installer
-
 $(COMMON_TARGETS):
 	cd intel-secl && make $@-installer && make aas-manager
 
@@ -75,4 +46,4 @@ $(COMMON_TARGETS):
 	cd $* && make clean
 	cd intel-secl && make clean
 
-.PHONY: all ubuntu clean sgx_agent skc_library $(TARGETS) $(TARGETS_UBUNTU) $(COMMON_TARGETS)
+.PHONY: all clean sgx_agent skc_library $(TARGETS) $(COMMON_TARGETS)
