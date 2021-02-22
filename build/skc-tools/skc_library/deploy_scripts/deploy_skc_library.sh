@@ -89,6 +89,7 @@ run_post_deployment_script()
 		echo "failed to create skc_library user/roles"
 		exit 1
 	fi
+	echo "skc library deployment succesful"
 }
 
 install_prerequisites
