@@ -1,4 +1,7 @@
 #!/bin/bash
+HOME_DIR=~/
+SKC_BINARY_DIR=$HOME_DIR/binaries
+KBS_HOSTNAME=$("hostname")
 
 # Check OS and VERSION
 OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
@@ -8,10 +11,14 @@ OS="$temp"
 VER=$(cat /etc/os-release | grep ^VERSION_ID | tr -d 'VERSION_ID="')
 OS_FLAVOUR="$OS""$VER"
 
-HOME_DIR=~/
-SKC_BINARY_DIR=$HOME_DIR/binaries
-
-KBS_HOSTNAME=$("hostname")
+if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
+        dnf install -y jq
+elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
+        apt install -y jq curl
+else
+        echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04"
+        exit 1
+fi
 
 # Copy env files to Home directory
 \cp -pf $SKC_BINARY_DIR/env/cms.env $HOME_DIR
@@ -34,19 +41,6 @@ if [ -f ./enterprise_skc.conf ]; then
     source enterprise_skc.conf
     env_file_exports=$(cat ./enterprise_skc.conf | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
     if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
-fi
-
-############## Install pre-req
-which jq &> /dev/null 
-if [ $? -ne 0 ]; then
-if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
-    dnf install -y jq
-elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
-    apt install -y jq curl
-else
-    echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04"
-    exit 1
-fi
 fi
 
 echo "################ Uninstalling CMS....  #################"
@@ -72,6 +66,8 @@ function is_database() {
     psql -U $2 -lqt | cut -d \| -f 1 | grep -wq $1
 }
 
+pushd $PWD
+cd ~
 if is_database $AAS_DB_NAME $AAS_DB_USERNAME $AAS_DB_PASSWORD
 then 
    echo $AAS_DB_NAME database exists
@@ -80,8 +76,6 @@ else
    sed -i "s@^\(ISECL_PGDB_DBNAME\s*=\s*\).*\$@\1$AAS_DB_NAME@" ~/iseclpgdb.env
    sed -i "s@^\(ISECL_PGDB_USERNAME\s*=\s*\).*\$@\1$AAS_DB_USERNAME@" ~/iseclpgdb.env
    sed -i "s@^\(ISECL_PGDB_USERPASSWORD\s*=\s*\).*\$@\1$AAS_DB_PASSWORD@" ~/iseclpgdb.env
-   pushd $PWD
-   cd ~
    bash install_pg.sh
 fi
 
@@ -98,15 +92,14 @@ fi
 
 popd
 
-pushd $PWD
-cd $SKC_BINARY_DIR
 echo "################ Installing CMS....  #################"
 AAS_URL=https://$SYSTEM_IP:8444/aas
 sed -i "s/^\(AAS_TLS_SAN\s*=\s*\).*\$/\1$SYSTEM_IP/" ~/cms.env
 sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/cms.env
 sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_IP/" ~/cms.env
 
-./cms-*.bin || exit 1
+./cms-*.bin
+cms status > /dev/null
 if [ $? -ne 0 ]; then
   echo "############ CMS Installation Failed"
   exit 1
@@ -131,7 +124,8 @@ sed -i "s/^\(AAS_DB_NAME\s*=\s*\).*\$/\1$AAS_DB_NAME/"  ~/authservice.env
 sed -i "s/^\(AAS_DB_USERNAME\s*=\s*\).*\$/\1$AAS_DB_USERNAME/"  ~/authservice.env
 sed -i "s/^\(AAS_DB_PASSWORD\s*=\s*\).*\$/\1$AAS_DB_PASSWORD/"  ~/authservice.env
 
-./authservice-*.bin || exit 1
+./authservice-*.bin
+authservice status > /dev/null
 if [ $? -ne 0 ]; then
   echo "############ AuthService Installation Failed"
   exit 1
@@ -176,12 +170,14 @@ sed -i '$ a INSTALL_ADMIN_USERNAME=superadmin' ~/populate-users.env
 sed -i '$ a INSTALL_ADMIN_PASSWORD=superAdminPass' ~/populate-users.env
 
 echo "################ Call populate users script....  #################"
+pushd $PWD
 cd ~
 ./populate-users.sh || exit 1
 if [ $? -ne 0 ]; then
   echo "############ Failed to run populate user script  ####################3"
   exit 1
 fi
+popd
 
 echo "################ Install Admin user token....  #################"
 INSTALL_ADMIN_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/token -d '{"username": "superadmin", "password": "superAdminPass" }'`
@@ -190,9 +186,6 @@ if [ $? -ne 0 ]; then
   echo "############ Could not get token for Install Admin User ####################"
   exit 1
 fi
-
-pushd $PWD
-cd $SKC_BINARY_DIR
 
 echo "################ Update SCS env....  #################"
 sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_IP/"  ~/scs.env
@@ -207,7 +200,8 @@ sed -i "s/^\(SCS_DB_USERNAME\s*=\s*\).*\$/\1$SCS_DB_USERNAME/"  ~/scs.env
 sed -i "s/^\(SCS_DB_PASSWORD\s*=\s*\).*\$/\1$SCS_DB_PASSWORD/"  ~/scs.env
 
 echo "################ Installing SCS....  #################"
-./scs-*.bin || exit 1
+./scs-*.bin
+scs status > /dev/null
 if [ $? -ne 0 ]; then
   echo "############ SCS Installation Failed"
   exit 1
@@ -224,7 +218,8 @@ SCS_URL=https://$SYSTEM_IP:9000/scs/sgx/certification/v1
 sed -i "s@^\(SCS_BASE_URL\s*=\s*\).*\$@\1$SCS_URL@" ~/sqvs.env
 
 echo "################ Installing SQVS....  #################"
-./sqvs-*.bin || exit 1
+./sqvs-*.bin
+sqvs status > /dev/null
 if [ $? -ne 0 ]; then
   echo "############ SQVS Installation Failed"
   exit 1
@@ -232,7 +227,7 @@ fi
 echo "################ Installed SQVS....  #################"
 
 echo "################ Update KBS env....  #################"
-sed -i "s/^\(TLS_SAN_LIST\s*=\s*\).*\$/\1$KBS_DOMAIN/" ~/kbs.env
+sed -i "s/^\(TLS_SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_IP,$KBS_DOMAIN/" ~/kbs.env
 sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$INSTALL_ADMIN_TOKEN/" ~/kbs.env
 sed -i "s/^\(CMS_TLS_CERT_SHA384\s*=\s*\).*\$/\1$CMS_TLS_SHA/" ~/kbs.env
 sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/kbs.env
@@ -242,10 +237,10 @@ sed -i "s@^\(SQVS_URL\s*=\s*\).*\$@\1$SQVS_URL@" ~/kbs.env
 ENDPOINT_URL=https://$SYSTEM_IP:9443/v1
 sed -i "s@^\(ENDPOINT_URL\s*=\s*\).*\$@\1$ENDPOINT_URL@" ~/kbs.env
 echo "################ Installing KBS....  #################"
-./kbs-*.bin || exit 1
+./kbs-*.bin
+kbs status > /dev/null
 if [ $? -ne 0 ]; then
   echo "############ KBS Installation Failed"
   exit 1
 fi
 echo "################ Installed KBS....  #################"
-popd

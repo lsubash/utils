@@ -31,7 +31,7 @@ if [ -f ./csp_skc.conf ]; then
     echo "Reading Installation variables from $(pwd)/csp_skc.conf"
     source csp_skc.conf
     if [[ "$SCS_DB_NAME" == "$SHVS_DB_NAME" || "$AAS_DB_NAME" == "$SHVS_DB_NAME" || "$SCS_DB_NAME" == "$AAS_DB_NAME" ]]; then
-        echo "value of SCS_DB_NAME & SHVS_DB_NAME & AAS_DB_NAME should not be same Please change in csp_skc.conf"
+        echo "SCS_DB_NAME, SHVS_DB_NAME & AAS_DB_NAME should not be same. Please change in csp_skc.conf"
         exit 1
     fi
     env_file_exports=$(cat ./csp_skc.conf | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
@@ -72,6 +72,8 @@ function is_database() {
     psql -U $2 -lqt | cut -d \| -f 1 | grep -wq $1
 }
 
+pushd $PWD
+cd ~
 if is_database $AAS_DB_NAME $AAS_DB_USERNAME $AAS_DB_PASSWORD
 then 
    echo $AAS_DB_NAME database exists
@@ -80,8 +82,6 @@ else
    sed -i "s@^\(ISECL_PGDB_DBNAME\s*=\s*\).*\$@\1$AAS_DB_NAME@" ~/iseclpgdb.env
    sed -i "s@^\(ISECL_PGDB_USERNAME\s*=\s*\).*\$@\1$AAS_DB_USERNAME@" ~/iseclpgdb.env
    sed -i "s@^\(ISECL_PGDB_USERPASSWORD\s*=\s*\).*\$@\1$AAS_DB_PASSWORD@" ~/iseclpgdb.env
-   pushd $PWD
-   cd ~
    bash install_pg.sh
 fi
 
@@ -109,8 +109,6 @@ fi
 
 popd
 
-pushd $PWD
-cd $SKC_BINARY_DIR
 echo "################ Installing CMS....  #################"
 AAS_URL=https://$SYSTEM_IP:8444/aas
 sed -i "s/^\(AAS_TLS_SAN\s*=\s*\).*\$/\1$SYSTEM_IP/" ~/cms.env
@@ -118,6 +116,7 @@ sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/cms.env
 sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_IP/" ~/cms.env
 
 ./cms-*.bin || exit 1
+cms status > /dev/null
 if [ $? -ne 0 ]; then
   echo "############ CMS Installation Failed"
   exit 1
@@ -143,6 +142,7 @@ sed -i "s/^\(AAS_DB_USERNAME\s*=\s*\).*\$/\1$AAS_DB_USERNAME/"  ~/authservice.en
 sed -i "s/^\(AAS_DB_PASSWORD\s*=\s*\).*\$/\1$AAS_DB_PASSWORD/"  ~/authservice.env
 
 ./authservice-*.bin || exit 1
+authservice status > /dev/null
 if [ $? -ne 0 ]; then
   echo "############ AuthService Installation Failed"
   exit 1
@@ -189,12 +189,14 @@ sed -i '$ a INSTALL_ADMIN_USERNAME=superadmin' ~/populate-users.env
 sed -i '$ a INSTALL_ADMIN_PASSWORD=superAdminPass' ~/populate-users.env
 
 echo "################ Call populate users script....  #################"
+pushd $PWD
 cd ~
 ./populate-users.sh || exit 1
 if [ $? -ne 0 ]; then
   echo "############ Failed to run populate user script  ####################3"
   exit 1
 fi
+popd
 
 echo "################ Install Admin user token....  #################"
 INSTALL_ADMIN_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/token -d '{"username": "superadmin", "password": "superAdminPass" }'`
@@ -204,8 +206,6 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-pushd $PWD
-cd $SKC_BINARY_DIR
 echo "################ Update SCS env....  #################"
 sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_IP/"  ~/scs.env
 sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$INSTALL_ADMIN_TOKEN/"  ~/scs.env
@@ -220,6 +220,7 @@ sed -i "s/^\(SCS_DB_PASSWORD\s*=\s*\).*\$/\1$SCS_DB_PASSWORD/"  ~/scs.env
 
 echo "################ Installing SCS....  #################"
 ./scs-*.bin || exit 1
+scs status > /dev/null
 if [ $? -ne 0 ]; then
   echo "############ SCS Installation Failed"
   exit 1
@@ -240,6 +241,7 @@ sed -i "s/^\(SHVS_DB_PASSWORD\s*=\s*\).*\$/\1$SHVS_DB_PASSWORD/"  ~/shvs.env
 
 echo "################ Installing SHVS....  #################"
 ./shvs-*.bin || exit 1
+shvs status > /dev/null
 if [ $? -ne 0 ]; then
   echo "############ SHVS Installation Failed"
   exit 1
@@ -266,10 +268,9 @@ sed -i "s@^\(TENANT\s*=\s*\).*\$@\1$TENANT@" ~/ihub.env
 
 echo "################ Installing IHUB....  #################"
 ./ihub-*.bin || exit 1
+ihub status > /dev/null
 if [ $? -ne 0 ]; then
   echo "############ IHUB Installation Failed"
   exit 1
 fi
 echo "################ Installed IHUB....  #################"
-
-popd

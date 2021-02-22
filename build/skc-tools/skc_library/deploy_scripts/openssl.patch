@@ -36,6 +36,7 @@
 +dynamic_path =/usr/lib64/engines-1.1/pkcs11.so
 +MODULE_PATH =/opt/skc//lib/libpkcs11-api.so
 +init = 0
+
  system_default = crypto_policy
  
  [ crypto_policy ]

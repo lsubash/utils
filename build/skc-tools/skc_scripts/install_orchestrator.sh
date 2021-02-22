@@ -42,15 +42,20 @@ fi
 echo "################ Uninstalling SHVS....  #################"
 shvs uninstall --purge
 echo "################ Remove SHVS DB....  #################"
+pushd $PWD
+cd /usr/local/pgsql
 sudo -u postgres dropdb $SHVS_DB_NAME
 echo "################ Uninstalling IHUB....  #################"
 ihub uninstall --purge
+popd
 
 function is_database() {
     export PGPASSWORD=$3
     psql -U $2 -lqt | cut -d \| -f 1 | grep -wq $1
 }
 
+pushd $PWD
+cd ~
 if is_database $SHVS_DB_NAME $SHVS_DB_USERNAME $SHVS_DB_PASSWORD
 then
    echo $SHVS_DB_NAME database exists
@@ -64,7 +69,7 @@ fi
 
 popd
 
-cho "################ Update Populate users env ....  #################"
+echo "################ Update Populate users env ....  #################"
 ISECL_INSTALL_COMPONENTS=SHVS,SIH
 sed -i "s@^\(ISECL_INSTALL_COMPONENTS\s*=\s*\).*\$@\1$ISECL_INSTALL_COMPONENTS@" ~/populate-users.env
 sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/populate-users.env
@@ -94,6 +99,7 @@ sed -i '$ a INSTALL_ADMIN_USERNAME=superadmin' ~/populate-users.env
 sed -i '$ a INSTALL_ADMIN_PASSWORD=superAdminPass' ~/populate-users.env
 
 echo "################ Call populate users script....  #################"
+pushd $PWD
 cd ~
 ./populate-users.sh || exit 1
 if [ $? -ne 0 ]; then
@@ -109,8 +115,7 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-pushd $PWD
-cd $SKC_BINARY_DIR
+popd
 
 echo "################ Update SHVS env....  #################"
 sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_IP/" ~/shvs.env
@@ -125,7 +130,8 @@ sed -i "s/^\(SHVS_DB_USERNAME\s*=\s*\).*\$/\1$SHVS_DB_USERNAME/"  ~/shvs.env
 sed -i "s/^\(SHVS_DB_PASSWORD\s*=\s*\).*\$/\1$SHVS_DB_PASSWORD/"  ~/shvs.env
 
 echo "################ Installing SHVS....  #################"
-./shvs-*.bin || exit 1
+./shvs-*.bin
+shvs status > /dev/null
 if [ $? -ne 0 ]; then
   echo "############ SHVS Installation Failed"
   exit 1
@@ -151,10 +157,10 @@ fi
 sed -i "s@^\(TENANT\s*=\s*\).*\$@\1$TENANT@" ~/ihub.env
 
 echo "################ Installing IHUB....  #################"
-./ihub-*.bin || exit 1
+./ihub-*.bin
+ihub status > /dev/null
 if [ $? -ne 0 ]; then
   echo "############ IHUB Installation Failed"
   exit 1
 fi
 echo "################ Installed IHUB....  #################"
-popd

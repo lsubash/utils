@@ -28,13 +28,13 @@ How to Deploy
 # ./skclib_untar.sh
 
 # cd  skc_library
-- Update the IP Address for CMS/AAS/KBS in skc_library.conf. Default values for Ports are pre-filled
+- Update the IP Address for CSP/Enterprise VM and Enterprise VM hostname in skc_library.conf
 
 - To deploy SKC Library on a SGX Enabled Server,
 # ./deploy_skc_library.sh
 
 To test Secure key transfer of a key from KBS to the nginx, please follow the below mentioned steps.
-1. On the KBS VM:
+1. On the enterprise VM:
 	edit skc-tools/kbs_scripts/run.sh, change the KMS_IP and AAS_IP with the ip address where these services are running, save and close
 2. ./run.sh reg
 3. copy the crt file generated to the SGX server /root/ directory where skc_library is deployed
@@ -58,9 +58,10 @@ Contents of the Deployment Tar file
 
 Repo Contents
 =============
-deploy_skc_library.sh		Main script for Deploying SKC Library on SGX enabled server
+deploy_skc_library.sh		Main script for Deploying SKC Library on SGX enabled Server
+deploy_sgx_dependencies.sh	Installs SGX DCAP Driver, PSW and QGL library on SGX Server
 deployment_prerequisites.sh	Install RHEL 8 packages dependencies required for SKC Library Deployment
 skc_library_create_roles.sh	Script to create SKC Library user and roles with AAS and fetching TLS Client Cert from CMS
-skc_library.conf		Pre-filled config file with CMS/AAS/KBS IP Address and port numbers
+skc_library.conf		Config file to provide Enterprise/CSP IP address and skc_library user credentials
 openssl.patch 			openssl.cnf patch file to add pkcs11 engine support to openssl
 nginx.patch 			nginx.conf patch file to add HTTPS PKCS11 block
