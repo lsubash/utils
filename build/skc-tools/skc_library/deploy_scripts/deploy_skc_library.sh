@@ -45,7 +45,7 @@ install_psw_qgl()
 	if [ "$OS" == "rhel" ]; then
 		tar -xf $SKCLIB_BIN/sgx_rpm_local_repo.tgz
 		yum-config-manager --add-repo file://$PWD/sgx_rpm_local_repo || exit 1
-		dnf install -y --nogpgcheck libsgx-launch libsgx-uae-service libsgx-urts libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-ql-devel libsgx-dcap-default-qpl-devel libsgx-dcap-default-qpl || exit 1
+		dnf install -qy --nogpgcheck libsgx-launch libsgx-uae-service libsgx-urts libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-ql-devel libsgx-dcap-default-qpl-devel libsgx-dcap-default-qpl || exit 1
 		rm -rf sgx_rpm_local_repo /etc/yum.repos.d/*sgx_rpm_local_repo.repo
 	elif [ "$OS" == "ubuntu" ]; then
 		echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu/ bionic main' | sudo tee /etc/apt/sources.list.d/intel-sgx.list
@@ -54,6 +54,7 @@ install_psw_qgl()
 		apt install -y libsgx-launch libsgx-uae-service libsgx-urts || exit 1
 		apt install -y libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-ql-dev libsgx-dcap-default-qpl-dev libsgx-dcap-default-qpl || exit 1
 	fi
+	echo "sgx psw and qgl libraries installed"
 	sed -i "s|PCCS_URL=.*|PCCS_URL=https://$CSP_IP:9000/scs/sgx/certification/v1/|g" /etc/sgx_default_qcnl.conf
 	sed -i "s|USE_SECURE_CERT=.*|USE_SECURE_CERT=FALSE|g" /etc/sgx_default_qcnl.conf
 	
@@ -66,11 +67,13 @@ install_psw_qgl()
 install_sgxssl()
 {
         \cp -prf sgxssl $SGX_INSTALL_DIR
+	echo "sgxssl installed"
 }
 
 install_cryptoapitoolkit()
 {
 	\cp -prf cryptoapitoolkit $SGX_INSTALL_DIR
+	echo "crypto api toolkit installed"
 }
 
 install_skc_library_bin()
@@ -80,6 +83,7 @@ install_skc_library_bin()
 		echo "skc_library installation failed"
 		exit 1
 	fi
+	echo "skc_library modules installed"
 }
 
 run_post_deployment_script()
@@ -89,7 +93,7 @@ run_post_deployment_script()
 		echo "failed to create skc_library user/roles"
 		exit 1
 	fi
-	echo "skc library deployment succesful"
+	echo "skc_library deployment successful"
 }
 
 install_prerequisites

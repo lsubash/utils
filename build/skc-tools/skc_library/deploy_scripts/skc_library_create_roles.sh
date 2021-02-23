@@ -42,7 +42,7 @@ fi
 
 update_credential_ini()
 {
-	sed -i "s|server=.*|server=https:\/\/$KBS_HOSTNAME:$9443|g" $KMS_NPM_PATH
+	sed -i "s|server=.*|server=https:\/\/$KBS_HOSTNAME:9443|g" $KMS_NPM_PATH
 	sed -i "s|request_params=.*|request_params=\"\/CN=$SKC_USER\"|g" $CREDENTIAL_PATH
 	sed -i "s|server=.*|server=$ENTERPRISE_IP|g" $CREDENTIAL_PATH
 	sed -i "s|port=.*|port=8445|g" $CREDENTIAL_PATH

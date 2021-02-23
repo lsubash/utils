@@ -37,7 +37,7 @@ install_psw_qgl()
 {
 	tar -xf $SKCLIB_BIN/sgx_rpm_local_repo.tgz
 	yum-config-manager --add-repo file://$PWD/sgx_rpm_local_repo || exit 1
-	dnf install -y --nogpgcheck libsgx-launch libsgx-uae-service libsgx-urts libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-ql-devel libsgx-dcap-default-qpl-devel libsgx-dcap-default-qpl || exit 1
+	dnf install -qy --nogpgcheck libsgx-launch libsgx-uae-service libsgx-urts libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-ql-devel libsgx-dcap-default-qpl-devel libsgx-dcap-default-qpl || exit 1
 	rm -rf sgx_rpm_local_repo /etc/yum.repos.d/*sgx_rpm_local_repo.repo
 
 	sed -i "s|PCCS_URL=.*|PCCS_URL=https://$CSP_IP:9000/scs/sgx/certification/v1/|g" /etc/sgx_default_qcnl.conf

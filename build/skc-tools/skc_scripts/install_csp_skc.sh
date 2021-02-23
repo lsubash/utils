@@ -39,7 +39,7 @@ if [ -f ./csp_skc.conf ]; then
 fi
 
 if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
-    dnf install -y jq
+    dnf install -qy jq
 elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
     apt install -y jq curl
 else
