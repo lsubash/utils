@@ -40,9 +40,9 @@ install_psw_qgl()
 	dnf install -qy --nogpgcheck libsgx-launch libsgx-uae-service libsgx-urts libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-ql-devel libsgx-dcap-default-qpl-devel libsgx-dcap-default-qpl || exit 1
 	rm -rf sgx_rpm_local_repo /etc/yum.repos.d/*sgx_rpm_local_repo.repo
 
-	sed -i "s|PCCS_URL=.*|PCCS_URL=https://$CSP_IP:9000/scs/sgx/certification/v1/|g" /etc/sgx_default_qcnl.conf
+	sed -i "s|PCCS_URL=.*|PCCS_URL=https://$SCS_IP:9000/scs/sgx/certification/v1/|g" /etc/sgx_default_qcnl.conf
 	#Update SCS root CA Certificate in SGX Compute node certificate store in order for  QPL to verify SCS
-	curl -k -H 'Accept:application/x-pem-file' https://$CSP_IP:8445/cms/v1/ca-certificates > /etc/pki/ca-trust/source/anchors/skc-lib-cms-ca.cert
+	curl -k -H 'Accept:application/x-pem-file' https://$CSP_CMS_IP:8445/cms/v1/ca-certificates > /etc/pki/ca-trust/source/anchors/skc-lib-cms-ca.cert
 	# 'update-ca-trust' command is specific to RHEL OS, to update the system-wide trust store configuration.
 	update-ca-trust
 }

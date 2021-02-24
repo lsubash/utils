@@ -75,10 +75,10 @@ install_sgx_agent() {
 	\cp -pf sgx_agent.env ~/sgx_agent.env
 
 	source agent.conf
-	CMS_URL=https://$SYSTEM_IP:8445/cms/v1
-	AAS_URL=https://$SYSTEM_IP:8444/aas
-	SHVS_URL=https://$SYSTEM_IP:13000/sgx-hvs/v2
-	SCS_URL=https://$SYSTEM_IP:9000/scs/sgx
+	CMS_URL=https://$CMS_IP:8445/cms/v1
+	AAS_URL=https://$AAS_IP:8444/aas
+	SHVS_URL=https://$SHVS_IP:13000/sgx-hvs/v2
+	SCS_URL=https://$SCS_IP:9000/scs/sgx
 	sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@" ~/sgx_agent.env
 	sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/sgx_agent.env
 	sed -i "s@^\(SHVS_BASE_URL\s*=\s*\).*\$@\1$SHVS_URL@" ~/sgx_agent.env
