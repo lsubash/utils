@@ -41,7 +41,7 @@
 
 
 - name: ISECL - TRUST AGENT | Set the default grub option to Tboot and rebuild grub config
-  shell: "grub2-set-default 2 && grub2-mkconfig -o {{grub_file_path}}"
+  shell: "grub2-set-default {{grub_default_option}} && grub2-mkconfig -o {{grub_file_path}}"
   when: 
     - uefi_secureboot == 'no'
     - "'TXT measured launch: TRUE' not in pre_mle_state.stdout"
