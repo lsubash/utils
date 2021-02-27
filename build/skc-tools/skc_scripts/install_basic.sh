@@ -170,8 +170,8 @@ sed -i "s/^\(SKC_LIBRARY_KEY_TRANSFER_CONTEXT\s*=\s*\).*\$/\1$SKC_LIBRARY_KEY_TR
 sed -i "/GLOBAL_ADMIN_USERNAME/d" ~/populate-users.env
 sed -i "/GLOBAL_ADMIN_PASSWORD/d" ~/populate-users.env
 
-sed -i '$ a INSTALL_ADMIN_USERNAME=superadmin' ~/populate-users.env
-sed -i '$ a INSTALL_ADMIN_PASSWORD=superAdminPass' ~/populate-users.env
+sed -i "s/^\(INSTALL_ADMIN_USERNAME\s*=\s*\).*\$/\1$INSTALL_ADMIN_USERNAME/" ~/populate-users.env
+sed -i "s/^\(INSTALL_ADMIN_PASSWORD\s*=\s*\).*\$/\1$INSTALL_ADMIN_PASSWORD/" ~/populate-users.env
 
 echo "################ Call populate users script....  #################"
 pushd $PWD
@@ -184,7 +184,7 @@ fi
 popd
 
 echo "################ Install Admin user token....  #################"
-INSTALL_ADMIN_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/token -d '{"username": "superadmin", "password": "superAdminPass" }'`
+INSTALL_ADMIN_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/token -d '{"username": "'"$INSTALL_ADMIN_USERNAME"'", "password": "'"$INSTALL_ADMIN_PASSWORD"'"}'`
 
 if [ $? -ne 0 ]; then
   echo "############ Could not get token for Install Admin User ####################"
