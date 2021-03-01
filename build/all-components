@@ -31,7 +31,6 @@ skc-all: sgx_agent skc_library
 	cp utils/build/skc-tools/sgx_agent/agent_untar.sh binaries/
 	cp utils/build/skc-tools/skc_library/build_scripts/skc_library.* binaries/
 	cp utils/build/skc-tools/skc_library/skclib_untar.sh binaries/
-	cp utils/build/skc-tools/skc_scripts/aas-util_user-role.sh binaries/
 	cp -pf utils/build/skc-tools/skc_scripts/env/*.env binaries/env
 	cp -pf utils/build/skc-tools/skc_scripts/env/install_pg.sh binaries/
 	cp -pf utils/build/skc-tools/skc_scripts/install_*.sh binaries/

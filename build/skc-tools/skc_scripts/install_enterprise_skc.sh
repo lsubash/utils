@@ -1,24 +1,16 @@
 #!/bin/bash
 HOME_DIR=~/
 SKC_BINARY_DIR=$HOME_DIR/binaries
-KBS_HOSTNAME=$("hostname")
 
-# Check OS and VERSION
-OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
-temp="${OS%\"}"
-temp="${temp#\"}"
-OS="$temp"
-VER=$(cat /etc/os-release | grep ^VERSION_ID | tr -d 'VERSION_ID="')
-OS_FLAVOUR="$OS""$VER"
+red=`tput setaf 1`
+green=`tput setaf 2`
+reset=`tput sgr0`
 
-if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
-        dnf install -qy jq
-elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
-        apt install -y jq curl
-else
-        echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04"
-        exit 1
-fi
+CMS_PORT=8445
+AAS_PORT=8444
+SCS_PORT=9000
+SQVS_PORT=12000
+KBS_PORT=9443
 
 # Copy env files to Home directory
 \cp -pf $SKC_BINARY_DIR/env/cms.env $HOME_DIR
@@ -39,25 +31,33 @@ fi
 if [ -f ./enterprise_skc.conf ]; then
     echo "Reading Installation variables from $(pwd)/enterprise_skc.conf"
     source enterprise_skc.conf
+    if [ $? -ne 0 ]; then
+	echo "${red} please set correct values in enterprise_skc.conf ${reset}"
+	exit 1
+    fi
+    if [[ "$SCS_DB_NAME" == "$AAS_DB_NAME" ]]; then
+        echo "${red} SCS_DB_NAME & AAS_DB_NAME should not be same. Please change in enterprise_skc.conf ${reset}"
+        exit 1
+    fi
     env_file_exports=$(cat ./enterprise_skc.conf | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
     if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
 fi
 
-echo "################ Uninstalling CMS....  #################"
+echo "Uninstalling Certificate Management Service...."
 cms uninstall --purge
-echo "################ Uninstalling AAS....  #################"
+echo "Uninstalling AuthService...."
 authservice uninstall --purge
-echo "################ Remove AAS DB....  #################"
+echo "Removing AuthService Database...."
 pushd $PWD
 cd /usr/local/pgsql
 sudo -u postgres dropdb $AAS_DB_NAME
-echo "################ Uninstalling SCS....  #################"
+echo "Uninstalling SGX Caching Service...."
 scs uninstall --purge
-echo "################ Remove SCS DB....  #################"
+echo "Removing SGX Caching Service Database...."
 sudo -u postgres dropdb $SCS_DB_NAME
-echo "################ Uninstalling SQVS....  #################"
+echo "Uninstalling SGX Quote Verification Service...."
 sqvs uninstall --purge
-echo "################ Uninstalling KBS....  #################"
+echo "Uninstalling Key Broker Service...."
 kbs uninstall --purge
 popd
 
@@ -70,56 +70,64 @@ pushd $PWD
 cd ~
 if is_database $AAS_DB_NAME $AAS_DB_USERNAME $AAS_DB_PASSWORD
 then 
-   echo $AAS_DB_NAME database exists
+   echo "$AAS_DB_NAME database exists"
 else
-   echo "################ Update iseclpgdb.env for AAS....  #################"
+   echo "Updating iseclpgdb.env for AuthService...."
    sed -i "s@^\(ISECL_PGDB_DBNAME\s*=\s*\).*\$@\1$AAS_DB_NAME@" ~/iseclpgdb.env
    sed -i "s@^\(ISECL_PGDB_USERNAME\s*=\s*\).*\$@\1$AAS_DB_USERNAME@" ~/iseclpgdb.env
    sed -i "s@^\(ISECL_PGDB_USERPASSWORD\s*=\s*\).*\$@\1$AAS_DB_PASSWORD@" ~/iseclpgdb.env
    bash install_pg.sh
+   if [ $? -ne 0 ]; then
+	echo "${red} aas db creation failed ${reset}"
+	exit 1
+   fi
 fi
 
 if is_database $SCS_DB_NAME $SCS_DB_USERNAME $SCS_DB_PASSWORD
 then
-   echo $SCS_DB_NAME database exists
+   echo "$SCS_DB_NAME database exists"
 else
-   echo "################ Update iseclpgdb.env for SCS....  #################"
+   echo "Updating iseclpgdb.env for SGX Caching Service...."
    sed -i "s@^\(ISECL_PGDB_DBNAME\s*=\s*\).*\$@\1$SCS_DB_NAME@" ~/iseclpgdb.env
    sed -i "s@^\(ISECL_PGDB_USERNAME\s*=\s*\).*\$@\1$SCS_DB_USERNAME@" ~/iseclpgdb.env
    sed -i "s@^\(ISECL_PGDB_USERPASSWORD\s*=\s*\).*\$@\1$SCS_DB_PASSWORD@" ~/iseclpgdb.env
    bash install_pgscsdb.sh
+   if [ $? -ne 0 ]; then
+	echo "${red} scs db creation failed ${reset}"
+	exit 1
+   fi
 fi
 
 popd
 
-echo "################ Installing CMS....  #################"
-AAS_URL=https://$SYSTEM_IP:8444/aas
-sed -i "s/^\(AAS_TLS_SAN\s*=\s*\).*\$/\1$SYSTEM_IP/" ~/cms.env
+echo "Installing Certificate Management Service...."
+AAS_URL=https://$SYSTEM_IP:$AAS_PORT/aas
+sed -i "s/^\(AAS_TLS_SAN\s*=\s*\).*\$/\1$SYSTEM_SAN/" ~/cms.env
 sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/cms.env
-sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_IP/" ~/cms.env
+sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_SAN/" ~/cms.env
 
 ./cms-*.bin
 cms status > /dev/null
 if [ $? -ne 0 ]; then
-  echo "############ CMS Installation Failed"
+  echo "${red} Certificate Management Service Installation Failed ${reset}"
   exit 1
 fi
-echo "################ Installed CMS....  #################"
+echo "${green} Installed Certificate Management Service.... ${reset}"
 
-echo "################ Installing AuthService....  #################"
+echo "Installing AuthService...."
 
-echo "################ Copy CMS token to AuthService....  #################"
-export AAS_TLS_SAN=$SYSTEM_IP
+echo "Copying Certificate Management Service token to AuthService...."
+export AAS_TLS_SAN=$SYSTEM_SAN
 CMS_TOKEN=`cms setup cms_auth_token --force | grep 'JWT Token:' | awk '{print $3}'`
 sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$CMS_TOKEN/"  ~/authservice.env
 
 CMS_TLS_SHA=`cms tlscertsha384`
 sed -i "s/^\(CMS_TLS_CERT_SHA384\s*=\s*\).*\$/\1$CMS_TLS_SHA/"  ~/authservice.env
 
-CMS_URL=https://$SYSTEM_IP:8445/cms/v1/
+CMS_URL=https://$SYSTEM_IP:$CMS_PORT/cms/v1/
 sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@"  ~/authservice.env
 
-sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_IP/"  ~/authservice.env
+sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_SAN/"  ~/authservice.env
 sed -i "s/^\(AAS_DB_NAME\s*=\s*\).*\$/\1$AAS_DB_NAME/"  ~/authservice.env
 sed -i "s/^\(AAS_DB_USERNAME\s*=\s*\).*\$/\1$AAS_DB_USERNAME/"  ~/authservice.env
 sed -i "s/^\(AAS_DB_PASSWORD\s*=\s*\).*\$/\1$AAS_DB_PASSWORD/"  ~/authservice.env
@@ -127,13 +135,13 @@ sed -i "s/^\(AAS_DB_PASSWORD\s*=\s*\).*\$/\1$AAS_DB_PASSWORD/"  ~/authservice.en
 ./authservice-*.bin
 authservice status > /dev/null
 if [ $? -ne 0 ]; then
-  echo "############ AuthService Installation Failed"
+  echo "${red} AuthService Installation Failed ${reset}"
   exit 1
 fi
-echo "################ Installed AuthService....  #################"
+echo "${green} Installed AuthService.... ${reset}"
 
-echo "################ Update Populate users env ....  #################"
-ISECL_INSTALL_COMPONENTS=AAS,SCS,SQVS,SKBS,SKC-LIBRARY
+echo "Updating Populate users env ...."
+ISECL_INSTALL_COMPONENTS=AAS,SCS,SQVS,SKBS
 sed -i "s@^\(ISECL_INSTALL_COMPONENTS\s*=\s*\).*\$@\1$ISECL_INSTALL_COMPONENTS@" ~/populate-users.env
 sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/populate-users.env
 
@@ -142,9 +150,9 @@ AAS_ADMIN_PASSWORD=$(cat ~/authservice.env | grep ^AAS_ADMIN_PASSWORD= | cut -d'
 sed -i "s/^\(AAS_ADMIN_USERNAME\s*=\s*\).*\$/\1$AAS_ADMIN_USERNAME/" ~/populate-users.env
 sed -i "s/^\(AAS_ADMIN_PASSWORD\s*=\s*\).*\$/\1$AAS_ADMIN_PASSWORD/" ~/populate-users.env
 
-sed -i "s@^\(KBS_CERT_SAN_LIST\s*=\s*\).*\$@\1$SYSTEM_IP@" ~/populate-users.env
-sed -i "s@^\(SCS_CERT_SAN_LIST\s*=\s*\).*\$@\1$SYSTEM_IP@" ~/populate-users.env
-sed -i "s@^\(SQVS_CERT_SAN_LIST\s*=\s*\).*\$@\1$SYSTEM_IP@" ~/populate-users.env
+sed -i "s@^\(KBS_CERT_SAN_LIST\s*=\s*\).*\$@\1$SYSTEM_SAN@" ~/populate-users.env
+sed -i "s@^\(SCS_CERT_SAN_LIST\s*=\s*\).*\$@\1$SYSTEM_SAN@" ~/populate-users.env
+sed -i "s@^\(SQVS_CERT_SAN_LIST\s*=\s*\).*\$@\1$SYSTEM_SAN@" ~/populate-users.env
 
 KBS_SERVICE_USERNAME=$(cat ~/kbs.env | grep ^KBS_SERVICE_USERNAME= | cut -d'=' -f2)
 KBS_SERVICE_PASSWORD=$(cat ~/kbs.env | grep ^KBS_SERVICE_PASSWORD= | cut -d'=' -f2)
@@ -156,39 +164,32 @@ SCS_ADMIN_PASSWORD=$(cat ~/scs.env | grep ^SCS_ADMIN_PASSWORD= | cut -d'=' -f2)
 sed -i "s/^\(SCS_SERVICE_USERNAME\s*=\s*\).*\$/\1$SCS_ADMIN_USERNAME/" ~/populate-users.env
 sed -i "s/^\(SCS_SERVICE_PASSWORD\s*=\s*\).*\$/\1$SCS_ADMIN_PASSWORD/" ~/populate-users.env
 
-sed -i "s/^\(SKC_LIBRARY_USERNAME\s*=\s*\).*\$/\1$SKC_USER/" ~/populate-users.env
-sed -i "s/^\(SKC_LIBRARY_PASSWORD\s*=\s*\).*\$/\1$SKC_USER_PASSWORD/" ~/populate-users.env
-
-sed -i "s/^\(SKC_LIBRARY_CERT_COMMON_NAME\s*=\s*\).*\$/\1$SKC_USER/" ~/populate-users.env
-SKC_LIBRARY_KEY_TRANSFER_CONTEXT=permissions=nginx,USA
-sed -i "s/^\(SKC_LIBRARY_KEY_TRANSFER_CONTEXT\s*=\s*\).*\$/\1$SKC_LIBRARY_KEY_TRANSFER_CONTEXT/" ~/populate-users.env
+sed -i "s/^\(INSTALL_ADMIN_USERNAME\s*=\s*\).*\$/\1$INSTALL_ADMIN_USERNAME/" ~/populate-users.env
+sed -i "s/^\(INSTALL_ADMIN_PASSWORD\s*=\s*\).*\$/\1$INSTALL_ADMIN_PASSWORD/" ~/populate-users.env
 
 sed -i "/GLOBAL_ADMIN_USERNAME/d" ~/populate-users.env
 sed -i "/GLOBAL_ADMIN_PASSWORD/d" ~/populate-users.env
 
-sed -i "s/^\(INSTALL_ADMIN_USERNAME\s*=\s*\).*\$/\1$INSTALL_ADMIN_USERNAME/" ~/populate-users.env
-sed -i "s/^\(INSTALL_ADMIN_PASSWORD\s*=\s*\).*\$/\1$INSTALL_ADMIN_PASSWORD/" ~/populate-users.env
-
-echo "################ Call populate users script....  #################"
+echo "Invoking populate users script...."
 pushd $PWD
 cd ~
-./populate-users.sh || exit 1
+./populate-users.sh
 if [ $? -ne 0 ]; then
-  echo "############ Failed to run populate user script  ####################3"
+  echo "${red} populate user script failed ${reset}"
   exit 1
 fi
 popd
 
-echo "################ Install Admin user token....  #################"
-INSTALL_ADMIN_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/token -d '{"username": "'"$INSTALL_ADMIN_USERNAME"'", "password": "'"$INSTALL_ADMIN_PASSWORD"'"}'`
+echo "Getting AuthService Admin token...."
+INSTALL_ADMIN_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:$AAS_PORT/aas/token -d '{"username": "'"$INSTALL_ADMIN_USERNAME"'", "password": "'"$INSTALL_ADMIN_PASSWORD"'"}'`
 
 if [ $? -ne 0 ]; then
-  echo "############ Could not get token for Install Admin User ####################"
+  echo "${red} Could not get AuthService Admin token ${reset}"
   exit 1
 fi
 
-echo "################ Update SCS env....  #################"
-sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_IP/"  ~/scs.env
+echo "Updating SGX Caching Service env...."
+sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_SAN/"  ~/scs.env
 sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$INSTALL_ADMIN_TOKEN/"  ~/scs.env
 sed -i "s/^\(CMS_TLS_CERT_SHA384\s*=\s*\).*\$/\1$CMS_TLS_SHA/" ~/scs.env
 sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/scs.env
@@ -196,51 +197,51 @@ sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@" ~/scs.env
 sed -i "s@^\(INTEL_PROVISIONING_SERVER\s*=\s*\).*\$@\1$INTEL_PROVISIONING_SERVER@" ~/scs.env
 sed -i "s@^\(INTEL_PROVISIONING_SERVER_API_KEY\s*=\s*\).*\$@\1$INTEL_PROVISIONING_SERVER_API_KEY@" ~/scs.env
 sed -i "s/^\(SCS_DB_NAME\s*=\s*\).*\$/\1$SCS_DB_NAME/"  ~/scs.env
-sed -i "s/^\(SCS_DB_USERNAME\s*=\s*\).*\$/\1$SCS_DB_USERNAME/"  ~/scs.env
-sed -i "s/^\(SCS_DB_PASSWORD\s*=\s*\).*\$/\1$SCS_DB_PASSWORD/"  ~/scs.env
+sed -i "s/^\(SCS_DB_USERNAME\s*=\s*\).*\$/\1$SCS_DB_USERNAME/" ~/scs.env
+sed -i "s/^\(SCS_DB_PASSWORD\s*=\s*\).*\$/\1$SCS_DB_PASSWORD/" ~/scs.env
 
-echo "################ Installing SCS....  #################"
+echo "Installing SGX Caching Service...."
 ./scs-*.bin
 scs status > /dev/null
 if [ $? -ne 0 ]; then
-  echo "############ SCS Installation Failed"
+  echo "${red} SGX Caching Service Installation Failed ${reset}"
   exit 1
 fi
-echo "################ Installed SCS....  #################"
+echo "${green} Installed SGX Caching Service.... ${reset}"
 
-echo "################ Update SQVS env....  #################"
-sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_IP/"  ~/sqvs.env
+echo "Updating SGX Quote Verification Service env...."
+sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_SAN/"  ~/sqvs.env
 sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$INSTALL_ADMIN_TOKEN/"  ~/sqvs.env
 sed -i "s/^\(CMS_TLS_CERT_SHA384\s*=\s*\).*\$/\1$CMS_TLS_SHA/" ~/sqvs.env
 sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/sqvs.env
 sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@" ~/sqvs.env
-SCS_URL=https://$SYSTEM_IP:9000/scs/sgx/certification/v1
+SCS_URL=https://$SYSTEM_IP:$SCS_PORT/scs/sgx/certification/v1
 sed -i "s@^\(SCS_BASE_URL\s*=\s*\).*\$@\1$SCS_URL@" ~/sqvs.env
 
-echo "################ Installing SQVS....  #################"
+echo "Installing SGX Quote Verification Service...."
 ./sqvs-*.bin
 sqvs status > /dev/null
 if [ $? -ne 0 ]; then
-  echo "############ SQVS Installation Failed"
+  echo "${red} SGX Quote Verification Service Installation Failed ${reset}"
   exit 1
 fi
-echo "################ Installed SQVS....  #################"
+echo "${green} Installed SGX Quote Verification Service....${reset}"
 
-echo "################ Update KBS env....  #################"
-sed -i "s/^\(TLS_SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_IP,$KBS_DOMAIN/" ~/kbs.env
+echo "Updating Key Broker Service env...."
+sed -i "s/^\(TLS_SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_SAN/" ~/kbs.env
 sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$INSTALL_ADMIN_TOKEN/" ~/kbs.env
 sed -i "s/^\(CMS_TLS_CERT_SHA384\s*=\s*\).*\$/\1$CMS_TLS_SHA/" ~/kbs.env
 sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/kbs.env
 sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@" ~/kbs.env
-SQVS_URL=https://$SYSTEM_IP:12000/svs/v1
+SQVS_URL=https://$SYSTEM_IP:$SQVS_PORT/svs/v1
 sed -i "s@^\(SQVS_URL\s*=\s*\).*\$@\1$SQVS_URL@" ~/kbs.env
-ENDPOINT_URL=https://$SYSTEM_IP:9443/v1
+ENDPOINT_URL=https://$SYSTEM_IP:$KBS_PORT/v1
 sed -i "s@^\(ENDPOINT_URL\s*=\s*\).*\$@\1$ENDPOINT_URL@" ~/kbs.env
-echo "################ Installing KBS....  #################"
+echo "Installing Key Broker Service...."
 ./kbs-*.bin
 kbs status > /dev/null
 if [ $? -ne 0 ]; then
-  echo "############ KBS Installation Failed"
+  echo "${red} Key Broker Service Installation Failed ${reset}"
   exit 1
 fi
-echo "################ Installed KBS....  #################"
+echo "${green} Installed Key Broker Service.... ${reset}"

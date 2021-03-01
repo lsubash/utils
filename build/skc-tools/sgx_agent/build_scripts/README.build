@@ -30,3 +30,4 @@ download_mpa_uefi_rpm.sh 	Downloads Multipackage Agent UEFI RPM and adds it to t
 build_pckretrieval_tool.sh 	Downloads DCAP PCKRetrieval tool and builds it adds to tar file
 build_sgx_agent.sh 		Downloads SGX Agent repo and builds it as a golang service
 remove_pccs_connect.diff 	Patch file applied to PCKRetrieval tool to disable password check
+build_sgx_agent_docker.sh	Build SGX Agent docker image

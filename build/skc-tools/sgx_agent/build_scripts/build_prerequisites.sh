@@ -7,7 +7,6 @@ temp="${OS%\"}"
 temp="${temp#\"}"
 OS="$temp"
 VER=$(cat /etc/os-release | grep ^VERSION_ID | tr -d 'VERSION_ID="')
-OS_FLAVOUR="$OS""$VER"
 
 install_go()
 {

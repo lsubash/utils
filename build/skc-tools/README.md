@@ -116,7 +116,7 @@ Follow the instructions in README.install file
 
 ​	cd into kbs_scripts folder
 
-​	Update KBS/AAS IP address in run.sh. Also update the CA_CERT with the pem file in /etc/kbs/certs/trustedca/ directory
+​	Update System IP address in run.sh. Also update the CA_CERT with the pem file in /etc/kbs/certs/trustedca/ directory
 
 **Create AES Key**
 
@@ -170,7 +170,7 @@ ssl_certificate_key "engine:pkcs11:pkcs11:token=KMS;id=164b41ae-be61-4c7c-a027-4
 
 **SKC Configuration**
 
-​ Create keys.txt in /tmp folder. The keyID should match the keyID of RSA key created in KBS. Other contents should match with nginx.conf. File location should match on pkcs11-apimodule.ini; 
+​ Create keys.txt in /root folder. The keyID should match the keyID of RSA key created in KBS. Other contents should match with nginx.conf. File location should match on pkcs11-apimodule.ini;
 
 ​	pkcs11:token=KMS;id=164b41ae-be61-4c7c-a027-4a2ab1e5e4c4;object=RSAKEY;type=private;pin-value=1234";
 
@@ -180,7 +180,7 @@ ssl_certificate_key "engine:pkcs11:pkcs11:token=KMS;id=164b41ae-be61-4c7c-a027-4
 
 ​	**[core]**
 
-​	preload_keys=/tmp/keys.txt
+​	preload_keys=/root/keys.txt
 
 ​	keyagent_conf=/opt/skc/etc/key-agent.ini
 
@@ -201,4 +201,4 @@ ssl_certificate_key "engine:pkcs11:pkcs11:token=KMS;id=164b41ae-be61-4c7c-a027-4
 
 **Product Guide**
 
-https://github.com/intel-secl/docs/blob/v3.4.0/develop/product-guides/Product%20Guide%20-%20Intel%C2%AE%20Security%20Libraries%20-%20Secure%20Key%20Caching.md
+https://github.com/intel-secl/docs/blob/v3.4/develop/product-guides/Product%20Guide%20-%20Intel%C2%AE%20Security%20Libraries%20-%20Secure%20Key%20Caching.md

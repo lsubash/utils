@@ -44,7 +44,7 @@ To test Secure key transfer of a key from KBS to the nginx, please follow the be
 		 replace the id with the id printed as output of step 2
 	b. edit /etc/nginx/nginx.conf file add same id in ssl_certificate_key. also add crt file location which was copied in step 3. save and close
 	c. open /opt/skc/etc/pkcs11-apimodule.ini file and following line under [core] section
-		preload_keys=/tmp/keys.txt. save and close
+		preload_keys=/root/keys.txt. save and close
 	d. systemctl restart nginx
 		This will fetch the key from KBS to enclave loaded by nginx
 	e. wget -k -v https://localhost:2443 --no-check-certificate

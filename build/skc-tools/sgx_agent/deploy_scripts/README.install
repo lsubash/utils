@@ -1,6 +1,6 @@
 Pre-requisite for the SGX Agent Deployment
 ==========================================
- - SGX Enabled in BIOS
+ - SGX and FLC Enabled in BIOS
  - RHEL 8.2 OS
 
 RHEL8 package Requirements
@@ -42,4 +42,4 @@ Repo Contents
 =============
 deploy_sgx_agent.sh		Main script for Deploying SGX Agent on SGX enabled server
 deployment_prerequisites.sh	Install RHEL 8 packages dependencies required fro SGX Agent Deployment
-agent.conf			Pre-filled config file with CMS/AAS/SHVS IP Address and Port Numners
+agent.conf			Config file for updating SGX Agent/CMS/AAS/SHVS IP Addresses
