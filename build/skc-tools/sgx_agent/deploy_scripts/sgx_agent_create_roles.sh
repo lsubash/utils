@@ -27,7 +27,7 @@ mkdir -p /tmp/sgx_agent
 tmpdir=$(mktemp -d -p /tmp/sgx_agent)
 
 #Get the AAS Admin JWT Token
-Bearer_token=`curl $CURL_OPTS -H "$CONTENT_TYPE" -H "$ACCEPT" -X POST https://$aas_hostname/token -d \{\"username\":\"$ADMIN_USERNAME\",\"password\":\"$ADMIN_PASSWORD\"\}`
+Bearer_token=`curl $CURL_OPTS -H "$CONTENT_TYPE" -H "$ACCEPT" -X POST $aas_hostname/token -d \{\"username\":\"$ADMIN_USERNAME\",\"password\":\"$ADMIN_PASSWORD\"\}`
 if [ $? -ne 0 ]; then
 	echo "${red} failed to get aas admin token ${reset}"
 	exit 1
