@@ -6,13 +6,13 @@ package main
 
 import (
 	"intel/isecl/sgx_agent/v3/constants"
-	_ "intel/isecl/sgx_agent/v3/swagger/docs"
 	"os"
 	"os/user"
+	"runtime"
 	"strconv"
 )
 
-func openLogFiles() (logFile *os.File, httpLogFile *os.File, secLogFile *os.File, err error) {
+func openLogFiles() (logFile, httpLogFile, secLogFile *os.File, err error) {
 	logFile, err = os.OpenFile(constants.LogFile, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		return nil, nil, nil, err
@@ -74,7 +74,6 @@ func openLogFiles() (logFile *os.File, httpLogFile *os.File, secLogFile *os.File
 		log.Errorf("Could not change file ownership for file: '%s'", constants.LogFile)
 		return nil, nil, nil, err
 	}
-
 	return
 }
 
@@ -114,6 +113,6 @@ func main() {
 	err = app.Run(os.Args)
 	if err != nil {
 		log.Error("Application returned with error: ", err)
-		os.Exit(1)
+		runtime.Goexit()
 	}
 }

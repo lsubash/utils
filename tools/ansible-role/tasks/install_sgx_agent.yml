@@ -24,19 +24,7 @@
     src: "agent.conf.j2"
     dest: "/root/{{sgxagent_installer_name}}/agent.conf"
 
-- name: ISECL - SGX AGENT | Update aas_admin_username
-  lineinfile:
-    dest: "/root/{{sgxagent_installer_name}}/sgx_agent_create_roles.sh"
-    regexp: '"username": "admin",'
-    line: '"username": "{{ aas_admin_username }}",'
-    backrefs: yes
 
-- name: ISECL - SGX AGENT | Update aas_admin_password
-  lineinfile:
-    dest: "/root/{{sgxagent_installer_name}}/sgx_agent_create_roles.sh"
-    regexp: '"password": "password"'
-    line: '"password": "{{ aas_admin_password }}"'
-    backrefs: yes
 
 - name: ISECL - SGX AGENT | Deploy SGX Agent
   shell: "set -o pipefail && ./deploy_sgx_agent.sh 2>&1 | tee /root/sgx_agent-install.log"

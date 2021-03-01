@@ -12,39 +12,6 @@
     dest: "/tmp/{{sqvs_trusted_rootca_filename}}"
     mode: "u+x"
 
-- name: ISECL - SGX QUOTE VERIFICATION SERVICE | Copy aas-util_user-role.sh file
-  copy:
-    src: "{{binaries_path}}/aas-util_user-role.sh"
-    dest: "/root/aas-util_user-role.sh"
-    mode: "u+x"
-
-- name: ISECL - SGX QUOTE VERIFICATION SERVICE | Copy default_roles.conf file
-  template:
-    src: "sqvs_users_roles_installation.conf.j2"
-    dest: "/root/sqvs_users_roles.conf"
-    mode: "u+x"
-
-- name: ISECL - SGX QUOTE VERIFICATION SERVICE | Execute aas-util_user-role.sh
-  shell: "./aas-util_user-role.sh -ru -c sqvs_users_roles.conf"
-  args:
-    chdir: /root
-    executable: /bin/bash
-
-- name: ISECL - SGX QUOTE VERIFICATION SERVICE | Create token for SQVS user
-  uri:
-    url: "https://{{aas}}:{{aas_port}}/aas/token"
-    body_format: json
-    body:
-       {
-       "username": "{{sqvs_admin_username}}",
-       "password": "{{sqvs_admin_password}}"
-       }
-    method: POST
-    use_proxy: no
-    validate_certs: no
-    return_content: yes
-  register: sqvs_bootstrap_token
-
 - name: ISECL - SGX QUOTE VERIFICATION SERVICE | Generate sqvs.env file
   template:
     src: "sqvs.env.j2"

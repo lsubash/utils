@@ -1,4 +1,17 @@
 #!/bin/bash
+HOME_DIR=~/
+SKC_BINARY_DIR=$HOME_DIR/binaries
+
+red=`tput setaf 1`
+green=`tput setaf 2`
+reset=`tput sgr0`
+
+CMS_PORT=8445
+AAS_PORT=8444
+SCS_PORT=9000
+SQVS_PORT=12000
+SHVS_PORT=13000
+KBS_PORT=9443
 
 # Check OS and VERSION
 OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
@@ -8,56 +21,64 @@ OS="$temp"
 VER=$(cat /etc/os-release | grep ^VERSION_ID | tr -d 'VERSION_ID="')
 OS_FLAVOUR="$OS""$VER"
 
-HOME_DIR=~/
-SKC_BINARY_DIR=$HOME_DIR/binaries
+if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
+	dnf install -qy jq
+elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
+	apt install -y jq curl
+else
+	echo "${red} Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04 ${reset}"
+	exit 1
+fi
 
 # Copy env files to Home directory
-\cp -pf $SKC_BINARY_DIR/env/cms.env $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/env/authservice.env $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/env/scs.env $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/env/shvs.env $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/env/ihub.env $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/env/iseclpgdb.env $HOME_DIR
+\cp -pf ./env/cms.env $HOME_DIR
+\cp -pf ./env/authservice.env $HOME_DIR
+\cp -pf ./env/scs.env $HOME_DIR
+\cp -pf ./env/shvs.env $HOME_DIR
+\cp -pf ./env/ihub.env $HOME_DIR
+\cp -pf ./env/iseclpgdb.env $HOME_DIR
+\cp -pf ./env/populate-users.env $HOME_DIR
 
 # Copy DB scripts to Home directory
-\cp -pf $SKC_BINARY_DIR/install_pg.sh $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/install_pgscsdb.sh $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/install_pgshvsdb.sh $HOME_DIR
+\cp -pf ./install_pg.sh $HOME_DIR
+\cp -pf ./install_pgscsdb.sh $HOME_DIR
+\cp -pf ./install_pgshvsdb.sh $HOME_DIR
+\cp -pf ./populate-users.sh $HOME_DIR
 
 # read from environment variables file if it exists
 if [ -f ./csp_skc.conf ]; then
     echo "Reading Installation variables from $(pwd)/csp_skc.conf"
     source csp_skc.conf
+    if [ $? -ne 0 ]; then
+	echo "${red} please set correct values in csp_skc.conf ${reset}"
+	exit 1
+    fi
+
+    if [[ "$SCS_DB_NAME" == "$SHVS_DB_NAME" || "$AAS_DB_NAME" == "$SHVS_DB_NAME" || "$SCS_DB_NAME" == "$AAS_DB_NAME" ]]; then
+        echo "${red} SCS_DB_NAME, SHVS_DB_NAME & AAS_DB_NAME should not be same. Please change in csp_skc.conf ${reset}"
+        exit 1
+    fi
     env_file_exports=$(cat ./csp_skc.conf | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
     if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
 fi
 
-if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
-    dnf install -y jq
-elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
-    apt install -y jq curl
-else
-    echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04"
-    exit 1
-fi
-
-echo "################ Uninstalling CMS....  #################"
+echo "Uninstalling Certificate Management Service...."
 cms uninstall --purge
-echo "################ Uninstalling AAS....  #################"
+echo "Uninstalling AuthService...."
 authservice uninstall --purge
-echo "################ Remove AAS DB....  #################"
+echo "Removing AuthService Database...."
 pushd $PWD
 cd /usr/local/pgsql
 sudo -u postgres dropdb $AAS_DB_NAME
-echo "################ Uninstalling SCS....  #################"
+echo "Uninstalling SGX Caching Service...."
 scs uninstall --purge
-echo "################ Remove SCS DB....  #################"
+echo "Removing SGX Caching Service Database...."
 sudo -u postgres dropdb $SCS_DB_NAME
-echo "################ Uninstalling SHVS....  #################"
+echo "Uninstalling SGX Host Verification Service...."
 shvs uninstall --purge
-echo "################ Remove SHVS DB....  #################"
+echo "Removing SGX Host Verification Service Database...."
 sudo -u postgres dropdb $SHVS_DB_NAME
-echo "################ Uninstalling IHUB....  #################"
+echo "Uninstalling Integration HUB...."
 ihub uninstall --purge
 popd
 
@@ -66,155 +87,150 @@ function is_database() {
     psql -U $2 -lqt | cut -d \| -f 1 | grep -wq $1
 }
 
+pushd $PWD
+cd ~
 if is_database $AAS_DB_NAME $AAS_DB_USERNAME $AAS_DB_PASSWORD
 then 
-   echo $AAS_DB_NAME database exists
+   echo "$AAS_DB_NAME database exists"
 else
-   echo "################ Update iseclpgdb.env for AAS....  #################"
+   echo "Updating iseclpgdb.env for AuthService...."
    sed -i "s@^\(ISECL_PGDB_DBNAME\s*=\s*\).*\$@\1$AAS_DB_NAME@" ~/iseclpgdb.env
    sed -i "s@^\(ISECL_PGDB_USERNAME\s*=\s*\).*\$@\1$AAS_DB_USERNAME@" ~/iseclpgdb.env
    sed -i "s@^\(ISECL_PGDB_USERPASSWORD\s*=\s*\).*\$@\1$AAS_DB_PASSWORD@" ~/iseclpgdb.env
-   pushd $PWD
-   cd ~
    bash install_pg.sh
+   if [ $? -ne 0 ]; then
+	echo "${red} aas db creation failed ${reset}"
+	exit 1
+   fi
 fi
 
 if is_database $SCS_DB_NAME $SCS_DB_USERNAME $SCS_DB_PASSWORD
 then
-   echo $SCS_DB_NAME database exists
+   echo "$SCS_DB_NAME database exists"
 else
-   echo "################ Update iseclpgdb.env for SCS....  #################"
+   echo "Updating iseclpgdb.env for SGX Caching Service...."
    sed -i "s@^\(ISECL_PGDB_DBNAME\s*=\s*\).*\$@\1$SCS_DB_NAME@" ~/iseclpgdb.env
    sed -i "s@^\(ISECL_PGDB_USERNAME\s*=\s*\).*\$@\1$SCS_DB_USERNAME@" ~/iseclpgdb.env
    sed -i "s@^\(ISECL_PGDB_USERPASSWORD\s*=\s*\).*\$@\1$SCS_DB_PASSWORD@" ~/iseclpgdb.env
    bash install_pgscsdb.sh
+   if [ $? -ne 0 ]; then
+	echo "${red} scs db creation failed ${reset}"
+	exit 1
+   fi
 fi
 
 if is_database $SHVS_DB_NAME $SHVS_DB_USERNAME $SHVS_DB_PASSWORD
 then
-   echo $SHVS_DB_NAME database exists
+   echo "$SHVS_DB_NAME database exists"
 else
-   echo "################ Update iseclpgdb.env for SHVS....  #################"
+   echo "Updating iseclpgdb.env for SGX Host Verification Service...."
    sed -i "s@^\(ISECL_PGDB_DBNAME\s*=\s*\).*\$@\1$SHVS_DB_NAME@" ~/iseclpgdb.env
    sed -i "s@^\(ISECL_PGDB_USERNAME\s*=\s*\).*\$@\1$SHVS_DB_USERNAME@" ~/iseclpgdb.env
    sed -i "s@^\(ISECL_PGDB_USERPASSWORD\s*=\s*\).*\$@\1$SHVS_DB_PASSWORD@" ~/iseclpgdb.env
    bash install_pgshvsdb.sh
+   if [ $? -ne 0 ]; then
+	echo "${red} shvs db creation failed ${reset}"
+	exit 1
+   fi
 fi
 
 popd
 
-pushd $PWD
-cd $SKC_BINARY_DIR
-echo "################ Installing CMS....  #################"
-AAS_URL=https://$SYSTEM_IP:8444/aas
-sed -i "s/^\(AAS_TLS_SAN\s*=\s*\).*\$/\1$SYSTEM_IP/" ~/cms.env
+echo "Installing Certificate Management Service...."
+AAS_URL=https://$SYSTEM_IP:$AAS_PORT/aas
+sed -i "s/^\(AAS_TLS_SAN\s*=\s*\).*\$/\1$SYSTEM_SAN/" ~/cms.env
 sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/cms.env
-sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_IP/" ~/cms.env
+sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_SAN/" ~/cms.env
 
-./cms-*.bin || exit 1
+./cms-*.bin
+cms status > /dev/null
 if [ $? -ne 0 ]; then
-  echo "############ CMS Installation Failed"
+  echo "${red} Certificate Management Service Installation Failed $reset}"
   exit 1
 fi
-echo "################ Installed CMS....  #################"
+echo "${green} Installed Certificate Management Service.... ${reset}"
 
-echo "################ Installing AuthService....  #################"
+echo "Installing AuthService...."
 
-echo "################ Copy CMS token to AuthService....  #################"
-export AAS_TLS_SAN=$SYSTEM_IP
+echo "Copying Certificate Management Service token to AuthService...."
+export AAS_TLS_SAN=$SYSTEM_SAN
 CMS_TOKEN=`cms setup cms_auth_token --force | grep 'JWT Token:' | awk '{print $3}'`
 sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$CMS_TOKEN/"  ~/authservice.env
 
 CMS_TLS_SHA=`cms tlscertsha384`
 sed -i "s/^\(CMS_TLS_CERT_SHA384\s*=\s*\).*\$/\1$CMS_TLS_SHA/"  ~/authservice.env
 
-CMS_URL=https://$SYSTEM_IP:8445/cms/v1/
+CMS_URL=https://$SYSTEM_IP:$CMS_PORT/cms/v1/
 sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@"  ~/authservice.env
 
-sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_IP/"  ~/authservice.env
+sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_SAN/"  ~/authservice.env
 sed -i "s/^\(AAS_DB_NAME\s*=\s*\).*\$/\1$AAS_DB_NAME/"  ~/authservice.env
 sed -i "s/^\(AAS_DB_USERNAME\s*=\s*\).*\$/\1$AAS_DB_USERNAME/"  ~/authservice.env
 sed -i "s/^\(AAS_DB_PASSWORD\s*=\s*\).*\$/\1$AAS_DB_PASSWORD/"  ~/authservice.env
 
-./authservice-*.bin || exit 1
+./authservice-*.bin
+authservice status > /dev/null
 if [ $? -ne 0 ]; then
-  echo "############ AuthService Installation Failed"
+  echo "${red} AuthService Installation Failed ${reset}"
   exit 1
 fi
-echo "################ Installed AuthService....  #################"
+echo "${green} Installed AuthService.... ${reset}"
 
-echo "################ Create user and role on AuthService....  #################"
-TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/token -d '{"username": "admin@aas", "password": "aasAdminPass" }'`
+echo "Updating Populate users env ...."
+ISECL_INSTALL_COMPONENTS=AAS,SCS,SHVS,SIH
+sed -i "s@^\(ISECL_INSTALL_COMPONENTS\s*=\s*\).*\$@\1$ISECL_INSTALL_COMPONENTS@" ~/populate-users.env
+sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/populate-users.env
 
+AAS_ADMIN_USERNAME=$(cat ~/authservice.env | grep ^AAS_ADMIN_USERNAME= | cut -d'=' -f2)
+AAS_ADMIN_PASSWORD=$(cat ~/authservice.env | grep ^AAS_ADMIN_PASSWORD= | cut -d'=' -f2)
+sed -i "s/^\(AAS_ADMIN_USERNAME\s*=\s*\).*\$/\1$AAS_ADMIN_USERNAME/" ~/populate-users.env
+sed -i "s/^\(AAS_ADMIN_PASSWORD\s*=\s*\).*\$/\1$AAS_ADMIN_PASSWORD/" ~/populate-users.env
+
+sed -i "s@^\(IH_CERT_SAN_LIST\s*=\s*\).*\$@\1$SYSTEM_SAN@" ~/populate-users.env
+sed -i "s@^\(SCS_CERT_SAN_LIST\s*=\s*\).*\$@\1$SYSTEM_SAN@" ~/populate-users.env
+sed -i "s@^\(SHVS_CERT_SAN_LIST\s*=\s*\).*\$@\1$SYSTEM_SAN@" ~/populate-users.env
+
+IHUB_SERVICE_USERNAME=$(cat ~/ihub.env | grep ^IHUB_SERVICE_USERNAME= | cut -d'=' -f2)
+IHUB_SERVICE_PASSWORD=$(cat ~/ihub.env | grep ^IHUB_SERVICE_PASSWORD= | cut -d'=' -f2)
+sed -i "s/^\(IHUB_SERVICE_USERNAME\s*=\s*\).*\$/\1$IHUB_SERVICE_USERNAME/" ~/populate-users.env
+sed -i "s/^\(IHUB_SERVICE_PASSWORD\s*=\s*\).*\$/\1$IHUB_SERVICE_PASSWORD/" ~/populate-users.env
+
+SCS_ADMIN_USERNAME=$(cat ~/scs.env | grep ^SCS_ADMIN_USERNAME= | cut -d'=' -f2)
+SCS_ADMIN_PASSWORD=$(cat ~/scs.env | grep ^SCS_ADMIN_PASSWORD= | cut -d'=' -f2)
+sed -i "s/^\(SCS_SERVICE_USERNAME\s*=\s*\).*\$/\1$SCS_ADMIN_USERNAME/" ~/populate-users.env
+sed -i "s/^\(SCS_SERVICE_PASSWORD\s*=\s*\).*\$/\1$SCS_ADMIN_PASSWORD/" ~/populate-users.env
+
+SHVS_ADMIN_USERNAME=$(cat ~/shvs.env | grep ^SHVS_ADMIN_USERNAME= | cut -d'=' -f2)
+SHVS_ADMIN_PASSWORD=$(cat ~/shvs.env | grep ^SHVS_ADMIN_PASSWORD= | cut -d'=' -f2)
+sed -i "s/^\(SHVS_SERVICE_USERNAME\s*=\s*\).*\$/\1$SHVS_ADMIN_USERNAME/" ~/populate-users.env
+sed -i "s/^\(SHVS_SERVICE_PASSWORD\s*=\s*\).*\$/\1$SHVS_ADMIN_PASSWORD/" ~/populate-users.env
+
+sed -i "s/^\(INSTALL_ADMIN_USERNAME\s*=\s*\).*\$/\1$INSTALL_ADMIN_USERNAME/" ~/populate-users.env
+sed -i "s/^\(INSTALL_ADMIN_PASSWORD\s*=\s*\).*\$/\1$INSTALL_ADMIN_PASSWORD/" ~/populate-users.env
+
+sed -i "/GLOBAL_ADMIN_USERNAME/d" ~/populate-users.env
+sed -i "/GLOBAL_ADMIN_PASSWORD/d" ~/populate-users.env
+
+echo "Invoking populate users script...."
+pushd $PWD
+cd ~
+./populate-users.sh
 if [ $? -ne 0 ]; then
-  echo "############ Could not get TOKEN from AuthService "
+  echo "${red} populate user script failed ${reset}"
+  exit 1
+fi
+popd
+
+echo "Getting AuthService Admin token...."
+INSTALL_ADMIN_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:$AAS_PORT/aas/token -d '{"username": "'"$INSTALL_ADMIN_USERNAME"'", "password": "'"$INSTALL_ADMIN_PASSWORD"'"}'`
+if [ $? -ne 0 ]; then
+  echo "${red} Could not get AuthService Admin token ${reset}"
   exit 1
 fi
 
-USER_ID=`curl --noproxy "*" -k https://$SYSTEM_IP:8444/aas/users?name=admin@aas -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' | jq -r '.[0].user_id'`
-echo "Got admin user ID $USER_ID"
-
-# SGX Caching Service User and Roles
-
-SCS_USER=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/users -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"username": "scsuser@scs","password": "scspassword"}'`
-SCS_USER_ID=`curl --noproxy "*" -k https://$SYSTEM_IP:8444/aas/users?name=scsuser@scs -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' | jq -r '.[0].user_id'`
-echo "Created SCS User with user ID $SCS_USER_ID"
-SCS_ROLE_ID1=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"service": "CMS","name": "CertApprover","context": "CN=SCS TLS Certificate;SAN='$SYSTEM_IP';certType=TLS"}' | jq -r ".role_id"`
-echo "Created SCS TLS cert role with ID $SCS_ROLE_ID1"
-SCS_ROLE_ID2=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"service": "SCS","name": "CacheManager","context": ""}' | jq -r ".role_id"`
-echo "Created SCS CacheManager role with ID $SCS_ROLE_ID2"
-
-if [ $? -eq 0 ]; then
-  curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/users/$SCS_USER_ID/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"role_ids": ["'"$SCS_ROLE_ID1"'", "'"$SCS_ROLE_ID2"'"]}'
-fi
-
-SCS_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/token -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"username": "scsuser@scs","password": "scspassword"}'`
-echo "SCS Token $SCS_TOKEN"
-
-# SGX Host Verification Service User and Roles
-
-SHVS_USER=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/users -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"username": "shvsuser@shvs","password": "shvspassword"}'`
-SHVS_USER_ID=`curl --noproxy "*" -k https://$SYSTEM_IP:8444/aas/users?name=shvsuser@shvs -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' | jq -r '.[0].user_id'`
-echo "Created SHVS User with user ID $SHVS_USER_ID"
-SHVS_ROLE_ID1=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"service": "CMS","name": "CertApprover","context": "CN=SHVS TLS Certificate;SAN='$SYSTEM_IP';certType=TLS"}' | jq -r ".role_id"`
-echo "Created SHVS TLS cert role with ID $SHVS_ROLE_ID1"
-SHVS_ROLE_ID2=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"service": "SGX_AGENT","name": "HostDataReader","context": ""}' | jq -r ".role_id"`
-echo "Created SHVS HostDataReader role with ID $SHVS_ROLE_ID2"
-SHVS_ROLE_ID3=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"service": "SCS","name": "HostDataUpdater","context": ""}' | jq -r ".role_id"`
-echo "Created SHVS HostDataUpdater role with ID $SHVS_ROLE_ID3"
-SHVS_ROLE_ID4=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"service": "SCS","name": "HostDataReader","context": ""}' | jq -r ".role_id"`
-echo "Created SHVS HostDataReader role with ID $SHVS_ROLE_ID4"
-SHVS_ROLE_ID5=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"service": "SHVS","name": "HostListManager","context": ""}' | jq -r ".role_id"`
-echo "Created SHVS HostListManager role with ID $SHVS_ROLE_ID5"
-SHVS_ROLE_ID6=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"service": "SHVS","name": "HostsListReader","context": ""}' | jq -r ".role_id"`
-echo "Created SHVS HostsListReader role with ID $SHVS_ROLE_ID6"
-SHVS_ROLE_ID7=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"service": "SHVS","name": "HostDataReader","context": ""}' | jq -r ".role_id"`
-echo "Created SHVS HostDataReader role with ID $SHVS_ROLE_ID7"
-
-if [ $? -eq 0 ]; then
-  curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/users/$SHVS_USER_ID/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"role_ids": ["'"$SHVS_ROLE_ID1"'", "'"$SHVS_ROLE_ID2"'", "'"$SHVS_ROLE_ID3"'", "'"$SHVS_ROLE_ID4"'", "'"$SHVS_ROLE_ID5"'", "'"$SHVS_ROLE_ID6"'", "'"$SHVS_ROLE_ID7"'"]}'
-fi
-
-SHVS_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/token -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"username": "shvsuser@shvs","password": "shvspassword"}'`
-echo "SHVS Token $SHVS_TOKEN"
-
-#  IHUB User and Roles
-IHUB_USER=`curl --noproxy "*" -k  -X POST https://$SYSTEM_IP:8444/aas/users -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"username": "admin@hub","password": "hubAdminPass"}'`
-IHUB_USER_ID=`curl --noproxy "*" -k https://$SYSTEM_IP:8444/aas/users?name=admin@hub -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' | jq -r '.[0].user_id'`
-echo "Created IHUB User with user ID $IHUB_USER_ID"
-IHUB_ROLE_ID=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"service": "CMS","name": "CertApprover","context": "CN=Integration HUB TLS Certificate;SAN='$SYSTEM_IP';certType=TLS"}' | jq -r ".role_id"`
-echo "Created IHUB TLS cert role with ID $IHUB_ROLE_ID"
-
-if [ $? -eq 0 ]; then
-  curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/users/$IHUB_USER_ID/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"role_ids": ["'"$IHUB_ROLE_ID"'", "'"$SHVS_ROLE_ID6"'", "'"$SHVS_ROLE_ID7"'"]}'
-fi
-
-IHUB_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:8444/aas/token -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"username": "admin@hub","password": "hubAdminPass"}'`
-echo "IHUB Token $IHUB_TOKEN"
-
-echo "################ Update SCS env....  #################"
-sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_IP/"  ~/scs.env
-sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$SCS_TOKEN/"  ~/scs.env
+echo "Updating SGX Caching Service env...."
+sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_SAN/"  ~/scs.env
+sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$INSTALL_ADMIN_TOKEN/"  ~/scs.env
 sed -i "s/^\(CMS_TLS_CERT_SHA384\s*=\s*\).*\$/\1$CMS_TLS_SHA/" ~/scs.env
 sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/scs.env
 sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@" ~/scs.env
@@ -224,41 +240,43 @@ sed -i "s/^\(SCS_DB_NAME\s*=\s*\).*\$/\1$SCS_DB_NAME/"  ~/scs.env
 sed -i "s/^\(SCS_DB_USERNAME\s*=\s*\).*\$/\1$SCS_DB_USERNAME/"  ~/scs.env
 sed -i "s/^\(SCS_DB_PASSWORD\s*=\s*\).*\$/\1$SCS_DB_PASSWORD/"  ~/scs.env
 
-echo "################ Installing SCS....  #################"
-./scs-*.bin || exit 1
+echo "Installing SGX Caching Service...."
+./scs-*.bin
+scs status > /dev/null
 if [ $? -ne 0 ]; then
-  echo "############ SCS Installation Failed"
+  echo "${red} SGX Caching Service Installation Failed ${reset}"
   exit 1
 fi
-echo "################ Installed SCS....  #################"
+echo "${green} Installed SGX Caching Service.... ${reset}"
 
-echo "################ Update SHVS env....  #################"
-sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_IP/" ~/shvs.env
-sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$SHVS_TOKEN/" ~/shvs.env
+echo "Updating SGX Host Verification Service env.... "
+sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_SAN/" ~/shvs.env
+sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$INSTALL_ADMIN_TOKEN/" ~/shvs.env
 sed -i "s/^\(CMS_TLS_CERT_SHA384\s*=\s*\).*\$/\1$CMS_TLS_SHA/" ~/shvs.env
 sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/shvs.env
 sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@" ~/shvs.env
-SCS_URL=https://$SYSTEM_IP:9000/scs/sgx/
+SCS_URL=https://$SYSTEM_IP:$SCS_PORT/scs/sgx/
 sed -i "s@^\(SCS_BASE_URL\s*=\s*\).*\$@\1$SCS_URL@" ~/shvs.env
 sed -i "s/^\(SHVS_DB_NAME\s*=\s*\).*\$/\1$SHVS_DB_NAME/"  ~/shvs.env
 sed -i "s/^\(SHVS_DB_USERNAME\s*=\s*\).*\$/\1$SHVS_DB_USERNAME/"  ~/shvs.env
 sed -i "s/^\(SHVS_DB_PASSWORD\s*=\s*\).*\$/\1$SHVS_DB_PASSWORD/"  ~/shvs.env
 
-echo "################ Installing SHVS....  #################"
-./shvs-*.bin || exit 1
+echo "Installing SGX Host Verification Service...."
+./shvs-*.bin
+shvs status > /dev/null
 if [ $? -ne 0 ]; then
-  echo "############ SHVS Installation Failed"
+  echo "${red} SGX Host Verification Service Installation Failed ${reset}"
   exit 1
 fi
-echo "################ Installed SHVS....  #################"
+echo "${green} Installed SGX Host Verification Service.... ${reset}"
 
-echo "################ Update IHUB env....  #################"
-sed -i "s/^\(TLS_SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_IP/" ~/ihub.env
-sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$IHUB_TOKEN/" ~/ihub.env
+echo "Updating Integration HUB env...."
+sed -i "s/^\(TLS_SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_SAN/" ~/ihub.env
+sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$INSTALL_ADMIN_TOKEN/" ~/ihub.env
 sed -i "s/^\(CMS_TLS_CERT_SHA384\s*=\s*\).*\$/\1$CMS_TLS_SHA/" ~/ihub.env
 sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/ihub.env
 sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@" ~/ihub.env
-SHVS_URL=https://$SYSTEM_IP:13000/sgx-hvs/v1
+SHVS_URL=https://$SYSTEM_IP:$SHVS_PORT/sgx-hvs/v2
 K8S_URL=https://$K8S_IP:6443/
 sed -i "s@^\(ATTESTATION_SERVICE_URL\s*=\s*\).*\$@\1$SHVS_URL@" ~/ihub.env
 sed -i "s@^\(KUBERNETES_URL\s*=\s*\).*\$@\1$K8S_URL@" ~/ihub.env
@@ -270,12 +288,11 @@ sed -i "s@^\(OPENSTACK_PLACEMENT_URL\s*=\s*\).*\$@\1$OPENSTACK_PLACEMENT_URL@" ~
 fi
 sed -i "s@^\(TENANT\s*=\s*\).*\$@\1$TENANT@" ~/ihub.env
 
-echo "################ Installing IHUB....  #################"
-./ihub-*.bin || exit 1
+echo "Installing Integration HUB...."
+./ihub-*.bin
+ihub status > /dev/null
 if [ $? -ne 0 ]; then
-  echo "############ IHUB Installation Failed"
+  echo " ${red} Integration HUB Installation Failed ${reset}"
   exit 1
 fi
-echo "################ Installed IHUB....  #################"
-
-popd
+echo "${green} Installed Integration HUB.... ${reset}"

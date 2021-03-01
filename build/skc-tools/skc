@@ -14,12 +14,12 @@ all: clean $(COMMON_TARGETS) $(TARGETS) sgx_agent skc_library
 	cp sgx-hvs/dist/linux/install_pgshvsdb.sh binaries/
 	cp intel-secl/deployments/installer/*.bin binaries/
 	cp intel-secl/deployments/installer/*.sh binaries/
+	cp intel-secl/tools/aas-manager/populate-users.env binaries/env
 	cp k8s-extensions/out/isecl-k8s-extensions-*.tar.gz binaries/
 	cp utils/build/skc-tools/sgx_agent/build_scripts/sgx_agent.* binaries/
 	cp utils/build/skc-tools/sgx_agent/agent_untar.sh binaries/
 	cp utils/build/skc-tools/skc_library/build_scripts/skc_library.* binaries/
 	cp utils/build/skc-tools/skc_library/skclib_untar.sh binaries/
-	cp utils/build/skc-tools/skc_scripts/aas-util_user-role.sh binaries/
 	cp -pf utils/build/skc-tools/skc_scripts/env/*.env binaries/env
 	cp -pf utils/build/skc-tools/skc_scripts/env/install_pg.sh binaries/
 	cp -pf utils/build/skc-tools/skc_scripts/install_*.sh binaries/

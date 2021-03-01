@@ -24,20 +24,6 @@
     src: "skc_library.conf.j2"
     dest: "/root/{{skclib_installer_name}}/skc_library.conf"
 
-- name: ISECL - SKC LIBRARY | Update aas_admin_username
-  lineinfile:
-    dest: "/root/{{skclib_installer_name}}/skc_library_create_roles.sh"
-    regexp: '"username": "admin",'
-    line: '"username": "{{ aas_admin_username }}",'
-    backrefs: yes
-
-- name: ISECL - SKC LIBRARY | Update aas_admin_password
-  lineinfile:
-    dest: "/root/{{skclib_installer_name}}/skc_library_create_roles.sh"
-    regexp: '"password": "password"'
-    line: '"password": "{{ aas_admin_password }}"'
-    backrefs: yes
-
 - name: ISECL - SKC LIBRARY | Deploy SKC LIB
   shell: "set -o pipefail && ./deploy_skc_library.sh 2>&1 | tee /root/skc_library-install.log"  
   args:

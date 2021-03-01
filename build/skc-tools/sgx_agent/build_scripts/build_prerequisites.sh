@@ -7,7 +7,6 @@ temp="${OS%\"}"
 temp="${temp#\"}"
 OS="$temp"
 VER=$(cat /etc/os-release | grep ^VERSION_ID | tr -d 'VERSION_ID="')
-OS_FLAVOUR="$OS""$VER"
 
 install_go()
 {
@@ -24,8 +23,8 @@ install_go()
 install_pre_requisites()
 {
 	if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
-		dnf install -y wget tar git gcc-c++ make curl-devel
-		dnf install -y https://dl.fedoraproject.org/pub/fedora/linux/releases/32/Everything/x86_64/os/Packages/m/makeself-2.4.0-5.fc32.noarch.rpm
+		dnf install -qy wget tar git gcc-c++ make curl-devel
+		dnf install -qy https://dl.fedoraproject.org/pub/fedora/linux/releases/32/Everything/x86_64/os/Packages/m/makeself-2.4.0-5.fc32.noarch.rpm
 	elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
 		apt install -y wget tar build-essential libcurl4-openssl-dev makeself
 	else

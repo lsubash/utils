@@ -11,7 +11,7 @@ default_ca		= ca
 
 ####################################################################
 [ req ]
-default_bits		= 2048
+default_bits		= 3072
 default_keyfile 	= privkey.pem
 # Don't prompt for fields: use those in section directly
 prompt			= no

@@ -14,6 +14,9 @@ grub_file_path: /boot/grub2/grub.cfg
 # The TPM Storage Root Key(SRK) Password to be used if TPM is already owned
 tpm_owner_secret: "{{tpm_secret | default('')}}"
 
+# The grub option to be selected for booting into TBOOT/MLE mode, use grubby --info <option:0/1...> to determine which one
+# has no boot menu assigned to it.
+grub_default_option: "3"
 
 # -------------------------- WORKLOAD SECURITY - LAUNCH TIME PROTECTION FOR DOCKER/CRIO CONTAINERS-------------------------------#
 

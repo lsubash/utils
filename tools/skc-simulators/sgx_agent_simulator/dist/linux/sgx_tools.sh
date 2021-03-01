@@ -1,11 +1,11 @@
 #!/bin/bash
-DCAP_VERSION=1.9
-SGX_DCAP_TAG=DCAP_1.9
+DCAP_VERSION=1.10
+SGX_DCAP_TAG=DCAP_1.10
 OS_FLAVOUR="rhel8.2-server"
 MULTIPACKAGE_AGENT_RPM="https://download.01.org/intel-sgx/sgx-dcap/$DCAP_VERSION/linux/tools/SGXMultiPackageAgent/$OS_FLAVOUR"
 SGX_DCAP_REPO="https://github.com/intel/SGXDataCenterAttestationPrimitives.git"
 GIT_CLONE_PATH=/tmp/dataCenterAttestationPrimitives
-MP_RPM_VER=1.9.100.3-1
+MP_RPM_VER=1.10.100.4-1
 
 install_sgx_components()
 {

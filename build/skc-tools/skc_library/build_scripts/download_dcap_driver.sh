@@ -1,7 +1,7 @@
 #!/bin/bash
 SKCLIB_DIR=$PWD/skc_library
 SKCLIB_BIN_DIR=$SKCLIB_DIR/bin
-SGX_VERSION=2.12
+SGX_VERSION=2.13
 
 # Check OS and VERSION
 OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
@@ -12,7 +12,7 @@ VER=$(cat /etc/os-release | grep ^VERSION_ID | tr -d 'VERSION_ID="')
 OS_FLAVOUR="$OS""$VER"
 
 SGX_URL="https://download.01.org/intel-sgx/sgx-linux/${SGX_VERSION}/distro/$OS_FLAVOUR-server"
-SGX_DRIVER_VERSION=1.36.2
+SGX_DRIVER_VERSION=1.41
 
 fetch_dcap_driver()
 {

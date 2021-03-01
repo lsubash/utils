@@ -2,7 +2,7 @@
 SKCLIB_DIR=$PWD/skc_library
 SKCLIB_BIN_DIR=$SKCLIB_DIR/bin
 SGX_INSTALL_DIR=/opt/intel
-SGX_VERSION=2.12
+SGX_VERSION=2.13
 
 # Check OS and VERSION
 OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
@@ -13,7 +13,7 @@ VER=$(cat /etc/os-release | grep ^VERSION_ID | tr -d 'VERSION_ID="')
 OS_FLAVOUR="$OS""$VER"
 
 SGX_URL="https://download.01.org/intel-sgx/sgx-linux/${SGX_VERSION}/distro/$OS_FLAVOUR-server"
-SGX_SDK_VERSION=2.12.100.3
+SGX_SDK_VERSION=2.13.100.4
 
 install_sgxsdk()
 {
@@ -21,6 +21,10 @@ install_sgxsdk()
 	chmod +x sgx_linux_x64_sdk_$SGX_SDK_VERSION.bin
 	./sgx_linux_x64_sdk_$SGX_SDK_VERSION.bin -prefix=$SGX_INSTALL_DIR || exit 1
 	source $SGX_INSTALL_DIR/sgxsdk/environment
+	if [ $? -ne 0 ]; then
+		echo "failed while setting sgx environment"
+		exit 1
+	fi
 	rm -rf sgx_linux_x64_sdk_$SGX_SDK_VERSION.bin
 }
 

@@ -17,15 +17,15 @@ func TestLoad(t *testing.T) {
 	temp.WriteString("cmsbaseurl: https://<cms.server.com>:8445/cms/v1/\nsgx_agent:\n")
 	defer os.Remove(temp.Name())
 	c := Load(temp.Name())
-	assert.Equal(t, "https://<cms.server.com>:8445/cms/v1/", c.CMSBaseUrl)
+	assert.Equal(t, "https://<cms.server.com>:8445/cms/v1/", c.CMSBaseURL)
 }
 
 func TestSave(t *testing.T) {
 	temp, _ := ioutil.TempFile("", "config.yml")
 	defer os.Remove(temp.Name())
 	c := Load(temp.Name())
-	c.CMSBaseUrl = "https://<cms.server.com>:8445/cms/v2/"
+	c.CMSBaseURL = "https://<cms.server.com>:8445/cms/v2/"
 	c.Save()
 	c2 := Load(temp.Name())
-	assert.Equal(t, "https://<cms.server.com>:8445/cms/v2/", c2.CMSBaseUrl)
+	assert.Equal(t, "https://<cms.server.com>:8445/cms/v2/", c2.CMSBaseURL)
 }

@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "fdd76087-61c5-493b-ab5e-e68cec24cf20",
+		"_postman_id": "88a93d53-8f48-498a-b9a0-52c4f751914d",
 		"name": "SGX Discovery and Provisioning",
 		"description": "For the secrets to be provisioned securely to SGX compute nodes in public clouds, the owner of the secret needs to ensure that the secrets will be protected in SGX enclaves by performing an SGX Attestation.\r\n\r\nSGX Attestation involves provisioning SGX nodes with Platform Certification Key (PCK) certificates. PCK certificates for SGX nodes are obtained by providing the node SGX data to the Intel SGX Provisioning Certificate Service (PCS), a cloud hosted service. PCS also returns SGX collateral such as CRLs, TCB information and QE Identity.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -15,7 +15,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "753dba02-64d0-4a75-a93b-2a27f07af5e2",
 								"exec": [
 									"pm.environment.set(\"bearerTokenSagent\", pm.response.text());"
 								],
@@ -44,12 +43,12 @@
 							"raw": "{\n    \"username\": \"{{sagentUser}}\",\n    \"password\": \"{{sagentUserPass}}\"\n}"
 						},
 						"url": {
-							"raw": "https://{{aas}}:{{aasPort}}/aas/token",
+							"raw": "https://{{aasCsp}}:{{aasPortCsp}}/aas/token",
 							"protocol": "https",
 							"host": [
-								"{{aas}}"
+								"{{aasCsp}}"
 							],
-							"port": "{{aasPort}}",
+							"port": "{{aasPortCsp}}",
 							"path": [
 								"aas",
 								"token"
@@ -78,12 +77,12 @@
 									"raw": "{\n    \"username\": \"{{sagentUser}}\",\n    \"password\": \"{{sagentUserPass}}\"\n}"
 								},
 								"url": {
-									"raw": "https://{{aas}}:{{aasPort}}/aas/token",
+									"raw": "https://{{aasCsp}}:{{aasPortCsp}}/aas/token",
 									"protocol": "https",
 									"host": [
-										"{{aas}}"
+										"{{aasCsp}}"
 									],
-									"port": "{{aasPort}}",
+									"port": "{{aasPortCsp}}",
 									"path": [
 										"aas",
 										"token"
@@ -118,7 +117,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "aa3f67b5-9fb5-4601-a195-14246f453e3e",
 								"exec": [
 									"pm.environment.set(\"bearerTokenKbs\", pm.response.text());"
 								],
@@ -150,12 +148,12 @@
 							}
 						},
 						"url": {
-							"raw": "https://{{aas}}:{{aasPort}}/aas/token",
+							"raw": "https://{{aasEnt}}:{{aasPortEnt}}/aas/token",
 							"protocol": "https",
 							"host": [
-								"{{aas}}"
+								"{{aasEnt}}"
 							],
-							"port": "{{aasPort}}",
+							"port": "{{aasPortEnt}}",
 							"path": [
 								"aas",
 								"token"
@@ -190,12 +188,12 @@
 									}
 								},
 								"url": {
-									"raw": "https://{{aas}}:{{aasPort}}/aas/token",
+									"raw": "https://{{aasEnt}}:{{aasPortEnt}}/aas/token",
 									"protocol": "https",
 									"host": [
-										"{{aas}}"
+										"{{aasEnt}}"
 									],
-									"port": "{{aasPort}}",
+									"port": "{{aasPortEnt}}",
 									"path": [
 										"aas",
 										"token"
@@ -225,8 +223,7 @@
 					]
 				}
 			],
-			"description": "To make an API request to an Intel® SecL-DC service, an authentication\r\ntoken is now required. API requests must now include an Authorization\r\nheader with an appropriate token:\r\n\r\n```\r\nAuthorization: Bearer <token>\r\n```\r\n\r\nThe token is issued by the AAS and will expire after a set amount of time.\r\nThis token may be used with any Intel® SecL-DC service, and will carry the\r\nappropriate permissions for the role(s) assigned to the account the token was\r\ngenerated for.",
-			"protocolProfileBehavior": {}
+			"description": "To make an API request to an Intel® SecL-DC service, an authentication\r\ntoken is now required. API requests must now include an Authorization\r\nheader with an appropriate token:\r\n\r\n```\r\nAuthorization: Bearer <token>\r\n```\r\n\r\nThe token is issued by the AAS and will expire after a set amount of time.\r\nThis token may be used with any Intel® SecL-DC service, and will carry the\r\nappropriate permissions for the role(s) assigned to the account the token was\r\ngenerated for."
 		},
 		{
 			"name": "Verify Services",
@@ -236,7 +233,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "62e266d3-5135-4912-8870-89f7bf10b936",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -246,15 +242,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "47245da6-93cb-4474-91d1-1d270f0f41ea",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Push Platform Information to SGX CS",
@@ -268,9 +262,11 @@
 						"method": "POST",
 						"header": [
 							{
-								"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+								"warning": "This is a duplicate header and will be overridden by the Authorization header generated by Postman.",
 								"key": "Authorization",
-								"value": "Bearer {{bearerTokenSagent}}"
+								"value": "Bearer {{bearerTokenSagent}}",
+								"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+								"type": "text"
 							},
 							{
 								"key": "Content-Type",
@@ -287,7 +283,7 @@
 							"raw": "{\n    \"cpu_svn\": \"{{cpusvn}}\",\n    \"enc_ppid\": \"{{encppid}}\",\n    \"manifest\": \"{{manifest}}\",\n    \"pce_id\": \"{{pceid}}\",\n    \"pce_svn\": \"{{pcesvn}}\",\n    \"qe_id\": \"{{qeid}}\"\n}"
 						},
 						"url": {
-							"raw": "https://{{scs}}:{{scsPort}}/scs/sgx/platforminfo/push",
+							"raw": "https://{{scs}}:{{scsPort}}/scs/sgx/certification/v1/platforms",
 							"protocol": "https",
 							"host": [
 								"{{scs}}"
@@ -296,11 +292,12 @@
 							"path": [
 								"scs",
 								"sgx",
-								"platforminfo",
-								"push"
+								"certification",
+								"v1",
+								"platforms"
 							]
 						},
-						"description": "Pushes the SGX Platform values into the SGX Caching Service (SCS). The SGX Host Verification Service (HVS) retrieves the \nplatform values (such as enc_ppi, pceid, cpisvn, pcesvn, qeid and manifest) from the registered SGX Agent and uses this API \nto push the platform values to the SCS.\nA valid bearer token should be provided to authorize this REST call.\n"
+						"description": "SGX Agent uses this API to push the platform values (such as enc_ppi, pceid, cpisvn, pcesvn, qeid and manifest) to SCS.\nA valid bearer token should be provided to authorize this REST call.\n"
 					},
 					"response": [
 						{
@@ -309,13 +306,17 @@
 								"method": "POST",
 								"header": [
 									{
-										"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+										"warning": "This is a duplicate header and will be overridden by the Authorization header generated by Postman.",
 										"key": "Authorization",
-										"value": "Bearer {{bearerTokenSagent}}"
+										"value": "Bearer {{bearerTokenSagent}}",
+										"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+										"type": "text"
 									},
 									{
 										"key": "Content-Type",
-										"value": "application/json"
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
 									},
 									{
 										"key": "Accept",
@@ -325,10 +326,15 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"cpu_svn\": \"{{cpusvn}}\",\n    \"enc_ppid\": \"{{encppid}}\",\n    \"manifest\": \"{{manifest}}\",\n    \"pce_id\": \"{{pceid}}\",\n    \"pce_svn\": \"{{pcesvn}}\",\n    \"qe_id\": \"{{qeid}}\"\n}"
+									"raw": "{\n    \"cpu_svn\": \"{{cpusvn}}\",\n    \"enc_ppid\": \"{{encppid}}\",\n    \"manifest\": \"{{manifest}}\",\n    \"pce_id\": \"{{pceid}}\",\n    \"pce_svn\": \"{{pcesvn}}\",\n    \"qe_id\": \"{{qeid}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
 								},
 								"url": {
-									"raw": "https://{{scs}}:{{scsPort}}/scs/sgx/platforminfo/push",
+									"raw": "https://{{scs}}:{{scsPort}}/scs/sgx/certification/v1/platforms",
 									"protocol": "https",
 									"host": [
 										"{{scs}}"
@@ -337,8 +343,9 @@
 									"path": [
 										"scs",
 										"sgx",
-										"platforminfo",
-										"push"
+										"certification",
+										"v1",
+										"platforms"
 									]
 								}
 							},
@@ -352,7 +359,7 @@
 								},
 								{
 									"key": "Date",
-									"value": "Mon, 31 Aug 2020 22:13:50 GMT"
+									"value": "Fri, 12 Feb 2021 10:23:01 GMT"
 								},
 								{
 									"key": "Content-Length",
@@ -365,12 +372,11 @@
 					]
 				}
 			],
-			"description": "Starting with ISecL-DC 3.2, SGX Agent supports two modes SGX Registration only mode and Orchestration mode. \r\n\r\nIn Registration only mode, SGX Agent makes use of the following SGX Caching Service (SCS) REST endpoint to push SGX platform values (encrypted_ppid, pcesvn, cpusvn, qeid, pceid and manifest) to the SCS directly.\r\n\r\nSGX Agent provides detailed resource information specific to Intel Software Guard Extensions (SGX) security technology which includes SGX Discovery, SGX Enablement Information, Flexible Launch control support and SGX EPC Memory Availability with size information. SGX Agent also collects the SGX platform-specific values, explicitly SGX Platform Manifest, Encrypted PPID, CPU SVN, ISV SVN, PCE ID and QEID on the SGX enabled platform.\r\n\r\nOnce the data is pushed successfully to the SGX Caching Service (SCS), the SGX Agent terminates.\r\n\r\nIf the push fails, the SGX Agent retries 5 times. If it still fails, the SGX Agent sleeps for 5 minutes (configurable) and tries 5 times (configurable) again. The SGX Agent continues this retry cycle until it succeeds at which time, it terminates.",
+			"description": "SGX Agent pushes platform information to SGX Caching Service (SCS), which uses it to get the PCK Certificate and other SGX collateral from the Intel SGX Provisioning Certification Service (PCS) and caches them locally. When a workload on the platform needs to generate an SGX Quote, it retrieves the PCK Certificate of the platform from SCS.\r\n\r\nSGX Agent makes use of the following SGX Caching Service (SCS) REST endpoint, to push SGX platform values (encrypted_ppid, pcesvn, cpusvn, qeid, pceid and manifest).\r\n",
 			"event": [
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "a148823b-e709-42ef-8029-08d7adc6822b",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -380,15 +386,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "a85caabd-3d06-4fc6-827b-345bb4515df8",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Verify TCB Info",
@@ -498,7 +502,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "f37ea345-56a2-4e0e-a32d-26ed8c272779",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -508,15 +511,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "dc4e728c-b9ba-442e-8874-49b5735ae2be",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Verify PCK Certificate",
@@ -670,7 +671,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "a5d5f201-471f-49b4-825f-eeacb018dcb5",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -680,15 +680,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "96db1236-6575-416e-9cc0-c1e0b480161e",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Verify Quote",
@@ -719,10 +717,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"quote\": \"<string>\",\n    \"userData\": \"<optional>\"\n}",
-							"options": {
-								"raw": {}
-							}
+							"raw": "{\n    \"quote\": \"<string>\",\n    \"userData\": \"<optional>\"\n}"
 						},
 						"url": {
 							"raw": "https://{{sqvs}}:{{sqvsPort}}/svs/v1/sgx_qv_verify_quote",
@@ -809,12 +804,11 @@
 					]
 				}
 			],
-			"description": "SGX Quote Verification service (SQVS) resource is used to verify the quote provided by the Quote verifier.\r\nSQVS checks whether the quote signature and PCK Certificate are valid, checks other parameters in the quote and returns the verification result.\r\nSQVS contacts SGX Caching service (SCS) to make sure that PCKCRL, TCBInfo, and QEIdentity in the quote are correct.\r\nSQVS listening port is user-configurable.",
+			"description": "SGX Quote Verification service (SQVS) resource is used to verify the quote provided by the Quote verifier.\r\nSQVS checks whether the quote signature and PCK Certificate are valid, checks other parameters in the quote and returns the verification result.\r\n\r\nSQVS contacts SGX Caching service (SCS) to make sure that PCKCRL, TCBInfo, and QEIdentity in the quote are correct.\r\nSQVS listening port is user-configurable.",
 			"event": [
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "e9bcca1c-8778-480e-8e7e-fb08470151da",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -824,22 +818,19 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "4ffebf9c-321d-4ac3-a3e0-cadbd1d2882c",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		}
 	],
 	"event": [
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "0c5d5537-c0eb-4e46-8c36-b46c7b8cef4d",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -849,13 +840,11 @@
 		{
 			"listen": "test",
 			"script": {
-				"id": "2d923495-494e-4c1b-b83e-e69ea5288255",
 				"type": "text/javascript",
 				"exec": [
 					""
 				]
 			}
 		}
-	],
-	"protocolProfileBehavior": {}
+	]
 }

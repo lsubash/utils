@@ -1,13 +1,19 @@
 #!/bin/bash
-
-echo "Setting up SGX_AGENT Related roles and user in AAS Database"
-
 AGENT_env="/root/sgx_agent.env"
-source $AGENT_env 2> /dev/null
-source agent.conf 2> /dev/null
+source $AGENT_env
+if [ $? -ne 0 ]; then
+	echo "${red} please set correct values in agent.env ${reset}"
+	exit 1
+fi
 
-#Get the value of AAS IP address and port. Default vlue is also provided.
-aas_hostname=${AAS_API_URL:-"https://<aas.server.com>:8444/aas"}
+source agent.conf
+if [ $? -ne 0 ]; then
+	echo "${red} please set correct values in agent.conf ${reset}"
+	exit 1
+fi
+
+#Get the value of AAS IP address and port. Default value is also provided.
+aas_hostname=$AAS_API_URL
 CURL_OPTS="-s -k"
 CONTENT_TYPE="Content-Type: application/json"
 ACCEPT="Accept: application/jwt"
@@ -20,21 +26,20 @@ reset=`tput sgr0`
 mkdir -p /tmp/sgx_agent
 tmpdir=$(mktemp -d -p /tmp/sgx_agent)
 
-cat >$tmpdir/aasAdmin.json <<EOF
-{
-	"username": "admin@aas",
-	"password": "aasAdminPass"
-}
-EOF
-
 #Get the AAS Admin JWT Token
-curl_output=`curl $CURL_OPTS -X POST -H "$CONTENT_TYPE" -H "$ACCEPT" --data @$tmpdir/aasAdmin.json -w "%{http_code}" $aas_hostname/token`
+Bearer_token=`curl $CURL_OPTS -H "$CONTENT_TYPE" -H "$ACCEPT" -X POST https://$aas_hostname/token -d \{\"username\":\"$ADMIN_USERNAME\",\"password\":\"$ADMIN_PASSWORD\"\}`
+if [ $? -ne 0 ]; then
+	echo "${red} failed to get aas admin token ${reset}"
+	exit 1
+fi
 
-Bearer_token=`echo $curl_output | rev | cut -c 4- | rev`
+if [ "$OS" == "rhel" ]; then
+	dnf install -qy jq
+elif [ "$OS" == "ubuntu" ]; then
+	apt install -qy jq
+fi
 
-dnf install -qy jq
-
-# This routined checks if sgx agent user exists and reurns user id
+# This routine checks if sgx agent user exists and returns user id
 # it creates a new user if one does not exist
 create_sgx_agent_user()
 {
@@ -44,15 +49,22 @@ cat > $tmpdir/user.json << EOF
 	"password":"$AGENT_PASSWORD"
 }
 EOF
-
 	#check if user already exists
 	curl $CURL_OPTS -H "Authorization: Bearer ${Bearer_token}" -o $tmpdir/user_response.json -w "%{http_code}" $aas_hostname/users?name=$AGENT_USER > $tmpdir/user-response.status
+	if [ $? -ne 0 ]; then
+		echo "${red} failed to get sgx user details ${reset}"
+		exit 1
+	fi
 
 	len=$(jq '. | length' < $tmpdir/user_response.json)
 	if [ $len -ne 0 ]; then
 		user_id=$(jq -r '.[0] .user_id' < $tmpdir/user_response.json)
 	else
 		curl $CURL_OPTS -X POST -H "$CONTENT_TYPE" -H "Authorization: Bearer ${Bearer_token}" --data @$tmpdir/user.json -o $tmpdir/user_response.json -w "%{http_code}" $aas_hostname/users > $tmpdir/user_response.status
+		if [ $? -ne 0 ]; then
+			echo "${red} failed to create sgx_agent user ${reset}"
+			exit 1
+		fi
 
 		local status=$(cat $tmpdir/user_response.status)
 		if [ $status -ne 201 ]; then
@@ -68,27 +80,19 @@ EOF
 	fi
 }
 
-# This routined checks if sgx agent CertApprover/HostRegistration roles exist and reurns those role ids
+# This routine check if sgx agent HostDataReader/HostDataUpdater roles exist and returns those role ids
 # it creates above roles if not present in AAS db
 create_roles()
 {
-cat > $tmpdir/certroles.json << EOF
+cat > $tmpdir/scsdataread.json << EOF
 {
-	"service": "CMS",
-	"name": "CertApprover",
-	"context": "CN=$CN;SAN=$SAN_LIST;CERTTYPE=TLS"
-}
-EOF
-
-cat > $tmpdir/hostregroles.json << EOF
-{
-	"service": "SHVS",
-	"name": "HostRegistration",
+	"service": "SCS",
+	"name": "HostDataReader",
 	"context": ""
 }
 EOF
 
-cat > $tmpdir/hostdataupdroles.json << EOF
+cat > $tmpdir/scsdataup.json << EOF
 {
 	"service": "SCS",
 	"name": "HostDataUpdater",
@@ -96,50 +100,28 @@ cat > $tmpdir/hostdataupdroles.json << EOF
 }
 EOF
 
-	#check if CertApprover role already exists
-	curl $CURL_OPTS -H "Authorization: Bearer ${Bearer_token}" -o $tmpdir/role_response.json -w "%{http_code}" $aas_hostname/roles?name=CertApprover > $tmpdir/role_response.status
+cat > $tmpdir/shvsdataup.json << EOF
+{
+	"service": "SHVS",
+	"name": "HostDataUpdater",
+	"context": ""
+}
+EOF
 
-	cms_role_id=$(jq --arg SAN $SAN_LIST -r '.[] | select ( .context | ( contains("SGX_AGENT") and contains($SAN)))' < $tmpdir/role_response.json | jq -r '.role_id')
-	if [ -z $cms_role_id ]; then
-		curl $CURL_OPTS -X POST -H "$CONTENT_TYPE" -H "Authorization: Bearer ${Bearer_token}" --data @$tmpdir/certroles.json -o $tmpdir/role_response.json -w "%{http_code}" $aas_hostname/roles > $tmpdir/role_response-status.json
-
-		local status=$(cat $tmpdir/role_response-status.json)
-		if [ $status -ne 201 ]; then
-			return 1
-		fi
-
-		if [ -s $tmpdir/role_response.json ]; then
-			cms_role_id=$(jq -r '.role_id' < $tmpdir/role_response.json)
-		fi
+	#check if HostDataReader role already exists
+	curl $CURL_OPTS -H "Authorization: Bearer ${Bearer_token}" -o $tmpdir/role_resp.json -w "%{http_code}" $aas_hostname/roles?name=HostDataReader > $tmpdir/role_resp.status
+	if [ $? -ne 0 ]; then
+		echo "${red} failed to get all HostDataReader roles info ${reset}"
+		exit 1
 	fi
 
-	#check if HostRegistration role already exists
-	curl $CURL_OPTS -H "Authorization: Bearer ${Bearer_token}" -o $tmpdir/role_resp.json -w "%{http_code}" $aas_hostname/roles?name=HostRegistration > $tmpdir/role_resp.status
-
-	len=$(jq '. | length' < $tmpdir/role_resp.json)
-	if [ $len -ne 0 ]; then
-		shvs_role_id=$(jq -r '.[0] .role_id' < $tmpdir/role_resp.json)
-	else
-		curl $CURL_OPTS -X POST -H "$CONTENT_TYPE" -H "Authorization: Bearer ${Bearer_token}" --data @$tmpdir/hostregroles.json -o $tmpdir/role_resp.json -w "%{http_code}" $aas_hostname/roles > $tmpdir/role_resp-status.json
-
-		local status=$(cat $tmpdir/role_resp-status.json)
-		if [ $status -ne 201 ]; then
-			return 1
+	scs_role_id=$(jq -r '.[] | select ( .service | ( contains("SCS")))' < $tmpdir/role_resp.json | jq -r '.role_id')
+	if [ -z $scs_role_id ]; then
+		curl $CURL_OPTS -X POST -H "$CONTENT_TYPE" -H "Authorization: Bearer ${Bearer_token}" --data @$tmpdir/scsdataread.json -o $tmpdir/scs_role_resp.json -w "%{http_code}" $aas_hostname/roles > $tmpdir/scs_role_resp-status.json
+		if [ $? -ne 0 ]; then
+			echo "${red} failed to create SCS HostDataReader role ${reset}"
+			exit 1
 		fi
-
-		if [ -s $tmpdir/role_resp.json ]; then
-			shvs_role_id=$(jq -r '.role_id' < $tmpdir/role_resp.json)
-		fi
-	fi
-
-	#check if HostDataUpdater role already exists
-	curl $CURL_OPTS -H "Authorization: Bearer ${Bearer_token}" -o $tmpdir/scs_role_resp.json -w "%{http_code}" $aas_hostname/roles?name=HostDataUpdater > $tmpdir/scs_role_resp.status
-
-	len=$(jq '. | length' < $tmpdir/scs_role_resp.json)
-	if [ $len -ne 0 ]; then
-		scs_role_id=$(jq -r '.[0] .role_id' < $tmpdir/scs_role_resp.json)
-	else
-		curl $CURL_OPTS -X POST -H "$CONTENT_TYPE" -H "Authorization: Bearer ${Bearer_token}" --data @$tmpdir/hostdataupdroles.json -o $tmpdir/scs_role_resp.json -w "%{http_code}" $aas_hostname/roles > $tmpdir/scs_role_resp-status.json
 
 		local status=$(cat $tmpdir/scs_role_resp-status.json)
 		if [ $status -ne 201 ]; then
@@ -151,10 +133,60 @@ EOF
 		fi
 	fi
 
-	ROLE_ID_TO_MAP=`echo \"$cms_role_id\",\"$shvs_role_id\",\"$scs_role_id\"`
+	#check if SCS HostDataUpdater role already exists
+	curl $CURL_OPTS -H "Authorization: Bearer ${Bearer_token}" -o $tmpdir/scs_role_resp.json -w "%{http_code}" $aas_hostname/roles?name=HostDataUpdater > $tmpdir/scs_role_resp.status
+	if [ $? -ne 0 ]; then
+		echo "${red} failed to check HostDataUpdater role ${reset}"
+		exit 1
+	fi
+
+	scs_role_id1=$(jq -r '.[0] .role_id' < $tmpdir/scs_role_resp.json)
+	if [ -z $scs_role_id1 ]; then
+		curl $CURL_OPTS -X POST -H "$CONTENT_TYPE" -H "Authorization: Bearer ${Bearer_token}" --data @$tmpdir/scsdataup.json -o $tmpdir/scs_role_resp.json -w "%{http_code}" $aas_hostname/roles > $tmpdir/scs_role_resp-status.json
+		if [ $? -ne 0 ]; then
+			echo "${red} failed to create SCS HostDataUpdater role ${reset}"
+			exit 1
+		fi
+
+		local status=$(cat $tmpdir/scs_role_resp-status.json)
+		if [ $status -ne 201 ]; then
+			return 1
+		fi
+
+		if [ -s $tmpdir/scs_role_resp.json ]; then
+			scs_role_id1=$(jq -r '.role_id' < $tmpdir/scs_role_resp.json)
+		fi
+	fi
+
+	#check if SHVS HostDataUpdater role already exists
+	curl $CURL_OPTS -H "Authorization: Bearer ${Bearer_token}" -o $tmpdir/shvs_role_resp.json -w "%{http_code}" $aas_hostname/roles?name=HostDataUpdater > $tmpdir/shvs_role_resp.status
+	if [ $? -ne 0 ]; then
+		echo "${red} failed to check HostDataUpdater role ${reset}"
+		exit 1
+	fi
+
+	shvs_role_id=$(jq -r '.[] | select ( .service | ( contains("SHVS")))' < $tmpdir/shvs_role_resp.json | jq -r '.role_id')
+	if [ -z $shvs_role_id ]; then
+		curl $CURL_OPTS -X POST -H "$CONTENT_TYPE" -H "Authorization: Bearer ${Bearer_token}" --data @$tmpdir/shvsdataup.json -o $tmpdir/shvs_role_resp.json -w "%{http_code}" $aas_hostname/roles > $tmpdir/shvs_role_resp-status.json
+		if [ $? -ne 0 ]; then
+			echo "${red} failed to create SHVS HostDataUpdater role ${reset}"
+			exit 1
+		fi
+
+		local status=$(cat $tmpdir/shvs_role_resp-status.json)
+		if [ $status -ne 201 ]; then
+			return 1
+		fi
+
+		if [ -s $tmpdir/shvs_role_resp.json ]; then
+			shvs_role_id=$(jq -r '.role_id' < $tmpdir/shvs_role_resp.json)
+		fi
+	fi
+
+	ROLE_ID_TO_MAP=`echo \"$scs_role_id\",\"$scs_role_id1\",\"$shvs_role_id\"`
 }
 
-#Maps sgx_agent User to CertApprover/HostRegistration Roles
+# Maps sgx_agent user to HostDataReader/HostDataUpdater Roles
 mapUser_to_role()
 {
 cat >$tmpdir/mapRoles.json <<EOF
@@ -164,6 +196,10 @@ cat >$tmpdir/mapRoles.json <<EOF
 EOF
 
 	curl $CURL_OPTS -X POST -H "$CONTENT_TYPE" -H "Authorization: Bearer ${Bearer_token}" --data @$tmpdir/mapRoles.json -o $tmpdir/mapRoles_response.json -w "%{http_code}" $aas_hostname/users/$user_id/roles > $tmpdir/mapRoles_response-status.json
+	if [ $? -ne 0 ]; then
+		echo "${red} failed to HostDataReader/HostDataUpdater role to sgx_agent user${reset}"
+		exit 1
+	fi
 
 	local status=$(cat $tmpdir/mapRoles_response-status.json)
 	if [ $status -ne 201 ]; then
@@ -177,20 +213,14 @@ for api in $SGX_AGENT_SETUP_API
 do
 	eval $api
     	status=$?
-	if [ $status -ne 0 ]; then
-		break;
-	fi
 done
 
-if [ $status -ne 0 ]; then
-	echo "${red} SGX_Agent-AAS User/Roles creation failed.: $api ${reset}"
-	exit 1
-else
-	echo "${green} SGX_Agent-AAS User/Roles creation succeded ${reset}"
-fi
-
-#Get Token for SGX-Agent USER and configure it in sgx_agent config.
+# Get sgx_agent user token and configure it in sgx_agent.env
 curl $CURL_OPTS -X POST -H "$CONTENT_TYPE" -H "$ACCEPT" --data @$tmpdir/user.json -o $tmpdir/agent_token-resp.json -w "%{http_code}" $aas_hostname/token > $tmpdir/get_agent_token-response.status
+if [ $? -ne 0 ]; then
+	echo "${red} failed to get token for sgx_agent user.: $api ${reset}"
+	exit 1
+fi
 
 status=$(cat $tmpdir/get_agent_token-response.status)
 if [ $status -ne 200 ]; then

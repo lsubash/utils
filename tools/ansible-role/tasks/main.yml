@@ -276,6 +276,8 @@
     scs_hostname: "{{ ansible_fqdn }}"
     shvs: "{{ ansible_default_ipv4.address }}"
     shvs_hostname: "{{ ansible_fqdn }}"
+    sgx_agent: "{{ ansible_default_ipv4.address }}"
+    sgx_agent_hostname: "{{ ansible_fqdn }}"    
   delegate_to: "{{ host }}"
   delegate_facts: true
   with_items: 
@@ -317,6 +319,7 @@
       - install_cms.yml
       - bootstrap_db.yml
       - install_aas.yml
+      - populate_users.yml
       - install_scs.yml
       - install_shvs.yml
   when: 
@@ -414,6 +417,7 @@
       - install_cms.yml
       - bootstrap_db.yml
       - install_aas.yml
+      - populate_users.yml
       - install_scs.yml
       - install_sqvs.yml
       - install_kbs.yml
@@ -477,6 +481,7 @@
       - install_cms.yml
       - bootstrap_db.yml
       - install_aas.yml
+      - populate_users.yml
       - install_scs.yml
       - install_sqvs.yml
   when:

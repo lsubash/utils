@@ -32,7 +32,7 @@ Bearer_token=`echo $curl_output | rev | cut -c 4- | rev`
 
 dnf install -qy jq
 
-# This routined checks if sgx agent user exists and reurns user id
+# This routine checks if sgx agent user exists and returns user id
 # it creates a new user if one does not exist
 create_sgx_agent_user()
 {
@@ -66,7 +66,7 @@ EOF
 	fi
 }
 
-# This routined checks if sgx agent CertApprover/HostRegistration roles exist and reurns those role ids
+# This routine checks if sgx agent CertApprover/HostRegistration roles exist and returns those role ids
 # it creates above roles if not present in AAS db
 create_roles()
 {

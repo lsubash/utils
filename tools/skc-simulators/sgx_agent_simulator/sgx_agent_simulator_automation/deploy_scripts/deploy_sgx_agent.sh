@@ -77,7 +77,7 @@ install_sgx_agent() {
 	source agent.conf
 	CMS_URL=https://$CMS_IP:$CMS_PORT/cms/v1
 	AAS_URL=https://$AAS_IP:$AAS_PORT/aas
-	SHVS_URL=https://$SHVS_IP:$SHVS_PORT/sgx-hvs/v1
+	SHVS_URL=https://$SHVS_IP:$SHVS_PORT/sgx-hvs/v2
 	SCS_URL=https://$SCS_IP:$SCS_PORT/scs/sgx
 	sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@" ~/sgx_agent.env
 	sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/sgx_agent.env
@@ -87,12 +87,6 @@ install_sgx_agent() {
 	sed -i "s/^\(CMS_TLS_CERT_SHA384\s*=\s*\).*\$/\1$CMS_TLS_SHA/" ~/sgx_agent.env
 	sed -i "s/^\(SGX_AGENT_USERNAME\s*=\s*\).*\$/\1$AGENT_USER/" ~/sgx_agent.env
 	sed -i "s/^\(SGX_AGENT_PASSWORD\s*=\s*\).*\$/\1$AGENT_PASSWORD/" ~/sgx_agent.env
-	
-	./sgx_agent_create_roles.sh
-	if [ $? -ne 0 ]; then
-		echo "sgx_agent user/role creation failed. exiting"
-		exit 1
-	fi
 
 	sgx_agent uninstall --purge
 	$SGX_AGENT_BIN/sgx_agent-v*.bin

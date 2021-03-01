@@ -50,11 +50,11 @@ Build PCS Simulator
 
 ``` {.shell}
 git clone https://github.com/intel-secl/utils.git && cd utils
-git checkout v3.3.1/develop
+git checkout v3.4/develop
 cd tools/skc-simulators/pcs_simulator
 ```
 
--   Replace PCS URL in /etc/scs/config.yml Sample: http://<pcs simulator ip>:8080/sgx/certification/v3
+-   Replace PCS URL in /etc/scs/config.yml Sample: http://pcssimulator_ip:8080/sgx/certification/v3
 -   restart SCS
 
 ``` {.shell}
