@@ -140,7 +140,7 @@ EOF
 		exit 1
 	fi
 
-	scs_role_id1=$(jq -r '.[0] .role_id' < $tmpdir/scs_role_resp.json)
+	scs_role_id1=$(jq -r '.[] | select ( .service | ( contains("SCS")))' < $tmpdir/scs_role_resp.json | jq -r '.role_id')
 	if [ -z $scs_role_id1 ]; then
 		curl $CURL_OPTS -X POST -H "$CONTENT_TYPE" -H "Authorization: Bearer ${Bearer_token}" --data @$tmpdir/scsdataup.json -o $tmpdir/scs_role_resp.json -w "%{http_code}" $aas_hostname/roles > $tmpdir/scs_role_resp-status.json
 		if [ $? -ne 0 ]; then
