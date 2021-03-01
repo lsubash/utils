@@ -34,7 +34,7 @@ aas_url=https://$AAS_IP:8444/aas
 mkdir -p /tmp/skclib
 tmpdir=$(mktemp -d -p /tmp/skclib)
 
-Bearer_token=`curl $CURL_OPTS -H "$CONTENT_TYPE" -H "$ACCEPT" -X $aas_url/token -d \{\"username\":\"$ADMIN_USERNAME\",\"password\":\"$ADMIN_PASSWORD\"\}`
+Bearer_token=`curl $CURL_OPTS -H "$CONTENT_TYPE" -H "$ACCEPT" -X POST $aas_url/token -d \{\"username\":\"$ADMIN_USERNAME\",\"password\":\"$ADMIN_PASSWORD\"\}`
 if [ $? -ne 0 ]; then
 	echo "${red} could not get AAS Admin token ${reset}"
 	exit 1
