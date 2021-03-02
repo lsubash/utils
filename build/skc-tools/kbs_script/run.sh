@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # set this to system ip where kbs/aas are deployed
-SYSTEM_IP=server.com
+SYSTEM_IP=
 # set this to absoulte file path in /etc/kbs/certs/trustedca/ directory
-CACERT_PATH=cms-ca.cert
+CACERT_PATH=
 
 # Check OS
 OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)

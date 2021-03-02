@@ -228,7 +228,8 @@ fi
 echo "${green} Installed SGX Quote Verification Service....${reset}"
 
 echo "Updating Key Broker Service env...."
-sed -i "s/^\(TLS_SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_SAN/" ~/kbs.env
+KBS_HOSTNAME=$("hostname")
+sed -i "s/^\(TLS_SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_SAN,$KBS_HOSTNAME/" ~/kbs.env
 sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$INSTALL_ADMIN_TOKEN/" ~/kbs.env
 sed -i "s/^\(CMS_TLS_CERT_SHA384\s*=\s*\).*\$/\1$CMS_TLS_SHA/" ~/kbs.env
 sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/kbs.env
