@@ -372,6 +372,7 @@ skclib_admin_password: password
 
 # SKC Library KeyTransfer Role Context 
 skclib_key_transfer_context: permissions=nginx,USA
+permissions: nginx,USA
 
 # --------------------------------------- SGX Dependency ----------------------------------------------- #
 #
