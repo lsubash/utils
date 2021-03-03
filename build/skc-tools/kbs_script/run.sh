@@ -1,22 +1,23 @@
 #!/bin/bash
 
-# set this to system ip where kbs/aas are deployed
-SYSTEM_IP=
-# set this to absoulte file path in /etc/kbs/certs/trustedca/ directory
-CACERT_PATH=
-
 # Check OS
 OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
 temp="${OS%\"}"
 temp="${temp#\"}"
 OS="$temp"
 
-AAS_PORT=8444
-KBS_PORT=9443
-AAS_USERNAME=admin@aas
-AAS_PASSWORD=aasAdminPass
-EnterPriseAdmin=EAdmin
-EnterPrisePassword=EPassword
+# read from environment variables file if it exists
+if [ -f ./kbs.conf ]; then
+    echo "Reading Installation variables from $(pwd)/kbs.conf"
+    source kbs.conf
+    if [ $? -ne 0 ]; then
+        echo "${red} please set correct values in kbs.conf ${reset}"
+        exit 1
+    fi
+
+    env_file_exports=$(cat ./kbs.conf | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
+    if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
+fi
 
 CONTENT_TYPE="Content-Type: application/json"
 ACCEPT="Accept: application/json"
@@ -33,11 +34,11 @@ fi
 aas_token=`curl -k -H "$CONTENT_TYPE" -H "$ACCEPT" --data \{\"username\":\"$AAS_USERNAME\",\"password\":\"$AAS_PASSWORD\"\} $AAS_BASE_URL/token`
 
 # Create EnterPriseAdmin User and assign the roles.
-user_="\"username\":\"$EnterPriseAdmin\""
-password_="\"password\":\"$EnterPrisePassword\""
+user_="\"username\":\"$ENTERPRISE_ADMIN\""
+password_="\"password\":\"$ENTERPRISE_PASSWORD\""
 curl -s -k -H "$CONTENT_TYPE" -H "Authorization: Bearer $aas_token" --data \{$user_,$password_\} $http_header $AAS_BASE_URL/users
 
-user_details=`curl -k "$CONTENT_TYPE" -H "Authorization: Bearer $aas_token" -w %{http_code}  $AAS_BASE_URL/users?name=$EnterPriseAdmin`
+user_details=`curl -k "$CONTENT_TYPE" -H "Authorization: Bearer $aas_token" -w %{http_code}  $AAS_BASE_URL/users?name=$ENTERPRISE_ADMIN`
 user_id=`echo $user_details| awk 'BEGIN{RS="user_id\":\""} {print $1}' | sed -n '2p' | awk 'BEGIN{FS="\",\"username\":\""} {print $1}'`
 
 # createRoles("KMS","KeyCRUD","","permissions:["*:*:*"]")
@@ -49,7 +50,7 @@ role_id1=`echo $role_details | cut -d '"' -f 4`
 curl -s -k -H "$CONTENT_TYPE" -H "Authorization: Bearer ${aas_token}" --data \{\"role_ids\":\[\"$role_id1\"\]\} -w %{http_code} $AAS_BASE_URL/users/$user_id/roles
 
 # get updated user token
-BEARER_TOKEN=`curl -k -H "$CONTENT_TYPE" -H "$ACCEPT" -H "Authorization: Bearer $aas_token" --data \{\"username\":\"$EnterPriseAdmin\",\"password\":\"$EnterPrisePassword\"\} $AAS_BASE_URL/token`
+BEARER_TOKEN=`curl -k -H "$CONTENT_TYPE" -H "$ACCEPT" -H "Authorization: Bearer $aas_token" --data \{\"username\":\"$ENTERPRISE_ADMIN\",\"password\":\"$ENTERPRISE_PASSWORD\"\} $AAS_BASE_URL/token`
 echo $BEARER_TOKEN
 
 curl -H "Authorization: Bearer ${BEARER_TOKEN}" -H "$CONTENT_TYPE" --cacert $CACERT_PATH \
