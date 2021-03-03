@@ -85,7 +85,7 @@ install_sgx_agent() {
 		exit 1
 	fi
 	CMS_URL=https://$CMS_IP:8445/cms/v1
-	AAS_URL=https://$AAS_IP:8444/aas
+	AAS_URL=https://$AAS_IP:8444/aas/v1
 	SCS_URL=https://$SCS_IP:9000/scs/sgx
 	sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@" ~/sgx_agent.env
 	sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/sgx_agent.env

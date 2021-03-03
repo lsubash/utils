@@ -101,7 +101,7 @@ fi
 popd
 
 echo "Installing Certificate Management Service...."
-AAS_URL=https://$SYSTEM_IP:$AAS_PORT/aas
+AAS_URL=https://$SYSTEM_IP:$AAS_PORT/aas/v1
 sed -i "s/^\(AAS_TLS_SAN\s*=\s*\).*\$/\1$SYSTEM_SAN/" ~/cms.env
 sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/cms.env
 sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_SAN/" ~/cms.env
@@ -181,7 +181,7 @@ fi
 popd
 
 echo "Getting AuthService Admin token...."
-INSTALL_ADMIN_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:$AAS_PORT/aas/token -d '{"username": "'"$INSTALL_ADMIN_USERNAME"'", "password": "'"$INSTALL_ADMIN_PASSWORD"'"}'`
+INSTALL_ADMIN_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:$AAS_PORT/aas/v1/token -d '{"username": "'"$INSTALL_ADMIN_USERNAME"'", "password": "'"$INSTALL_ADMIN_PASSWORD"'"}'`
 
 if [ $? -ne 0 ]; then
   echo "${red} Could not get AuthService Admin token ${reset}"

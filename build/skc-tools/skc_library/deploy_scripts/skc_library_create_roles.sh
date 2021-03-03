@@ -29,7 +29,7 @@ CURL_OPTS="-s -k"
 CONTENT_TYPE="Content-Type: application/json"
 ACCEPT="Accept: application/jwt"
 SGX_DEFAULT_PATH=/etc/sgx_default_qcnl.conf
-aas_url=https://$AAS_IP:8444/aas
+aas_url=https://$AAS_IP:8444/aas/v1
 
 mkdir -p /tmp/skclib
 tmpdir=$(mktemp -d -p /tmp/skclib)

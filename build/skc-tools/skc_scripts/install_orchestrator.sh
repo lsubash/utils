@@ -82,7 +82,7 @@ else
 fi
 popd
 
-AAS_URL=https://$SYSTEM_IP:$AAS_PORT/aas
+AAS_URL=https://$SYSTEM_IP:$AAS_PORT/aas/v1
 CMS_URL=https://$SYSTEM_IP:$CMS_PORT/cms/v1/
 echo "Updating Populate users env ...."
 ISECL_INSTALL_COMPONENTS=SHVS,SIH
@@ -123,7 +123,7 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "Getting AAS Admin user token...."
-INSTALL_ADMIN_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:$AAS_PORT/aas/token -d '{"username": "'"$INSTALL_ADMIN_USERNAME"'", "password": "'"$INSTALL_ADMIN_PASSWORD"'"}'`
+INSTALL_ADMIN_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:$AAS_PORT/aas/v1/token -d '{"username": "'"$INSTALL_ADMIN_USERNAME"'", "password": "'"$INSTALL_ADMIN_PASSWORD"'"}'`
 if [ $? -ne 0 ]; then
   echo "${red} could not get AAS Admin token ${reset}"
   exit 1

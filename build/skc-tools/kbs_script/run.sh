@@ -20,6 +20,7 @@ EnterPrisePassword=EPassword
 
 CONTENT_TYPE="Content-Type: application/json"
 ACCEPT="Accept: application/json"
+AAS_BASE_URL=https://$SYSTEM_IP:$AAS_PORT/aas/v1
 
 rm -rf output *response.* *debug.*
 
@@ -29,26 +30,26 @@ elif [ "$OS" == "ubuntu" ]; then
 apt-get install jq -y
 fi
 
-aas_token=`curl -k -H "$CONTENT_TYPE" -H "$ACCEPT" --data \{\"username\":\"$AAS_USERNAME\",\"password\":\"$AAS_PASSWORD\"\} https://$SYSTEM_IP:$AAS_PORT/aas/token`
+aas_token=`curl -k -H "$CONTENT_TYPE" -H "$ACCEPT" --data \{\"username\":\"$AAS_USERNAME\",\"password\":\"$AAS_PASSWORD\"\} $AAS_BASE_URL/token`
 
 # Create EnterPriseAdmin User and assign the roles.
 user_="\"username\":\"$EnterPriseAdmin\""
 password_="\"password\":\"$EnterPrisePassword\""
-curl -s -k -H "$CONTENT_TYPE" -H "Authorization: Bearer $aas_token" --data \{$user_,$password_\} $http_header https://$SYSTEM_IP:$AAS_PORT/aas/users
+curl -s -k -H "$CONTENT_TYPE" -H "Authorization: Bearer $aas_token" --data \{$user_,$password_\} $http_header $AAS_BASE_URL/users
 
-user_details=`curl -k "$CONTENT_TYPE" -H "Authorization: Bearer $aas_token" -w %{http_code}  https://$SYSTEM_IP:$AAS_PORT/aas/users?name=$EnterPriseAdmin`
+user_details=`curl -k "$CONTENT_TYPE" -H "Authorization: Bearer $aas_token" -w %{http_code}  $AAS_BASE_URL/users?name=$EnterPriseAdmin`
 user_id=`echo $user_details| awk 'BEGIN{RS="user_id\":\""} {print $1}' | sed -n '2p' | awk 'BEGIN{FS="\",\"username\":\""} {print $1}'`
 
 # createRoles("KMS","KeyCRUD","","permissions:["*:*:*"]")
-curl -s -k -H "$CONTENT_TYPE" -H "Authorization: Bearer $aas_token" --data \{\"service\":\"KBS\",\"name\":\"KeyCRUD\",\"permissions\":[\"*:*:*\"]\} $http_header https://$SYSTEM_IP:$AAS_PORT/aas/roles
-role_details=`curl -k "$CONTENT_TYPE" -H "Authorization: Bearer $aas_token" -w %{http_code}  https://$SYSTEM_IP:$AAS_PORT/aas/roles?service=KBS\&name=KeyCRUD`
+curl -s -k -H "$CONTENT_TYPE" -H "Authorization: Bearer $aas_token" --data \{\"service\":\"KBS\",\"name\":\"KeyCRUD\",\"permissions\":[\"*:*:*\"]\} $http_header $AAS_BASE_URL/roles
+role_details=`curl -k "$CONTENT_TYPE" -H "Authorization: Bearer $aas_token" -w %{http_code} $AAS_BASE_URL/roles?service=KBS\&name=KeyCRUD`
 role_id1=`echo $role_details | cut -d '"' -f 4`
 
 # map Key CRUD roles to enterprise admin
-curl -s -k -H "$CONTENT_TYPE" -H "Authorization: Bearer ${aas_token}" --data \{\"role_ids\":\[\"$role_id1\"\]\} -w %{http_code} https://$SYSTEM_IP:$AAS_PORT/aas/users/$user_id/roles
+curl -s -k -H "$CONTENT_TYPE" -H "Authorization: Bearer ${aas_token}" --data \{\"role_ids\":\[\"$role_id1\"\]\} -w %{http_code} $AAS_BASE_URL/users/$user_id/roles
 
 # get updated user token
-BEARER_TOKEN=`curl -k -H "$CONTENT_TYPE" -H "$ACCEPT" -H "Authorization: Bearer $aas_token" --data \{\"username\":\"$EnterPriseAdmin\",\"password\":\"$EnterPrisePassword\"\} https://$SYSTEM_IP:$AAS_PORT/aas/token`
+BEARER_TOKEN=`curl -k -H "$CONTENT_TYPE" -H "$ACCEPT" -H "Authorization: Bearer $aas_token" --data \{\"username\":\"$EnterPriseAdmin\",\"password\":\"$EnterPrisePassword\"\} $AAS_BASE_URL/token`
 echo $BEARER_TOKEN
 
 curl -H "Authorization: Bearer ${BEARER_TOKEN}" -H "$CONTENT_TYPE" --cacert $CACERT_PATH \
