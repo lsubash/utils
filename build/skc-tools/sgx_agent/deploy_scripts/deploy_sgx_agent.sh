@@ -85,28 +85,25 @@ install_sgx_agent() {
 		exit 1
 	fi
 	CMS_URL=https://$CMS_IP:8445/cms/v1
-	AAS_URL=https://$AAS_IP:8444/aas/v1
 	SCS_URL=https://$SCS_IP:9000/scs/sgx
 	sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@" ~/sgx_agent.env
-	sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/sgx_agent.env
 	sed -i "s@^\(SCS_BASE_URL\s*=\s*\).*\$@\1$SCS_URL@" ~/sgx_agent.env
-	sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SGX_AGENT_SAN/" ~/sgx_agent.env
 	sed -i "s/^\(CMS_TLS_CERT_SHA384\s*=\s*\).*\$/\1$CMS_TLS_SHA/" ~/sgx_agent.env
-	sed -i "s/^\(SGX_AGENT_USERNAME\s*=\s*\).*\$/\1$AGENT_USER/" ~/sgx_agent.env
-	sed -i "s/^\(SGX_AGENT_PASSWORD\s*=\s*\).*\$/\1$AGENT_PASSWORD/" ~/sgx_agent.env
 	if [ -z $SHVS_IP ]; then
 		sed -i "/SHVS_BASE_URL/d" ~/sgx_agent.env
 	else
 		SHVS_URL=https://$SHVS_IP:13000/sgx-hvs/v2
 		sed -i "s@^\(SHVS_BASE_URL\s*=\s*\).*\$@\1$SHVS_URL@" ~/sgx_agent.env
 	fi
-	./sgx_agent_create_roles.sh
+	LONG_LIVED_TOKEN=`./create_roles.sh`
 	if [ $? -ne 0 ]; then
-		echo "${red} sgx_agent user/role creation failed. exiting ${reset}"
+		echo "${red} sgx_agent token generation failed. exiting ${reset}"
 		exit 1
 	fi
+	echo "${green} sgx agent roles created ${reset}"
 
-	echo "${green} sgx agent user and roles created ${reset}"
+	sed -i "s|BEARER_TOKEN=.*|BEARER_TOKEN=$LONG_LIVED_TOKEN|g" ~/sgx_agent.env
+
 	echo "Uninstalling existing SGX Agent Installation...."
 	sgx_agent uninstall --purge
 	echo "Installing SGX Agent...."
