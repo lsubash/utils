@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "88a93d53-8f48-498a-b9a0-52c4f751914d",
+		"_postman_id": "833a4d64-e423-4ed7-a866-0edbeedf56fd",
 		"name": "SGX Discovery and Provisioning",
 		"description": "For the secrets to be provisioned securely to SGX compute nodes in public clouds, the owner of the secret needs to ensure that the secrets will be protected in SGX enclaves by performing an SGX Attestation.\r\n\r\nSGX Attestation involves provisioning SGX nodes with Platform Certification Key (PCK) certificates. PCK certificates for SGX nodes are obtained by providing the node SGX data to the Intel SGX Provisioning Certificate Service (PCS), a cloud hosted service. PCS also returns SGX collateral such as CRLs, TCB information and QE Identity.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -43,7 +43,7 @@
 							"raw": "{\n    \"username\": \"{{sagentUser}}\",\n    \"password\": \"{{sagentUserPass}}\"\n}"
 						},
 						"url": {
-							"raw": "https://{{aasCsp}}:{{aasPortCsp}}/aas/token",
+							"raw": "https://{{aasCsp}}:{{aasPortCsp}}/aas/v1/token",
 							"protocol": "https",
 							"host": [
 								"{{aasCsp}}"
@@ -51,6 +51,7 @@
 							"port": "{{aasPortCsp}}",
 							"path": [
 								"aas",
+								"v1",
 								"token"
 							]
 						},
@@ -77,7 +78,7 @@
 									"raw": "{\n    \"username\": \"{{sagentUser}}\",\n    \"password\": \"{{sagentUserPass}}\"\n}"
 								},
 								"url": {
-									"raw": "https://{{aasCsp}}:{{aasPortCsp}}/aas/token",
+									"raw": "https://{{aasCsp}}:{{aasPortCsp}}/aas/v1/token",
 									"protocol": "https",
 									"host": [
 										"{{aasCsp}}"
@@ -85,6 +86,7 @@
 									"port": "{{aasPortCsp}}",
 									"path": [
 										"aas",
+										"v1",
 										"token"
 									]
 								}
@@ -148,7 +150,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://{{aasEnt}}:{{aasPortEnt}}/aas/token",
+							"raw": "https://{{aasEnt}}:{{aasPortEnt}}/aas/v1/token",
 							"protocol": "https",
 							"host": [
 								"{{aasEnt}}"
@@ -156,6 +158,7 @@
 							"port": "{{aasPortEnt}}",
 							"path": [
 								"aas",
+								"v1",
 								"token"
 							]
 						},
@@ -188,7 +191,7 @@
 									}
 								},
 								"url": {
-									"raw": "https://{{aasEnt}}:{{aasPortEnt}}/aas/token",
+									"raw": "https://{{aasEnt}}:{{aasPortEnt}}/aas/v1/token",
 									"protocol": "https",
 									"host": [
 										"{{aasEnt}}"
@@ -196,6 +199,7 @@
 									"port": "{{aasPortEnt}}",
 									"path": [
 										"aas",
+										"v1",
 										"token"
 									]
 								}

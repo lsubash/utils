@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "652ddfc2-2547-4175-86a6-781a5476b8a8",
+		"_postman_id": "43c4a153-9d1d-4926-be4b-4ca9e5a52c31",
 		"name": "Secure Key Caching",
 		"description": "Key Protection is implemented by the SKC Client -- a set of libraries - which must be linked with a\ntenant workload, like Nginx, deployed in a CSP environment and the Key Broker Service (KBS)\ndeployed in the tenant's enterprise environment. The SKC Client retrieves the keys needed by the\nworkload from KBS after proving that the key can be protected in an SGX enclave.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -46,7 +46,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://{{aas}}:{{aasPort}}/aas/token",
+							"raw": "https://{{aas}}:{{aasPort}}/aas/v1/token",
 							"protocol": "https",
 							"host": [
 								"{{aas}}"
@@ -54,6 +54,7 @@
 							"port": "{{aasPort}}",
 							"path": [
 								"aas",
+								"v1",
 								"token"
 							]
 						},
@@ -86,7 +87,7 @@
 									}
 								},
 								"url": {
-									"raw": "https://{{aas}}:{{aasPort}}/aas/token",
+									"raw": "https://{{aas}}:{{aasPort}}/aas/v1/token",
 									"protocol": "https",
 									"host": [
 										"{{aas}}"
@@ -94,6 +95,7 @@
 									"port": "{{aasPort}}",
 									"path": [
 										"aas",
+										"v1",
 										"token"
 									]
 								}
@@ -157,7 +159,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://{{aas}}:{{aasPort}}/aas/token",
+							"raw": "https://{{aas}}:{{aasPort}}/aas/v1/token",
 							"protocol": "https",
 							"host": [
 								"{{aas}}"
@@ -165,6 +167,7 @@
 							"port": "{{aasPort}}",
 							"path": [
 								"aas",
+								"v1",
 								"token"
 							]
 						},
@@ -197,7 +200,7 @@
 									}
 								},
 								"url": {
-									"raw": "https://{{aas}}:{{aasPort}}/aas/token",
+									"raw": "https://{{aas}}:{{aasPort}}/aas/v1/token",
 									"protocol": "https",
 									"host": [
 										"{{aas}}"
@@ -205,6 +208,7 @@
 									"port": "{{aasPort}}",
 									"path": [
 										"aas",
+										"v1",
 										"token"
 									]
 								}
