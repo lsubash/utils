@@ -5,13 +5,11 @@ all: clean $(COMMON_TARGETS) $(TARGETS) sgx_agent skc_library
 	mkdir -p binaries/env
 	cp sgx-caching-service/out/*.bin binaries/
 	cp sgx-caching-service/dist/linux/scs.env binaries/env
-	cp sgx-caching-service/dist/linux/install_pgscsdb.sh binaries/
 	cp sgx-verification-service/out/*.bin binaries/
 	cp sgx-verification-service/dist/linux/sqvs.env binaries/env
 	cp sgx-verification-service/dist/linux/trusted_rootca.pem binaries/
 	cp sgx-hvs/out/*.bin binaries/
 	cp sgx-hvs/dist/linux/shvs.env binaries/env
-	cp sgx-hvs/dist/linux/install_pgshvsdb.sh binaries/
 	cp intel-secl/deployments/installer/*.bin binaries/
 	cp intel-secl/deployments/installer/*.sh binaries/
 	cp intel-secl/tools/aas-manager/populate-users.env binaries/env

@@ -34,8 +34,8 @@ fi
 \cp -pf $SKC_BINARY_DIR/env/iseclpgdb.env $HOME_DIR
 \cp -pf $SKC_BINARY_DIR/env/populate-users.env $HOME_DIR
 
-# Copy DB scripts to Home directory
-\cp -pf $SKC_BINARY_DIR/install_pgshvsdb.sh $HOME_DIR
+# Copy DB and user/role creation script to Home directory
+\cp -pf $SKC_BINARY_DIR/create_db.sh $HOME_DIR
 \cp -pf $SKC_BINARY_DIR/populate-users.sh $HOME_DIR
 
 if [ -f ./orchestrator.conf ]; then
@@ -59,27 +59,25 @@ echo "Uninstalling Integration HUB...."
 ihub uninstall --purge
 popd
 
-function is_database() {
-    export PGPASSWORD=$3
-    psql -U $2 -lqt | cut -d \| -f 1 | grep -wq $1
-}
-
 pushd $PWD
 cd ~
-if is_database $SHVS_DB_NAME $SHVS_DB_USERNAME $SHVS_DB_PASSWORD
-then
-   echo "$SHVS_DB_NAME database exists"
-else
-   echo "Updating iseclpgdb.env for SGX Host Verification Service...."
-   sed -i "s@^\(ISECL_PGDB_DBNAME\s*=\s*\).*\$@\1$SHVS_DB_NAME@" ~/iseclpgdb.env
-   sed -i "s@^\(ISECL_PGDB_USERNAME\s*=\s*\).*\$@\1$SHVS_DB_USERNAME@" ~/iseclpgdb.env
-   sed -i "s@^\(ISECL_PGDB_USERPASSWORD\s*=\s*\).*\$@\1$SHVS_DB_PASSWORD@" ~/iseclpgdb.env
-   bash install_pgshvsdb.sh
-   if [ $? -ne 0 ]; then
-	echo "${red} shvs db creation failed ${reset}"
-	exit 1
-   fi
+
+echo "Installing Postgres....."
+bash install_pg.sh
+if [ $? -ne 0 ]; then
+        echo "${red} postgres installation failed ${reset}"
+        exit 1
 fi
+echo "Postgres installated successfully"
+
+echo "Creating SHVS database....."
+bash create_db.sh $SHVS_DB_NAME $SHVS_DB_USERNAME $SHVS_DB_PASSWORD
+if [ $? -ne 0 ]; then
+        echo "${red} shvs db creation failed ${reset}"
+        exit 1
+fi
+echo "SHVS database created successfully"
+
 popd
 
 AAS_URL=https://$SYSTEM_IP:$AAS_PORT/aas/v1

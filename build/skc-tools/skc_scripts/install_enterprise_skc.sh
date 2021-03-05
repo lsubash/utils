@@ -21,9 +21,9 @@ KBS_PORT=9443
 \cp -pf $SKC_BINARY_DIR/env/iseclpgdb.env $HOME_DIR
 \cp -pf $SKC_BINARY_DIR/env/populate-users.env $HOME_DIR
 
-# Copy DB scripts to Home directory
+# Copy DB and user/role creation script to Home directory
 \cp -pf $SKC_BINARY_DIR/install_pg.sh $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/install_pgscsdb.sh $HOME_DIR
+\cp -pf $SKC_BINARY_DIR/create_db.sh $HOME_DIR
 \cp -pf $SKC_BINARY_DIR/populate-users.sh $HOME_DIR
 
 \cp -pf $SKC_BINARY_DIR/trusted_rootca.pem /tmp
@@ -61,42 +61,32 @@ echo "Uninstalling Key Broker Service...."
 kbs uninstall --purge
 popd
 
-function is_database() {
-    export PGPASSWORD=$3
-    psql -U $2 -lqt | cut -d \| -f 1 | grep -wq $1
-}
-
 pushd $PWD
 cd ~
-if is_database $AAS_DB_NAME $AAS_DB_USERNAME $AAS_DB_PASSWORD
-then 
-   echo "$AAS_DB_NAME database exists"
-else
-   echo "Updating iseclpgdb.env for AuthService...."
-   sed -i "s@^\(ISECL_PGDB_DBNAME\s*=\s*\).*\$@\1$AAS_DB_NAME@" ~/iseclpgdb.env
-   sed -i "s@^\(ISECL_PGDB_USERNAME\s*=\s*\).*\$@\1$AAS_DB_USERNAME@" ~/iseclpgdb.env
-   sed -i "s@^\(ISECL_PGDB_USERPASSWORD\s*=\s*\).*\$@\1$AAS_DB_PASSWORD@" ~/iseclpgdb.env
-   bash install_pg.sh
-   if [ $? -ne 0 ]; then
-	echo "${red} aas db creation failed ${reset}"
-	exit 1
-   fi
-fi
 
-if is_database $SCS_DB_NAME $SCS_DB_USERNAME $SCS_DB_PASSWORD
-then
-   echo "$SCS_DB_NAME database exists"
-else
-   echo "Updating iseclpgdb.env for SGX Caching Service...."
-   sed -i "s@^\(ISECL_PGDB_DBNAME\s*=\s*\).*\$@\1$SCS_DB_NAME@" ~/iseclpgdb.env
-   sed -i "s@^\(ISECL_PGDB_USERNAME\s*=\s*\).*\$@\1$SCS_DB_USERNAME@" ~/iseclpgdb.env
-   sed -i "s@^\(ISECL_PGDB_USERPASSWORD\s*=\s*\).*\$@\1$SCS_DB_PASSWORD@" ~/iseclpgdb.env
-   bash install_pgscsdb.sh
-   if [ $? -ne 0 ]; then
-	echo "${red} scs db creation failed ${reset}"
-	exit 1
-   fi
+echo "Installing Postgres....."
+bash install_pg.sh
+if [ $? -ne 0 ]; then
+        echo "${red} postgres installation failed ${reset}"
+        exit 1
 fi
+echo "Postgres installated successfully"
+
+echo "Creating AAS database....."
+bash create_db.sh $AAS_DB_NAME $AAS_DB_USERNAME $AAS_DB_PASSWORD
+if [ $? -ne 0 ]; then
+        echo "${red} aas db creation failed ${reset}"
+        exit 1
+fi
+echo "AAS database created successfully"
+
+echo "Creating SCS database....."
+bash create_db.sh $SCS_DB_NAME $SCS_DB_USERNAME $SCS_DB_PASSWORD
+if [ $? -ne 0 ]; then
+        echo "${red} scs db creation failed ${reset}"
+        exit 1
+fi
+echo "SCS database created successfully"
 
 popd
 
