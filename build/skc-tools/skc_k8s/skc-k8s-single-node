@@ -1,0 +1,45 @@
+TARGETS = sgx-caching-service sgx-verification-service sgx-hvs
+
+all: clean intel_secl_k8s $(TARGETS) k8s-extensions sgx_agent skc_library
+	mkdir -p k8s/container-images
+	mkdir -p k8s/manifests
+	cp -r utils/build/skc-tools/skc_k8s/single-node/* k8s/manifests/
+	cp -r utils/build/skc-tools/skc_k8s/k8s-extensions-controller k8s/manifests/
+	cp -r utils/build/skc-tools/skc_k8s/k8s-extensions-scheduler k8s/manifests/
+	cp intel-secl/deployments/container-archive/oci/* k8s/container-images/
+	cp intel-secl/deployments/k8s/aas/db_rotation.sql k8s/manifests/aas/
+	mkdir -p k8s/manifests/aas/scripts
+	cp intel-secl/deployments/k8s/aas/populate-users k8s/manifests/aas/scripts/
+	cp intel-secl/deployments/k8s/aas/populate-users.env k8s/manifests/aas/scripts/populate-users.env
+	cp -r utils/build/skc-tools/kbs_script k8s/manifests/kbs/
+	cp k8s-extensions/out/isecl-k8s-extensions/*.tar k8s/container-images/
+	cp sgx-caching-service/out/*.tar k8s/container-images/
+	cp sgx-verification-service/out/*.tar k8s/container-images/
+	cp sgx-hvs/out/*.tar k8s/container-images/
+	cp sgx_agent/out/*.tar k8s/container-images/
+	cp skc_library/out/*.tar k8s/container-images/
+
+clean: $(patsubst %, %-clean, $(TARGETS))
+	rm -rf k8s/
+
+sgx_agent:
+	cd utils/build/skc-tools/sgx_agent/build_scripts/ && ./sgxagent_build.sh
+
+skc_library:
+	cd utils/build/skc-tools/skc_library/build_scripts/ && ./skc_library_build.sh
+
+intel_secl_k8s:
+	cd intel-secl && make k8s
+
+$(TARGETS):
+	cd $@ && make oci-archive
+
+k8s-extensions:
+	cd k8s-extensions && make all
+
+%-clean:
+	cd $* && make clean
+	cd intel-secl && make clean
+	cd k8s-extensions && make clean
+
+.PHONY: all clean sgx_agent skc_library $(TARGETS) k8s-extensions

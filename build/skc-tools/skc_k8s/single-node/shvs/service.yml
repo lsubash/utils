@@ -1,0 +1,36 @@
+# Copyright (C) 2021  Intel Corporation
+# SPDX-License-Identifier: BSD-3-Clause
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shvsdb-svc
+  namespace: isecl
+  labels:
+    env: demo
+    app: shvsdb
+spec:
+  selector:
+    app: shvsdb
+  type: ClusterIP
+  ports:
+    - targetPort: 5432
+      port: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shvs-svc
+  namespace: isecl
+  labels:
+    env: demo
+    app: shvs
+spec:
+  selector:
+    app: shvs
+  type: NodePort
+  ports:
+    - port: 13000
+      targetPort: 13000
+      nodePort: 30500

@@ -1,0 +1,84 @@
+# Copyright (C) 2021  Intel Corporation
+# SPDX-License-Identifier: BSD-3-Clause
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kbs-deployment
+  namespace: isecl
+  labels:
+    env: demo
+    app: kbs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kbs
+  template:
+    metadata:
+      labels:
+        app: kbs
+    spec:
+      securityContext:
+        fsGroup: 1001
+      initContainers:
+        - image: busybox:latest
+          imagePullPolicy: Always
+          name: chown-config-data
+          command:
+            - /bin/chown
+            - -R
+            - "1001"
+            - /etc/kbs
+            - /var/log/kbs
+            - /opt/kbs
+          volumeMounts:
+            - name: kbs-config-volume
+              mountPath: /etc/kbs
+            - name: kbs-logs-volume
+              mountPath: /var/log/kbs
+            - name: kbs-opt-volume
+              mountPath: /opt/kbs
+      containers:
+        - name: kbs
+          image: <image-name>:<port>
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9443
+          envFrom:
+            - configMapRef:
+                name: kbs-config
+          env:
+            - name: KBS_SERVICE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: kbs-service-credentials
+                  key: KBS_SERVICE_USERNAME
+            - name: KBS_SERVICE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: kbs-service-credentials
+                  key: KBS_SERVICE_PASSWORD
+          volumeMounts:
+            - name: kbs-config-volume
+              mountPath: /etc/kbs
+            - name: kbs-logs-volume
+              mountPath: /var/log/kbs
+            - name: kbs-opt-volume
+              mountPath: /opt/kbs
+      volumes:
+        - name: kbs-logs-volume
+          hostPath:
+            path: /var/log/kbs/
+            type: DirectoryOrCreate
+        - name: kbs-config-volume
+          hostPath:
+            path: /etc/kbs
+            type: DirectoryOrCreate
+        - name: kbs-opt-volume
+          hostPath:
+            path: /opt/kbs
+            type: DirectoryOrCreate
+
+
