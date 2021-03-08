@@ -1,0 +1,15 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: aasdb-svc
+  namespace: isecl
+  labels:
+    app: aasdb
+spec:
+  selector:
+    app: aasdb
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432

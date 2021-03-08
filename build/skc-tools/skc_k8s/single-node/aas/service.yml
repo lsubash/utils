@@ -5,22 +5,6 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: aasdb-svc
-  namespace: isecl
-  labels:
-    env: demo
-    app: aasdb
-spec:
-  selector:
-    app: aasdb
-  type: ClusterIP
-  ports:
-    - port: 5432
-      targetPort: 5432
----
-kind: Service
-apiVersion: v1
-metadata:
   name: aas-svc
   namespace: isecl
   labels:

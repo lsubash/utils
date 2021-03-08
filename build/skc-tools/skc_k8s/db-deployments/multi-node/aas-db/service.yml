@@ -2,19 +2,17 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 ---
-apiVersion: v1
 kind: Service
+apiVersion: v1
 metadata:
-  name: shvs-svc
+  name: aasdb-svc
   namespace: isecl
   labels:
-    env: demo
-    app: shvs
+    app: aasdb
 spec:
   selector:
-    app: shvs
-  type: NodePort
+    app: aasdb
+  type: ClusterIP
   ports:
-    - port: 13000
-      targetPort: 13000
-      nodePort: 30500
+    - port: 5432
+      targetPort: 5432

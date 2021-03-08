@@ -10,13 +10,6 @@ namespace: isecl
 commonLabels:
   env: test
 
-secretGenerator:
-  - name: shvs-db-certs
-    files:
-      - "secrets/server.crt"
-      - "secrets/server.key"
-    type: "Opaque"
-
 resources:
   - configMap.yml
   - secrets.yml

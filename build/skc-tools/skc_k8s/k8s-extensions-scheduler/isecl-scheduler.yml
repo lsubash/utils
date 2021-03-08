@@ -52,7 +52,7 @@ spec:
             nodeSelectorTerms:
               - matchExpressions:
                  -
-                  key: microk8s.io/cluster
+                  key: <microk8s.io/cluster or node-role.kubernetes.io/master>
                   operator: Exists
       containers:
         - name: isecl-scheduler
