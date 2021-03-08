@@ -27,10 +27,13 @@ fi
 
 HW_UUID=`dmidecode -s system-uuid`
 
+SECONDS_PER_DAY=86400
+VALIDITY_SECONDS=$(( VALIDITY_DAYS * SECONDS_PER_DAY ))
+
 cat > $tmpdir/request_data.json << EOF
 {
     "subject": "$HW_UUID",
-    "validity_seconds": 2592000,
+    "validity_seconds": $VALIDITY_SECONDS,
     "claims": {
         "roles": [{
             "service": "SCS",
