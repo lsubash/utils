@@ -16,7 +16,7 @@ all: clean intel_secl_k8s $(TARGETS) k8s-extensions sgx_agent skc_library
 	cp -r utils/build/skc-tools/skc_k8s/k8s-extensions-controller k8s/manifests/
 	cp -r utils/build/skc-tools/skc_k8s/k8s-extensions-scheduler k8s/manifests/
 	cp -r utils/build/skc-tools/skc_k8s/skc-aio-bootstrap.sh k8s/manifests/skc-aio-bootstrap.sh
-	cp -r utils/build/skc-tools/skc_k8s/isecl-skc-k8s.env k8s/manifests/isecl-skc-k8s.env
+	cp utils/build/skc-tools/skc_k8s/isecl-skc-k8s.env k8s/manifests/isecl-skc-k8s.env
 	cp intel-secl/deployments/container-archive/oci/* k8s/container-images/
 	cp intel-secl/deployments/k8s/aas/db_rotation.sql k8s/manifests/aas/
 	mkdir -p k8s/manifests/aas/scripts
