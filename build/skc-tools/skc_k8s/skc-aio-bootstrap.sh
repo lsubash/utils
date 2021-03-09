@@ -142,7 +142,6 @@ get_bearer_token(){
     sed -i "s#CMS_BASE_URL=.*#CMS_BASE_URL=$CMS_BASE_URL#g" $aas_scripts_dir/populate-users.env
     sed -i "s#AAS_API_URL=.*#AAS_API_URL=$AAS_API_CLUSTER_ENDPOINT_URL#g" $aas_scripts_dir/populate-users.env
     sed -i "s/SCS_CERT_SAN_LIST=.*/SCS_CERT_SAN_LIST=$SCS_CERT_SAN_LIST/g" $aas_scripts_dir/populate-users.env
-    sed -i "s/SCS_CERT_SAN_LIST=.*/SCS_CERT_SAN_LIST=$SCS_CERT_SAN_LIST/g" $aas_scripts_dir/populate-users.env
     sed -i "s/SHVS_CERT_SAN_LIST=.*/SHVS_CERT_SAN_LIST=$SHVS_CERT_SAN_LIST/g" $aas_scripts_dir/populate-users.env
     sed -i "s/SQVS_CERT_SAN_LIST=.*/SQVS_CERT_SAN_LIST=$SQVS_CERT_SAN_LIST/g" $aas_scripts_dir/populate-users.env
     sed -i "s/IH_CERT_SAN_LIST=.*/IH_CERT_SAN_LIST=$IH_CERT_SAN_LIST/g" $aas_scripts_dir/populate-users.env
@@ -425,7 +424,7 @@ deploy_ihub(){
         exit 1
     fi
 
-    cp $K8s_API_SERVER_CERT /etc/ihub/apiserver.crt
+    cp $K8S_API_SERVER_CERT /etc/ihub/apiserver.crt
     cp /etc/ihub/apiserver.crt secrets/apiserver.crt
 
     #update configMap & secrets
@@ -466,7 +465,7 @@ deploy_extended_scheduler(){
     echo "----------------------------------------------------"
 
     required_variables="K8S_CA_CERT,K8S_CA_KEY"
-    check_mandatory_variables $ISECL_SCHEDULER $required_variables
+    check_mandatory_variables "$ISECL_SCHEDULER" $required_variables
 
     cd k8s-extensions-scheduler/
 
@@ -641,7 +640,7 @@ cleanup_sagent(){
     sed -i "s/SGX_AGENT_USERNAME: .*/SGX_AGENT_USERNAME: \${sagent_service_username}/g" secrets.yml
     sed -i "s/SGX_AGENT_PASSWORD: .*/SGX_AGENT_PASSWORD: \${sagent_service_password}/g" secrets.yml
 
-    $KUBECTL delete secret sagent-service-credentials --namespace isecl
+    $KUBECTL delete secret sagent-llt-credentials --namespace isecl
     $KUBECTL delete configmap sagent-config --namespace isecl
     $KUBECTL delete daemonset sagent-daemonset --namespace isecl
 
@@ -677,21 +676,29 @@ cleanup_ihub(){
     cd ../
 }
 
-cleanup_k8s_extensions(){
+cleanup_isecl_controller(){
 
     cd k8s-extensions-controller/
 
+    $KUBECTL delete deploy isecl-controller-deployment --namespace isecl
     $KUBECTL delete crd hostattributes.crd.isecl.intel.com --namespace isecl
-    $KUBECTL delete deploy isecl-controller isecl-scheduler --namespace isecl
-    $KUBECTL delete svc isecl-scheduler-svc --namespace isecl
     $KUBECTL delete clusterrole isecl-controller --namespace isecl
     $KUBECTL delete clusterrolebinding isecl-controller-binding --namespace isecl
 
-    cd ../k8s-extensions-scheduler/
+    cd ..
+}
+
+cleanup_isecl_scheduler(){
+
+    cd k8s-extensions-scheduler/
+
+    $KUBECTL delete deploy isecl-scheduler-deployment --namespace isecl
+    $KUBECTL delete svc isecl-scheduler-svc --namespace isecl
     rm -rf secrets
 
     cd ..
 }
+
 
 cleanup_shvs(){
 
@@ -812,12 +819,6 @@ cleanup_authservice() {
 
     cd scripts/
 
-    sed -i "s/SHVS_CERT_SAN_LIST=.*/SHVS_CERT_SAN_LIST=/g" populate-users.env
-    sed -i "s/IH_CERT_SAN_LIST=.*/SIH_CERT_SAN_LIST=/g" populate-users.env
-    sed -i "s/SQVS_CERT_SAN_LIST=.*/SQVS_CERT_SAN_LIST=/g" populate-users.env
-    sed -i "s/KBS_CERT_SAN_LIST=.*/SKBS_CERT_SAN_LIST=/g" populate-users.env
-    sed -i "s/SCS_CERT_SAN_LIST=.*/SCS_CERT_SAN_LIST=/g" populate-users.env
-
     if [ "$K8S_DISTRIBUTION" == "kubeadm" ]; then
         $KUBECTL delete pvc aas-config-pvc --namespace isecl
         $KUBECTL delete pvc aas-logs-pvc --namespace isecl
@@ -925,7 +926,8 @@ cleanup() {
     cleanup_sqvs
     cleanup_sagent
     cleanup_ihub
-    cleanup_k8s_extensions
+    cleanup_isecl_scheduler
+    cleanup_isecl_controller
     cleanup_shvs
     cleanup_scs
     cleanup_authservice
@@ -1020,17 +1022,19 @@ dispatch_works() {
         "down" )
               case $2 in
                	 "cms") cleanup_cms
-		              ;;
-            	   "authservice") cleanup_authservice
-		              ;;
-		             "scs") cleanup_scs
- 		              ;;
+		  ;;
+            	 "authservice") cleanup_authservice
+		  ;;
+		 "scs") cleanup_scs
+ 		  ;;
                  "shvs") cleanup_shvs
- 		              ;;
-            	   "ihub") cleanup_ihub
-                 	;;
-            	   "k8s_extensions") cleanup_k8s_extensions
-		              ;;
+ 		  ;;
+            	 "ihub") cleanup_ihub
+                  ;;
+            	 "isecl-controller") cleanup_isecl_controller
+		  ;;
+		 "isecl_scheduler") cleanup_isecl_scheduler
+		  ;;
                  "sagent") cleanup_sagent
                   ;;
                  "sqvs") cleanup_sqvs
@@ -1038,8 +1042,8 @@ dispatch_works() {
                  "kbs") cleanup_kbs
                   ;;
                  "skclib") cleanup_SKC_library
-	                ;;
-            	    "secure-key-caching") cleanup_commont_components
+	          ;;
+            	 "secure-key-caching") cleanup_commont_components
                                         cleanup_sqvs
                                         cleanup_kbs
                   ;;
@@ -1047,7 +1051,8 @@ dispatch_works() {
                   ;;
                   "sgx-orchestration-k8s")  cleanup_common_components
                                             cleanup_ihub
-                                            cleanup_k8s_extensions
+                                            cleanup_isecl_controller
+                                            cleanup_isecl_scheduler
                   ;;
                   "all")  cleanup
                   ;;
