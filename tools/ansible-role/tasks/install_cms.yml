@@ -32,7 +32,7 @@
 
 
 - name: ISECL - CERTIFICATE MANAGEMENT SERVICE | Fetch AAS bootstrap token
-  shell: "set -o pipefail && cms setup cms_auth_token --force | grep \"JWT Token: \" | awk '{print $3}'"
+  shell: "set -o pipefail && cms setup cms-auth-token --force | grep \"JWT Token: \" | awk '{print $3}'"
   environment:
     AAS_TLS_SAN: "{{ aas }},{{ aas_hostname }}"
   args:

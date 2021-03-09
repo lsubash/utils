@@ -108,7 +108,7 @@ echo "Installing AuthService...."
 
 echo "Copying Certificate Management Service token to AuthService...."
 export AAS_TLS_SAN=$SYSTEM_SAN
-CMS_TOKEN=`cms setup cms_auth_token --force | grep 'JWT Token:' | awk '{print $3}'`
+CMS_TOKEN=`cms setup cms-auth-token --force | grep 'JWT Token:' | awk '{print $3}'`
 sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$CMS_TOKEN/"  ~/authservice.env
 
 CMS_TLS_SHA=`cms tlscertsha384`
