@@ -205,4 +205,4 @@ service postgresql-11 start &>> $log_file
 
 sudo -E PGDATA=$PGDATA -E PGHOST=$PGHOST -E PGPORT=$PGPORT -u postgres psql postgres -c "alter system set log_connections = 'on';" &>> $log_file
 sudo -E PGDATA=$PGDATA -E PGHOST=$PGHOST -E PGPORT=$PGPORT -u postgres psql postgres -c "alter system set log_disconnections = 'on';" &>> $log_file
-sudo -E PGDATA=$PGDATA -E PGHOST=$PGHOST -E PGPORT=$PGPORT -u postgres psql postgres -c "CREATE EXTENSION \"uuid-ossp\";" &>> $log_file
+sudo -E PGDATA=$PGDATA -E PGHOST=$PGHOST -E PGPORT=$PGPORT -u postgres psql postgres -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";" &>> $log_file
