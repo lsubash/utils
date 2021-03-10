@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "f4df18b7-8a49-4f37-87c8-7ca01f2497bb",
+		"_postman_id": "7e14c2f0-16f7-4371-89bd-2315d52a869e",
 		"name": "SGX Discovery, Provisioning and Orchestration",
 		"description": "For the secrets to be provisioned securely to SGX compute node on public cloud, the owner of the secret would like to ensure that the node is secure and trustworthy.\r\n\r\nSGX attestation infrastructure involves providing Platform Certification Key (PCK) certificates as part of the attestation report. To fetch the PCK certificates for a platform, platform needs to provide the platform SGX values to the Intel PCS server hosted on the internet. In addition, PCS server also provides other platform collaterals like PCK CRL, TCB Information, QE Identity Information for a platform.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -722,7 +722,7 @@
 							}
 						],
 						"url": {
-							"raw": "https://{{scs}}:{{scsPort}}/scs/sgx/certification/v1/tcbstatus?qeid={{qeid}}",
+							"raw": "https://{{scs}}:{{scsPort}}/scs/sgx/certification/v1/tcbstatus?qeid={{qeid}}&pceid={{pceid}}",
 							"protocol": "https",
 							"host": [
 								"{{scs}}"
@@ -740,6 +740,11 @@
 									"key": "qeid",
 									"value": "{{qeid}}",
 									"description": "Quoting Enclave ID specific to a platform."
+								},
+								{
+									"key": "pceid",
+									"value": "{{pceid}}",
+									"description": "PCE ID of the platform."
 								}
 							]
 						},
@@ -765,7 +770,7 @@
 									}
 								],
 								"url": {
-									"raw": "https://{{scs}}:{{scsPort}}/scs/sgx/certification/v1/tcbstatus?qeid={{qeid}}",
+									"raw": "https://{{scs}}:{{scsPort}}/scs/sgx/certification/v1/tcbstatus?qeid={{qeid}}&pceid={{pceid}}",
 									"protocol": "https",
 									"host": [
 										"{{scs}}"
@@ -783,6 +788,11 @@
 											"key": "qeid",
 											"value": "{{qeid}}",
 											"description": "Quoting Enclave ID specific to a platform."
+										},
+										{
+											"key": "pceid",
+											"value": "{{pceid}}",
+											"description": "PCE ID of the platform."
 										}
 									]
 								}
