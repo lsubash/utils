@@ -400,8 +400,8 @@ deploy_ihub(){
     echo "|             DEPLOY:INTEGRATION-HUB               |"
     echo "----------------------------------------------------"
 
-    required_variables="IHUB_SERVICE_USERNAME,IHUB_SERVICE_PASSWORD"
-    check_mandatory_variables $SQVS $required_variables
+    required_variables="IHUB_SERVICE_USERNAME,IHUB_SERVICE_PASSWORD,K8S_API_SERVER_CERT"
+    check_mandatory_variables $IHUB $required_variables
 
     cd ihub/
 
@@ -514,15 +514,17 @@ deploy_sagent(){
     # The variables BEARER_TOKEN and CMS_TLS_CERT_SHA384 get loaded with below functions, this required if we want to deploy individual sagent service
     get_cms_tls_cert_sha384
 
-    required_variables="CSP_ADMIN_USERNAME,CSP_ADMIN_PASSWORD,CMS_TLS_CERT_SHA384"
+    required_variables="CSP_ADMIN_USERNAME,CSP_ADMIN_PASSWORD,CMS_TLS_CERT_SHA384,VALIDITY_DAYS"
     check_mandatory_variables "$SGX_AGENT" $required_variables
 
     #update configMap
     sed -i "s/CMS_TLS_CERT_SHA384:.*/CMS_TLS_CERT_SHA384: $CMS_TLS_CERT_SHA384/g" configMap.yml
     sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: ${CMS_BASE_URL}#g" configMap.yml
+    sed -i "s/VALIDITY_DAYS:.*/VALIDITY_DAYS: \"${VALIDITY_DAYS}\"/g" configMap.yml
     sed -i "s#AAS_API_URL:.*#AAS_API_URL: ${AAS_API_URL}#g" configMap.yml
     sed -i "s/CSP_ADMIN_USERNAME:.*/CSP_ADMIN_USERNAME: ${CSP_ADMIN_USERNAME}/g" secrets.yml
     sed -i "s/CSP_ADMIN_PASSWORD:.*/CSP_ADMIN_PASSWORD: ${CSP_ADMIN_PASSWORD}/g" secrets.yml
+   
     # deploy
     $KUBECTL kustomize . | $KUBECTL apply -f -
 
