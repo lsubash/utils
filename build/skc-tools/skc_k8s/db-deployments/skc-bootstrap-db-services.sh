@@ -276,10 +276,10 @@ purge() {
 
 #Help section
 print_help() {
-  echo "Usage: $0 [-help/bootstrap-db/purge-db]"
+  echo "Usage: $0 [-help/up/purge]"
   echo "    -help          print help and exit"
   echo "    up        Bootstrap Database Services for Authservice, SGX Caching Service and SGX Host verification Service"
-  echo "    purge     Delete Database Services Authservice, SGX Caching Service and SGX Host verification Service"
+  echo "    purge     Delete Database Services for Authservice, SGX Caching Service and SGX Host verification Service"
 }
 
 #Dispatch works based on args to script

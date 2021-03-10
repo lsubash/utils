@@ -31,10 +31,10 @@ SHVS="shvs"
 SQVS="sqvs"
 IHUB="ihub"
 KBS="kbs"
-SGX_AGENT="sgx agent"
-SKC_LIB="skc lib"
-ISECL_SCHEDULER="isecl k8s controller"
-ISECL_CONTROLLER="isecl k8s scheduler"
+SGX_AGENT="sgx-agent"
+SKC_LIB="skc-library"
+ISECL_SCHEDULER="isecl-k8s-scheduler"
+ISECL_CONTROLLER="isecl-k8s-controller"
 
 K8S_DISTRIBUTION=${K8S_DISTRIBUTION:-"microk8s"}
 # Setting default KUBECTl command as kubectl
@@ -485,7 +485,7 @@ deploy_extended_scheduler(){
     cp scripts/server.key secrets/
     cp scripts/server.crt secrets/
 
-    if [ "$K8S_DISTRIBUTION" == "kubeadm" ]; then
+    if [ "$K8S_DISTRIBUTION" == "microk8s" ]; then
         cp /etc/ihub/ihub_public_key.pem secrets/sgx_ihub_public_key.pem
     elif [ "$K8S_DISTRIBUTION" == "kubeadm" ]; then
         cp $IHUB_PUB_KEY_PATH secrets/sgx_ihub_public_key.pem
@@ -664,7 +664,6 @@ cleanup_ihub(){
     $KUBECTL delete secret ihub-service-credentials --namespace isecl
     $KUBECTL delete configmap ihub-config --namespace isecl
     $KUBECTL delete deploy ihub-deployment --namespace isecl
-    $KUBECTL delete svc ihub-svc --namespace isecl
 
     if [ "$K8S_DISTRIBUTION" == "kubeadm" ]; then
        $KUBECTL delete pvc ihub-config-pvc --namespace isecl
@@ -684,6 +683,7 @@ cleanup_isecl_controller(){
     $KUBECTL delete crd hostattributes.crd.isecl.intel.com --namespace isecl
     $KUBECTL delete clusterrole isecl-controller --namespace isecl
     $KUBECTL delete clusterrolebinding isecl-controller-binding --namespace isecl
+    $KUBECTL delete clusterrolebinding isecl-clusterrole --namespace isecl
 
     cd ..
 }
