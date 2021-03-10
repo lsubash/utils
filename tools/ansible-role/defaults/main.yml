@@ -382,3 +382,10 @@ sgxdep_installer_file__name: skc_library.tar
 # The binary installer file source for SGX Depencency
 sgxdep_installer_file_src: "{{binaries_path}}"
 
+# ------------------------------------ CSP ADMIN ------------------------------------------------------- #
+#
+# CSP Admin User Name
+csp_admin_username: csp_admin
+
+# CSP Admin Password
+csp_admin_password: password
