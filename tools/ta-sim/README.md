@@ -1,9 +1,9 @@
 # Trust Agent Simulator
-The Trust Agent Simulator could be used for simulating Trust Agents for performance testing of ISecl compoonents - in particular the HVS. The Trust Agent Simulator can simulate thousands of hosts in a single process. A single process hosts multiple `https servers` with one port per simulated host. Typically, you could simulate upto 25,000 hosts on a single Linux server. The number of servers and starting port number can be configured through the config file. 
 
-
+The Trust Agent Simulator could be used for simulating Trust Agents for performance testing of ISecl compoonents - in particular the HVS. The Trust Agent Simulator can simulate thousands of hosts in a single process. A single process hosts multiple `https servers` with one port per simulated host. Typically, you could simulate upto 25,000 hosts on a single Linux server. The number of servers and starting port number can be configured through the config file.
 
 ## Building from Source code
+
 The Trust Agent Simulator is written in Go and the only tool that is needed for building it is Go
 
 - Requires Go Version 1.14 or later
@@ -24,7 +24,6 @@ cp deployments/installer/go-ta-sim.env ~
 
 There are advanced options to build the simulator such as the `ta-sim` binary alone. Please refer to the `Makefile` in the source.
 
-
 ## Installing
 
 Copy installer to a machine that has access to the HVS privacy CA certificate and private key. Please refer to the env file documentation for further details. Use the `go-ta-sim.env` for easier setup and avoiding prompts during installation. Please refer to [go-ta-sim.env section](#go-ta-sim.env-File-Environment-variables)
@@ -36,12 +35,13 @@ cp go-ta-sim.env ~
 ./ta-sim-v3.4.0.bin
 ```
 
-Some of the required values will be prompted for by the installer if they are not set via the .env file. For others that are needed, the installer will error out. Please check the documentation of the .env file for setting the necessary ones.  
+Some of the required values will be prompted for by the installer if they are not set via the .env file. For others that are needed, the installer will error out. Please check the documentation of the .env file for setting the necessary ones.
 
-After successfull installation, make configuration changes in the configuration file located at `/opt/go-ta-simulator/configuration/config/yml'
+After successfull installation, make configuration changes in the configuration file located at `/opt/go-ta-simulator/configuration/config.yml`.
 
 Some of the value are discussed here
-``` shell
+
+```shell
 # PortStart - starting port number of the ports where web servers are listening on - one for each unique simulated host
 PortStart : 10000
 
@@ -63,10 +63,9 @@ TrustedHostsPercentage : 99
 
 ## Using the Trust Agent Simulator
 
-Once configured, the Trust Agent simulator can be used to create flavors, and register hosts to support simulation. 
+Once configured, the Trust Agent simulator can be used to create flavors, and register hosts to support simulation.
 
 ```shell
-
 cd /opt/go-ta-simulator
 # start the simulator using the helper script. This script will set the ulimit and keep the process in the background
 ./tagent-sim start
@@ -76,7 +75,7 @@ cd /opt/go-ta-simulator
 # Create Hosts.
 ./ta-sim create-all-hosts
 
-# Leave the simulator running so that HVS can contact the simulated host to create and refresh hosts. 
+# Leave the simulator running so that HVS can contact the simulated host to create and refresh hosts.
 ```
 
 To stop the simulator, use helper script which looks for the process running the simulator and kills it
@@ -98,6 +97,7 @@ rm -rf /opt/go-ta-simulator
 ## Moving Simulator to another server
 
 The Simulator can be moved from one machine to another (as long as it is communicating with the same HVS and AAS) by copying the contents of the /opt/go-ta-simulator folder. If running multiple TA simulators, make sure the hardware uuids do not conflict. This can be done by zeroing out or deleting the hw_uuid_map.json file
+
 ```shell
 cd /opt/go-ta-simulator
 # Edit contents of config.yml 
@@ -109,10 +109,12 @@ cat /dev/null > configuration/hw_uuid_map.json
 # start the server and create flavor and hosts as explained previously
 ```
 
-The Simulator can be stopped and restarted as needed. The simulator stores the simulated hardware uuids in a file in configuration/hw_uuid_map.json file. This ensures that when the Simulator is restarted, the hardware uuid and the connection strings (based on port numbers) matches. 
+The Simulator can be stopped and restarted as needed. The simulator stores the simulated hardware uuids in a file in configuration/hw_uuid_map.json file. This ensures that when the Simulator is restarted, the hardware uuid and the connection strings (based on port numbers) matches.
 
 ### go-ta-sim.env File Environment variables
-The following are contents of the env file 
+
+The following are contents of the env file
+
 ```shell
 # Some variables will be prompted if they are not set. The ones that are prompted will be indicated in this
 # document. For those variables that are not set and does not have default values, set them in the env file or export them from the terminal
@@ -187,5 +189,4 @@ AIK_KEY_PATH=<path to Private Key for the AIK certificate>
 # copy from a valid TA simulator and set BINDING_KEY_CERT_PATH
 # don't set if PRIVACY_CA_CERT_PATH and PRIVACY_CA_KEY_PATH are set. 
 BINDING_KEY_CERT_PATH=<path to Binding Key Certificate that is created using the AIK>
-
 ```
