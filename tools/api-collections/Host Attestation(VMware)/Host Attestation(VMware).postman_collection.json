@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "e8887742-e600-4f24-915b-a20e0ddaeeb4",
+		"_postman_id": "41935ce4-be48-4742-8b1f-e965a46b5a8e",
 		"name": "Host Attestation(VMware)",
 		"description": "The Host Attestation use case will enable external platform integrity verification using TCG-standard practices. This feature is the foundation for other Intel® SecL – DC use cases.\n\nPlatform Attestation involves taking measurements of system components during system boot, and then cryptographically verifying that the actual measurements taken match a set of expected or approved values, ensuring that the measured components were in an acceptable or “trusted” state at the time of the last system boot. \n\nIntel® SecL – DC leverages the Trusted Compute Group specification for a trusted boot process, extending measurements of platform components to registers in a TPM, and securely generating quotes of those measurements from the TPM for remote comparison to expected values (attestation). \n\nDeployment will include only the Verification Service, which is typically installed on a Virtual Machine. \n \nPlatform Attestation for VMware ESXi* servers does not require a Trust Agent. Instead, it requires communication with vCenter Server*; vCenter* and ESXi will handle the TPM-specific functions, and the Intel® SecL – DC Verification Service will retrieve the TPM quote for a given host from a vCenter API. ",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -15,7 +15,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "abf35dff-1331-4ecd-b49d-703b3f2035ac",
+								"id": "dd7e5c69-63c6-45a4-8ec4-2f600475e5ea",
 								"exec": [
 									"pm.environment.set(\"bearerToken\", pm.response.text());"
 								],
@@ -47,7 +47,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://{{aas}}:{{aasPort}}/aas/token",
+							"raw": "https://{{aas}}:{{aasPort}}/aas/v1/token",
 							"protocol": "https",
 							"host": [
 								"{{aas}}"
@@ -55,6 +55,7 @@
 							"port": "{{aasPort}}",
 							"path": [
 								"aas",
+								"v1",
 								"token"
 							]
 						},
@@ -240,7 +241,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "d5b9ec0f-9468-42f9-b409-868730bb4586",
+						"id": "171e19a0-490f-4404-ad3d-24233aba8482",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -250,7 +251,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "285e5f5c-1c01-4994-b797-0d3ae700a617",
+						"id": "5fdc9795-4f30-486f-b95c-a3043e95567f",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -269,7 +270,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "a8de0e57-0a96-41f5-b973-eb04b14a7bdc",
+								"id": "0ed35ae1-d0d6-42c4-8446-5352223de868",
 								"exec": [
 									""
 								],
@@ -367,7 +368,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "e4c5571a-9e53-46d6-b534-7ce1a0f6bff1",
+						"id": "b83a751b-8f30-49f7-a40a-0aadbebc1aed",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -377,7 +378,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "f7118643-f91a-4f0e-a9d6-d15dea579a94",
+						"id": "9403e14e-14af-473a-ada8-80193fc74c91",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -507,7 +508,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "334384de-810f-4caf-8881-7af06c9732a2",
+						"id": "c663a706-0c13-44f0-b0aa-4ba505169318",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -517,7 +518,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "48f820ff-cbf2-46bd-b59d-f897d2b313f6",
+						"id": "18448c04-968b-4e65-af84-a1fc542a7fb0",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -685,7 +686,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "040c4524-c592-4b5c-b34a-ecccabd1199f",
+						"id": "b05dea79-a096-4cff-8678-0dd3b9d9563e",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -695,7 +696,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "a804fc69-b249-484f-b925-e473a90c3189",
+						"id": "613a2f15-8d97-41ec-8146-138130718c4b",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -921,7 +922,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "79573a58-4716-4087-a461-3e428c3cdb6c",
+						"id": "f25d610e-61e0-44ce-8453-b42b90a4f166",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -931,7 +932,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "0b3cc18e-2a67-4855-a6f1-e66c69aee78d",
+						"id": "f2b24099-7f03-4d02-a48e-7710e00dcd74",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -1069,7 +1070,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "231c300e-4bfe-4dea-83e6-ad6ebc9bd2b1",
+						"id": "6940b940-cd1f-4c22-9532-549d4da68041",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -1079,7 +1080,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "5de773bc-b1a1-4669-b4b2-bae3f34cd575",
+						"id": "62ec914a-039c-4ab3-9506-a30a6e8f02d4",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -1512,7 +1513,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "8f4dd75b-7d82-49d8-822f-86179da8f427",
+						"id": "10001248-735c-4605-af6e-20aa38365ba8",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -1522,7 +1523,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "c835a2d9-c472-4f32-8615-53084dd8c09d",
+						"id": "b250c3e8-b663-4ea2-9bea-844e6c6dafb5",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -1537,7 +1538,7 @@
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "d37e6ad0-a3ce-4223-af06-d03e91542cb6",
+				"id": "b8149512-35b2-40b1-b876-c5bfcc73f07d",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -1547,7 +1548,7 @@
 		{
 			"listen": "test",
 			"script": {
-				"id": "b28530e7-f221-45cf-bc10-2a20b4dccbd4",
+				"id": "3ec4fcef-43fd-4c1b-bfd9-b9110897810a",
 				"type": "text/javascript",
 				"exec": [
 					""

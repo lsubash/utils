@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "a3e37bcf-d044-4b81-925c-93d9769ca896",
+		"_postman_id": "5d2e04e4-8ce5-4755-a41c-103c2e1aa9c5",
 		"name": "Trusted Workload Placement  - Containers",
 		"description": "Through the use of Custom Resource Definitions for the Kubernetes Master, Intel® Security Libraries can make Kubernetes aware of Intel® SecL security attributes and make them available for pod orchestration.  In this way, a security-sensitive pod can be launched only on **\"Trusted\"** physical worker nodes, or on physical worker nodes that match specified Asset Tag values.\n\n> **NOTE:** This control only applies to pods launched using the Kubernetes scheduler, and these scheduling controls will not affect manually-launched instances where a specific worker node is defined (since this does not use the scheduler at all).  Intel SecL-DC uses existing Kubernetes interfaces and does not modify Kubernetes code, using only the standard Custom Resource Definition mechanism to add this functionality to the Kubernetes Master.  The datacenter owner or Kubernetes administrator is responsible for the security of the Kubernetes workload scheduling process in general, and Intel recommends following published Kubernetes security best practices. ",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -15,7 +15,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "28a56291-7a51-4cdc-a11e-ef6d2cf8fed6",
+								"id": "8e4674eb-fe26-4ecb-8a95-facbbcd7feea",
 								"exec": [
 									"pm.environment.set(\"bearerToken\", pm.response.text());"
 								],
@@ -49,7 +49,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://{{aas}}:{{aasPort}}/aas/token",
+							"raw": "https://{{aas}}:{{aasPort}}/aas/v1/token",
 							"protocol": "https",
 							"host": [
 								"{{aas}}"
@@ -57,6 +57,7 @@
 							"port": "{{aasPort}}",
 							"path": [
 								"aas",
+								"v1",
 								"token"
 							]
 						},
@@ -125,7 +126,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "5211e9e4-2ff5-4f8e-a3b8-a26ca1dd4b38",
+						"id": "ee727724-f20f-49b6-9238-d38e37f12a07",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -135,7 +136,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "ef79ad4b-15c0-4370-9b3b-ea2cc751bf80",
+						"id": "2b3c24d3-104e-4fd4-a465-45bc3a69a73b",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -154,7 +155,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "dbdf95c5-e5d7-439d-b039-1b383b87c2bc",
+								"id": "6d2e83fb-fa63-4be8-99f8-2ab30c0814b3",
 								"exec": [
 									"var report=pm.response.json()\r",
 									"pm.environment.set(\"hostId\", report.reports[0].host_id)"
@@ -165,7 +166,7 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "ec797c0c-2622-4cca-a082-73448ce70c33",
+								"id": "e1ab71e7-325e-471d-b88e-fb272ca20288",
 								"exec": [
 									""
 								],
@@ -381,7 +382,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "648c59b7-eb02-4132-89af-bc78f80fcf1b",
+						"id": "4b1d9aef-0426-41c9-ab8d-5826bb6cf324",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -391,7 +392,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "9af00253-3aa0-459e-b921-879d248278e3",
+						"id": "5480cce3-7af3-4852-a209-48c46ee4631a",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -409,7 +410,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "dd0112b7-96a5-480e-8f0d-2dd781138058",
+						"id": "277269f9-70fe-4985-90c1-281ad7a7c023",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -419,7 +420,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "b12e4bce-b56c-4f6e-ac60-a6ff1c913658",
+						"id": "d6e90d80-88c7-4a7b-9b97-7c9e57cecee3",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -437,7 +438,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "ea35fe52-6eb2-421a-b9c5-9d31887ca071",
+						"id": "8b05f340-41ca-40ff-b9e8-a111efb35af7",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -447,7 +448,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "cad184f3-334f-4c83-8907-f62501189750",
+						"id": "bde27a43-6476-44be-9230-917033fdfa1b",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -462,7 +463,7 @@
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "7eed0a0e-b670-4c33-aef4-513eb2300185",
+				"id": "3f062fbe-45dc-418b-b70b-63a075f38e4c",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -472,7 +473,7 @@
 		{
 			"listen": "test",
 			"script": {
-				"id": "0ccc86bc-bc1b-4f2d-b22d-440fdc840644",
+				"id": "b1f7f6b5-812d-4089-8c47-c9d4da2d293f",
 				"type": "text/javascript",
 				"exec": [
 					""

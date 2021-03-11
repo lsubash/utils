@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "27b17143-2864-4a39-9613-2c48c1765dba",
+		"_postman_id": "66a7cc20-4478-43d3-a792-b80c46ffb97c",
 		"name": "Data Fencing with Asset Tags(VMWare)",
 		"description": "Data Fencing with Asset Tags builds on the Host Attestation use case to allow physical\r\nTPMs to be written with Asset Tags containing any number of key/value pairs.\r\nThis use case is typically used to identify the geographic location of the\r\nphysical server, but can also be used to identify other attributes. For example,\r\nthe Asset Tags provided by the Data Sovereignty use case could be used to\r\nidentify hosts that meet specific compliance requirements and can run\r\ncontrolled workloads.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -15,7 +15,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "d5f2a809-53c1-437d-849a-4e5afddb0fa6",
+								"id": "8a5d4dda-f9df-43fa-bc68-8843dc5c3210",
 								"exec": [
 									"pm.environment.set(\"bearerToken\", pm.response.text());"
 								],
@@ -47,7 +47,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://{{aas}}:{{aasPort}}/aas/token",
+							"raw": "https://{{aas}}:{{aasPort}}/aas/v1/token",
 							"protocol": "https",
 							"host": [
 								"{{aas}}"
@@ -55,6 +55,7 @@
 							"port": "{{aasPort}}",
 							"path": [
 								"aas",
+								"v1",
 								"token"
 							]
 						},
@@ -135,7 +136,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "d4f8accb-7dbe-4c1b-8e82-5573392b2962",
+								"id": "7460cc04-b049-45d4-a8fd-ccac27afa6fc",
 								"exec": [
 									"var report = pm.response.json();\r",
 									"pm.environment.set(\"hostHardwareUuid\",report.reports[0].host_info.hardware_uuid)\r",
@@ -244,7 +245,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "a8e0b3ae-36d1-4286-ad6f-d42aeba351ac",
+						"id": "9fea79c7-8099-43d7-a666-971a5f68a949",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -254,7 +255,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "8a56221b-f834-4e91-8724-6662b86d2277",
+						"id": "70966e58-58f3-4e70-82da-791e955b2868",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -321,7 +322,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "1da3047a-e635-4e05-b4af-01affac7f601",
+						"id": "653a3b71-482a-4312-904d-b2429ae5178e",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -331,7 +332,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "bc9fa376-c084-4ded-afc0-6805998ae7cd",
+						"id": "314aff4d-03f1-4f1c-96b3-05c6b5e13d72",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -352,7 +353,7 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "b9d5f6e6-0128-4dc3-9d17-f99ee5b6a8fc",
+								"id": "bbf4adde-11d3-4579-812d-82090711d8ff",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -362,7 +363,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "b741b5cb-2890-4772-a865-07d6090ffb61",
+								"id": "fd6fee64-0cce-41a9-b0ad-cade913c0f4f",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -385,7 +386,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "6b513c47-ab21-4fb5-bab6-12a03d23400e",
+						"id": "a0d0e556-e578-4ea1-9fe9-226d02667480",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -395,7 +396,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "4b5ee78c-3fa9-421a-bb8f-7792dbc12ddd",
+						"id": "26b4eaa4-8730-453d-8af8-c2d850300c2a",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -521,7 +522,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "3b5e5eeb-f973-4144-96c6-c36d460b7ec2",
+						"id": "65b5659d-b585-4238-b09a-0ffefc764e94",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -531,7 +532,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "4b3151fe-e481-4a08-aec6-85db697f1f38",
+						"id": "e24ad853-900e-4779-8438-d7e2434773cd",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -546,7 +547,7 @@
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "bc3be5d1-752d-49d3-b611-19148a512326",
+				"id": "fbbdbb9e-f91c-4365-ae84-8ee95d43444a",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -556,7 +557,7 @@
 		{
 			"listen": "test",
 			"script": {
-				"id": "4dc164c3-4aa5-4cd4-a046-6f435b62d3e1",
+				"id": "68d06e83-efd1-4594-a176-0308d195e65f",
 				"type": "text/javascript",
 				"exec": [
 					""
