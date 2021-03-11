@@ -51,7 +51,7 @@ spec:
            - mountPath: /etc/nginx/nginx.conf
              name: nginx-config-volume
              subPath: nginx.conf
-           - mountPath: /tmp/keys.txt
+           - mountPath: /root/keys.txt
              name: kms-key-volume
              subPath: keys.txt
            - mountPath: /etc/sgx_default_qcnl.conf
