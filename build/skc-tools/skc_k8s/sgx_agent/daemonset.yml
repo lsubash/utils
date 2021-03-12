@@ -52,6 +52,8 @@ spec:
               mountPath: /etc/hostname
             - name: sagent-sgx-device
               mountPath: /dev/sgx/
+            - name: sagent-pck-data
+              mountPath: /opt/pckData
       volumes:
         - name: sagent-logs-volume
           hostPath:
@@ -73,4 +75,8 @@ spec:
           hostPath:
             path: /dev/sgx/
             type: DirectoryOrCreate
+        - name: sagent-pck-data
+          hostPath:
+            path: /opt/pckData
+            type: FileOrCreate
 
