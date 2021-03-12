@@ -949,11 +949,16 @@ purge() {
 
 #Help section
 print_help() {
-    echo "Usage: $0 [-help/-up/-down/-p]"
-    echo "    -help    print help and exit"
-    echo "    -up      Bootstrap Intel AIO SecL environment"
-    echo "    -down    Delete Intel AIO SecL environment[will not delete data,config and logs]"
-    echo "    -purge   Delete data,config,logs of Intel AIO SecL environment"
+    echo "Usage: $0 [-help/up/down/purge]"
+    echo "    -help                                     Print help and exit"
+    echo "    up   [all/<agent>/<service>/<usecase>]    Bootstrap SKC K8s environment for specified agent/service/usecase"
+    echo "    down [all/<agent>/<service>/<usecase>]    Delete SKC K8s environment for specified agent/service/usecase [will not delete data,config and logs]"
+    echo "    purge                                     Delete SKC K8s environment with data,config,logs"
+    echo ""
+    echo "    Available Options for up/down command:"
+    echo "        agent      Can be one of sagent,skclib"
+    echo "        service    Can be one of cms,authservice,scs,shvs,ihub,sqvs,kbs,isecl-controller,isecl-scheduler"
+    echo "        usecase    Can be one of secure-key-caching,sgx-attestation,sgx-orchestration-k8s"
 }
 
 deploy_common_components () {

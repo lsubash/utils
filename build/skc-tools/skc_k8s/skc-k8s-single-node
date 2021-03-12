@@ -8,7 +8,7 @@ all: clean intel_secl_k8s $(TARGETS) k8s-extensions sgx_agent skc_library
 	cp -r utils/build/skc-tools/skc_k8s/pre-requisites.sh k8s/manifests/
 	cp -r utils/build/skc-tools/skc_k8s/db-deployments/skc-bootstrap-db-services.sh k8s/manifests/skc-bootstrap-db-services.sh
 	cp -r utils/build/skc-tools/skc_k8s/single-node/* k8s/manifests/
-	cp -r utils/build/skc-tools/skc_k8s/skc-aio-bootstrap.sh k8s/manifests/skc-aio-bootstrap.sh
+	cp -r utils/build/skc-tools/skc_k8s/skc-bootstrap.sh k8s/manifests/skc-bootstrap.sh
 	cp -r utils/build/skc-tools/skc_k8s/sgx_agent k8s/manifests/sgx_agent
 	cp -r utils/build/skc-tools/skc_k8s/skc_library k8s/manifests/skc_library
 	cp -r utils/build/skc-tools/skc_k8s/k8s-extensions-controller k8s/manifests/
