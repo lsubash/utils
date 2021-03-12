@@ -11,8 +11,6 @@ reset=`tput sgr0`
 
 cat $KDIR/.config | grep "CONFIG_INTEL_SGX=y" > /dev/null
 INKERNEL_SGX=$?
-/sbin/modinfo intel_sgx &> /dev/null
-SGX_DRIVER_INSTALLED=$?
 
 # Check OS and VERSION
 OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
@@ -20,6 +18,22 @@ temp="${OS%\"}"
 temp="${temp#\"}"
 OS="$temp"
 VER=$(cat /etc/os-release | grep ^VERSION_ID | tr -d 'VERSION_ID="')
+
+uninstall_sgx_agent()
+{
+	echo "uninstalling sgx psw/qgl and multi-package agent rpm"
+	rpm -qa | grep 'sgx' | xargs rpm -e
+	rm -rf /etc/yum.repos.d/*sgx_rpm_local_repo.repo
+	
+	echo "uninstalling PCKIDRetrieval Tool"
+	rm -rf /usr/sbin/libdcap_quoteprov.so.1 /usr/sbin/pck_id_retrieval_tool_enclave.signed.so /usr/sbin/PCKIDRetrievalTool
+
+	echo "uninstalling sgx dcap driver"
+	sh $SGX_INSTALL_DIR/sgxdriver/uninstall.sh
+
+	echo "Uninstalling existing SGX Agent Installation...."
+        sgx_agent uninstall --purge
+}
 
 install_prerequisites()
 {
@@ -34,9 +48,10 @@ install_prerequisites()
 install_dcap_driver()
 {
 	chmod u+x $SGX_AGENT_BIN/sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin
-	if [[ "$INKERNEL_SGX" -eq 1 && "$SGX_DRIVER_INSTALLED" -eq 1 ]]; then
+	if [[ "$INKERNEL_SGX" -eq 1 ]]; then
+		echo "Installing sgx dcap driver...."
 		./$SGX_AGENT_BIN/sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin -prefix=$SGX_INSTALL_DIR || exit 1
-		echo "sgx dcap driver already installed"
+		echo "sgx dcap driver installed successfully"
 	else
 		echo "found inbuilt sgx driver, skipping dcap driver installation"
 	fi
@@ -104,8 +119,6 @@ install_sgx_agent() {
 
 	sed -i "s|BEARER_TOKEN=.*|BEARER_TOKEN=$LONG_LIVED_TOKEN|g" ~/sgx_agent.env
 
-	echo "Uninstalling existing SGX Agent Installation...."
-	sgx_agent uninstall --purge
 	echo "Installing SGX Agent...."
 	$SGX_AGENT_BIN/sgx_agent-v*.bin
 	sgx_agent status > /dev/null
@@ -116,6 +129,7 @@ install_sgx_agent() {
 	echo "${green} SGX Agent Installation Successful ${reset}"
 }
 
+uninstall_sgx_agent
 install_prerequisites
 install_dcap_driver
 install_psw_qgl
