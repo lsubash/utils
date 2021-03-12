@@ -950,20 +950,28 @@ print_help() {
     echo "    Available Options for up/down command:"
     echo "        agent      Can be one of sagent,skclib"
     echo "        service    Can be one of cms,authservice,scs,shvs,ihub,sqvs,kbs,isecl-controller,isecl-scheduler"
-    echo "        usecase    Can be one of secure-key-caching,sgx-attestation,sgx-orchestration-k8s"
+    echo "        usecase    Can be one of secure-key-caching,sgx-attestation,sgx-orchestration-k8s,sgx-virtualization"
 }
 
-deploy_common_components () {
+deploy_control_plane_components () {
     deploy_cms
     deploy_authservice
     deploy_scs
+}
+
+deploy_common_components () {
+    deploy_control_plane_components
     deploy_sagent
 }
 
-cleanup_common_components () {
+cleanup_control_plane_components () {
     cleaup_cms
     cleanup_authservice
     cleanup_scs
+}
+
+cleanup_common_components () {
+    cleanup_control_plane_components
     cleanup_sagent
 }
 
@@ -1006,6 +1014,11 @@ dispatch_works() {
                                         deploy_ihub
                                         deploy_extended_scheduler
                   ;;
+                  "sgx-virtualization") deploy_control_plane_components
+                                        deploy_sqvs
+                                        deploy_kbs
+                                        deploy_shvs
+                  ;;
                   "all")  bootstrap
                   ;;
             	    *)
@@ -1039,7 +1052,7 @@ dispatch_works() {
                   ;;
                  "skclib") cleanup_SKC_library
 	          ;;
-            	 "secure-key-caching") cleanup_commont_components
+            	 "secure-key-caching") cleanup_common_components
                                         cleanup_sqvs
                                         cleanup_kbs
                   ;;
@@ -1049,6 +1062,11 @@ dispatch_works() {
                                             cleanup_ihub
                                             cleanup_isecl_controller
                                             cleanup_isecl_scheduler
+                  ;;
+                  "sgx-virtualization")  cleanup_control_plane_components
+                                         cleanup_kbs
+                                         cleanup_sqvs
+                                         cleanup_shvs
                   ;;
                   "all")  cleanup
                   ;;
