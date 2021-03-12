@@ -121,9 +121,9 @@ install_skc_library_bin()
 
 run_post_deployment_script()
 {
-	./skc_library_create_roles.sh
+	./credential_agent.sh
 	if [ $? -ne 0 ]; then
-		echo "${red} failed to create skc_library user/roles ${reset}"
+		echo "${red} failed to run credential agent ${reset}"
 		exit 1
 	fi
 	echo "${green} skc_library deployment successful ${reset}"

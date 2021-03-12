@@ -22,6 +22,7 @@ create_skc_library_tar()
 {
 	\cp -pf ../deploy_scripts/*.sh $SKCLIB_DIR
 	\cp -pf ../deploy_scripts/skc_library.conf $SKCLIB_DIR
+	\cp -pf ../deploy_scripts/create_roles.conf $SKCLIB_DIR
 	\cp -pf ../deploy_scripts/README.install $SKCLIB_DIR
 	\cp -pf ../deploy_scripts/openssl.patch $SKCLIB_DIR
 	\cp -pf ../deploy_scripts/nginx.patch $SKCLIB_DIR
