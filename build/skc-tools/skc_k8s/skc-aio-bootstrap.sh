@@ -136,6 +136,7 @@ get_bearer_token(){
 
     aas_scripts_dir=$AAS_DIR/scripts
     echo "Running populate-users script"
+    sed -i "s/ISECL_INSTALL_COMPONENTS=.*/ISECL_INSTALL_COMPONENTS=$ISECL_INSTALL_COMPONENTS/g" $aas_scripts_dir/populate-users.env
     sed -i "s#CMS_BASE_URL=.*#CMS_BASE_URL=$CMS_BASE_URL#g" $aas_scripts_dir/populate-users.env
     sed -i "s#AAS_API_URL=.*#AAS_API_URL=$AAS_API_CLUSTER_ENDPOINT_URL#g" $aas_scripts_dir/populate-users.env
     sed -i "s/SCS_CERT_SAN_LIST=.*/SCS_CERT_SAN_LIST=$SCS_CERT_SAN_LIST/g" $aas_scripts_dir/populate-users.env
