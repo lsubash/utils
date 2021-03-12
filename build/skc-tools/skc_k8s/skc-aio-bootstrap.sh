@@ -20,9 +20,6 @@ IP_ADDRESS=$(hostname -i)
 HOST_NAME=$(hostname -f)
 HOME_DIR=`pwd`
 AAS_DIR=$HOME_DIR/aas
-K8s_API_SERVER_CERT=${K8s_API_SERVER_CERT:-/var/snap/microk8s/1916/certs/server.crt}
-K8S_CA_KEY=${K8S_CA_KEY:-/var/snap/microk8s/1916/certs/ca.crt}
-K8S_CA_CERT=${K8S_CA_CERT:-/var/snap/microk8s/1916/certs/ca.key}
 
 AAS="aas"
 CMS="cms"
@@ -415,7 +412,6 @@ deploy_ihub(){
     mkdir -p /etc/ihub/
 
     if [ "$K8S_DISTRIBUTION" == "kubeadm" ]; then
-        K8S_API_SERVER_CERT=/etc/kubernetes/pki/apiserver.crt
         API_SERVER_PORT=6443
     elif [ "$K8S_DISTRIBUTION" == "microk8s" ]; then
         API_SERVER_PORT=16443
