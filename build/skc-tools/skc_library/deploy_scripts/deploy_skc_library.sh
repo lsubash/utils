@@ -41,8 +41,12 @@ uninstall_skc()
 	fi
 
 	echo "uninstalling sgx psw/qgl"
-	rpm -qa | grep 'sgx' | xargs rpm -e
-	rm -rf /etc/yum.repos.d/*sgx_rpm_local_repo.repo
+        if [ "$OS" == "rhel" ]; then
+                rpm -qa | grep 'sgx' | xargs rpm -e
+                rm -rf /etc/yum.repos.d/*sgx_rpm_local_repo.repo
+        elif [ "$OS" == "ubuntu" ]; then
+                apt remove -y libsgx-*
+        fi
 
 	echo "uninstalling sgx dcap driver"
 	sh $SGX_INSTALL_DIR/sgxdriver/uninstall.sh

@@ -22,9 +22,12 @@ VER=$(cat /etc/os-release | grep ^VERSION_ID | tr -d 'VERSION_ID="')
 uninstall_sgx_agent()
 {
 	echo "uninstalling sgx psw/qgl and multi-package agent rpm"
-	rpm -qa | grep 'sgx' | xargs rpm -e
-	rm -rf /etc/yum.repos.d/*sgx_rpm_local_repo.repo
-	
+	if [ "$OS" == "rhel" ]; then
+		rpm -qa | grep 'sgx' | xargs rpm -e
+		rm -rf /etc/yum.repos.d/*sgx_rpm_local_repo.repo
+	elif [ "$OS" == "ubuntu" ]; then
+		apt remove -y libsgx-dcap-ql libsgx-ra-uefi
+	fi
 	echo "uninstalling PCKIDRetrieval Tool"
 	rm -rf /usr/sbin/libdcap_quoteprov.so.1 /usr/sbin/pck_id_retrieval_tool_enclave.signed.so /usr/sbin/PCKIDRetrievalTool
 
@@ -32,7 +35,7 @@ uninstall_sgx_agent()
 	sh $SGX_INSTALL_DIR/sgxdriver/uninstall.sh
 
 	echo "Uninstalling existing SGX Agent Installation...."
-        sgx_agent uninstall --purge
+	sgx_agent uninstall --purge
 }
 
 install_prerequisites()
