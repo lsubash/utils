@@ -416,15 +416,14 @@ deploy_ihub(){
         exit 1
     fi
 
-    cp $K8S_API_SERVER_CERT /etc/ihub/apiserver.crt
-    cp /etc/ihub/apiserver.crt secrets/apiserver.crt
+    cp $K8S_API_SERVER_CERT secrets/apiserver.crt
 
     #update configMap & secrets
     sed -i "s/BEARER_TOKEN:.*/BEARER_TOKEN: $BEARER_TOKEN/g" configMap.yml
     sed -i "s/CMS_TLS_CERT_SHA384:.*/CMS_TLS_CERT_SHA384: $CMS_TLS_CERT_SHA384/g" configMap.yml
     sed -i "s/TLS_SAN_LIST:.*/TLS_SAN_LIST: $IH_CERT_SAN_LIST/g" configMap.yml
     sed -i "s/KUBERNETES_TOKEN:.*/KUBERNETES_TOKEN: $kubernetes_token/g" configMap.yml
-    sed -i "s/KUBERNETES_URL:.*/KUBERNETES_URL: https:\/\/$K8_MASTER_IP:$API_SERVER_PORT\//g" configMap.yml
+    sed -i "s/KUBERNETES_URL:.*/KUBERNETES_URL: https:\/\/$K8S_MASTER_IP:$API_SERVER_PORT\//g" configMap.yml
     sed -i "s/IHUB_SERVICE_USERNAME:.*/IHUB_SERVICE_USERNAME: $IHUB_SERVICE_USERNAME/g" secrets.yml
     sed -i "s/IHUB_SERVICE_PASSWORD:.*/IHUB_SERVICE_PASSWORD: $IHUB_SERVICE_PASSWORD/g" secrets.yml
     sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: ${CMS_BASE_URL}#g" configMap.yml
