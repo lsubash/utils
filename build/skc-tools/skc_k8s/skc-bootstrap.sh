@@ -16,8 +16,7 @@ fi
 CMS_TLS_CERT_SHA384=""
 AAS_BOOTSTRAP_TOKEN=""
 BEARER_TOKEN=""
-IP_ADDRESS=$(hostname -i)
-HOST_NAME=$(hostname -f)
+
 HOME_DIR=`pwd`
 AAS_DIR=$HOME_DIR/aas
 
@@ -32,10 +31,6 @@ SGX_AGENT="sgx-agent"
 SKC_LIB="skc-library"
 ISECL_SCHEDULER="isecl-k8s-scheduler"
 ISECL_CONTROLLER="isecl-k8s-controller"
-
-K8S_DISTRIBUTION=${K8S_DISTRIBUTION:-"microk8s"}
-# Setting default KUBECTl command as kubectl
-KUBECTL=${KUBECTL:-"microk8s.kubectl"}
 
 check_mandatory_variables() {
   IFS=',' read -ra ADDR <<< "$2"
@@ -429,7 +424,7 @@ deploy_ihub(){
     sed -i "s/CMS_TLS_CERT_SHA384:.*/CMS_TLS_CERT_SHA384: $CMS_TLS_CERT_SHA384/g" configMap.yml
     sed -i "s/TLS_SAN_LIST:.*/TLS_SAN_LIST: $IH_CERT_SAN_LIST/g" configMap.yml
     sed -i "s/KUBERNETES_TOKEN:.*/KUBERNETES_TOKEN: $kubernetes_token/g" configMap.yml
-    sed -i "s/KUBERNETES_URL:.*/KUBERNETES_URL: https:\/\/$IP_ADDRESS:$API_SERVER_PORT\//g" configMap.yml
+    sed -i "s/KUBERNETES_URL:.*/KUBERNETES_URL: https:\/\/$K8_MASTER_IP:$API_SERVER_PORT\//g" configMap.yml
     sed -i "s/IHUB_SERVICE_USERNAME:.*/IHUB_SERVICE_USERNAME: $IHUB_SERVICE_USERNAME/g" secrets.yml
     sed -i "s/IHUB_SERVICE_PASSWORD:.*/IHUB_SERVICE_PASSWORD: $IHUB_SERVICE_PASSWORD/g" secrets.yml
     sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: ${CMS_BASE_URL}#g" configMap.yml
@@ -470,8 +465,8 @@ deploy_extended_scheduler(){
 
     # create certs
     chmod +x scripts/create_k8s_extsched_certs.sh
-    cd scripts && echo ./create_k8s_extsched_certs.sh -n "K8S Extended Scheduler" -s "$IP_ADDRESS","$HOST_NAME" -c "$K8S_CA_CERT" -k "$K8S_CA_KEY"
-    ./create_k8s_extsched_certs.sh -n "K8S Extended Scheduler" -s "$IP_ADDRESS","$HOST_NAME" -c "$K8S_CA_CERT" -k "$K8S_CA_KEY"
+    cd scripts && echo ./create_k8s_extsched_certs.sh -n "K8S Extended Scheduler" -s "$K8S_MASTER_IP","$K8S_MASTER_HOSTNAME" -c "$K8S_CA_CERT" -k "$K8S_CA_KEY"
+    ./create_k8s_extsched_certs.sh -n "K8S Extended Scheduler" -s "$K8S_MASTER_IP","$K8S_MASTER_HOSTNAME" -c "$K8S_CA_CERT" -k "$K8S_CA_KEY"
     if [ $? -ne 0 ]; then
         echo "Error while creating certificates for extended scheduler"
         exit 1
@@ -561,7 +556,7 @@ deploy_kbs(){
     sed -i "s/KBS_SERVICE_PASSWORD:.*/KBS_SERVICE_PASSWORD: ${KBS_SERVICE_PASSWORD}/g" secrets.yml
     sed -i "s/BEARER_TOKEN:.*/BEARER_TOKEN: $BEARER_TOKEN/g" configMap.yml
     sed -i "s/CMS_TLS_CERT_SHA384:.*/CMS_TLS_CERT_SHA384: $CMS_TLS_CERT_SHA384/g" configMap.yml
-    sed -i "s/TLS_SAN_LIST:.*/TLS_SAN_LIST: $IP_ADDRESS,$HOST_NAME,kbs-svc.isecl.svc.cluster.local/g" configMap.yml
+    sed -i "s/TLS_SAN_LIST:.*/TLS_SAN_LIST: $KBS_CERT_SAN_LIST/g" configMap.yml
     sed -i "s#SQVS_URL:.*#SQVS_URL: $SQVS_URL#g" configMap.yml
     sed -i "s#ENDPOINT_URL:.*#ENDPOINT_URL: $ENDPOINT_URL#g" configMap.yml
     sed -i "s/SKC_CHALLENGE_TYPE:.*/SKC_CHALLENGE_TYPE: \"$SKC_CHALLENGE_TYPE\"/g" configMap.yml
@@ -882,10 +877,8 @@ bootstrap() {
         echo "K8s Distribution" $K8S_DISTRIBUTION "not supported"
     fi
 
-    IP_ADDRESS=$(hostname -i)
-    HOST_NAME=$(hostname -f)
-    echo "ipAddress: $IP_ADDRESS"
-    echo "hostName: $HOST_NAME"
+    echo "ipAddress: $K8S_MASTER_IP"
+    echo "hostName: $K8S_MASTER_HOSTNAME"
 
     echo "----------------------------------------------------"
     echo "|     DEPLOY: ISECL SERVICES                        |"
