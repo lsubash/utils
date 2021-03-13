@@ -76,15 +76,6 @@ build_skc_library()
 	fi
 }
 
-build_skc_library_docker()
-{
-        source build_skclib_docker.sh
-        if [ $? -ne 0 ]; then
-                echo "skc_library build failed"
-                exit 1
-        fi
-}
-
 rm -rf $SKCLIB_DIR
 
 if [ "$OS" == "rhel" ]
@@ -98,8 +89,4 @@ install_sgxsdk
 install_sgxrpm
 install_ctk
 build_skc_library
-if [ "$OS" == "rhel" ]
-then
-	build_skc_library_docker
-fi
 create_skc_library_tar

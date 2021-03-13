@@ -34,10 +34,10 @@ clean: $(patsubst %, %-clean, $(TARGETS))
 	rm -rf k8s/
 
 sgx_agent:
-	cd utils/build/skc-tools/sgx_agent/build_scripts/ && ./sgxagent_build.sh
+	cd utils/build/skc-tools/sgx_agent/build_scripts/ && ./build_sgx_agent_docker.sh
 
 skc_library:
-	cd utils/build/skc-tools/skc_library/build_scripts/ && ./skc_library_build.sh
+	cd utils/build/skc-tools/skc_library/build_scripts/ && ./build_skclib_docker.sh
 
 intel_secl_k8s:
 	cd intel-secl && make k8s
