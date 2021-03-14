@@ -3,6 +3,12 @@ TARGETS = sgx-caching-service sgx-verification-service sgx-hvs
 all: clean intel_secl_k8s $(TARGETS) k8s-extensions sgx_agent skc_library
 	mkdir -p k8s/container-images
 	mkdir -p k8s/manifests
+	mkdir -p k8s/platform-dependencies
+	cp -r utils/build/skc-tools/sgx_agent/agent_untar.sh k8s/platform-dependencies/
+	cp -r utils/build/skc-tools/sgx_agent/build_scripts/sgx_agent.tar k8s/platform-dependencies/
+	cp -r utils/build/skc-tools/sgx_agent/build_scripts/sgx_agent.sha2 k8s/platform-dependencies/
+	cp -r utils/build/skc-tools/sgx_agent/deploy_scripts/agent_container_prereq.sh k8s/platform-dependencies/
+	cp -r utils/build/skc-tools/sgx_agent/deploy_scripts/deployment_prerequisites.sh k8s/platform-dependencies/
 	cp -r utils/build/skc-tools/skc_k8s/db-deployments/single-node/* k8s/manifests/
 	cp utils/build/skc-tools/skc_k8s/isecl-skc-k8s.env k8s/manifests/isecl-skc-k8s.env
 	cp -r utils/build/skc-tools/skc_k8s/pre-requisites.sh k8s/manifests/
