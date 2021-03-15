@@ -73,7 +73,7 @@ build_skc_library_docker()
         \cp -prf $SKCLIB_BIN_DIR ../../../../../skc_library/dist/image/
 	if [ "$OS" == "rhel" ]
 	then
-		tar -xf ../../../../../skc_library/dist/image/bin/sgx_rpm_local_repo.tgz -C ../../../../../skc_library/dist/image/bin/
+		tar -xf ../../../../../skc_library/dist/image/bin/sgx_rpm_local_repo.tgz -C ../../../../../skc_library/dist/image/bin/ || exit 1
 	fi
         cd ../../../../../skc_library
         mkdir -p out

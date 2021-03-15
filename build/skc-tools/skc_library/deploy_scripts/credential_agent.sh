@@ -23,7 +23,7 @@ update_credential_ini()
 	sed -i "s|server=.*|server=$CMS_IP|g" $CREDENTIAL_PATH
 	sed -i "s|port=.*|port=8445|g" $CREDENTIAL_PATH
 	sed -i "s|^token=.*|token=\"$SKC_TOKEN\"|g" $CREDENTIAL_PATH
-	curl $CURL_OPTS -H 'Accept:application/x-pem-file' https://$CMS_IP:8445/cms/v1/ca-certificates > $SKCLIB_INST_PATH/store/cms-ca.cert
+	curl $CURL_OPTS -H 'Accept:application/x-pem-file' https://$CMS_IP:8445/cms/v1/ca-certificates > $SKCLIB_INST_PATH/store/cms-ca.cert || exit 1
 	if [ $? -ne 0 ]; then
 		echo "${red} could not get Certificate Management Service Root CA Certificate ${reset}"
 		exit 1

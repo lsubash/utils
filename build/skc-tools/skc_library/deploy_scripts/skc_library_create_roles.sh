@@ -6,9 +6,9 @@ temp="${temp#\"}"
 OS="$temp"
 
 if [ "$OS" == "rhel" ]; then
-	dnf install -qy jq
+	dnf install -qy jq || exit 1
 elif [ "$OS" == "ubuntu" ]; then
-	apt install -qy jq
+	apt install -qy jq || exit 1
 fi
 
 red=`tput setaf 1`

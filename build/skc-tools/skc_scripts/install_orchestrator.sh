@@ -17,12 +17,11 @@ temp="${OS%\"}"
 temp="${temp#\"}"
 OS="$temp"
 VER=$(cat /etc/os-release | grep ^VERSION_ID | tr -d 'VERSION_ID="')
-OS_FLAVOUR="$OS""$VER"
 
 if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
-	dnf install -qy jq
+	dnf install -qy jq || exit 1
 elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
-	apt install -y jq curl
+	apt install -y jq curl || exit 1
 else
 	echo "${red} Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04 ${reset}"
 	exit 1

@@ -59,14 +59,14 @@ install_psw_qgl()
 {
 	if [ "$OS" == "rhel" ]; then
 		tar -xf $SGX_AGENT_BIN/sgx_rpm_local_repo.tgz
-		yum-config-manager --add-repo file://$PWD/sgx_rpm_local_repo
-		yum-config-manager --save --setopt=tmp_sgx_sgx_rpm_local_repo.gpgcheck=0
+		yum-config-manager --add-repo file://$PWD/sgx_rpm_local_repo || exit 1
+		yum-config-manager --save --setopt=tmp_sgx_sgx_rpm_local_repo.gpgcheck=0 || exit 1
 		dnf install -qy --nogpgcheck libsgx-dcap-ql || exit 1
 		rm -rf sgx_rpm_local_repo /etc/yum.repos.d/*sgx_rpm_local_repo.repo
 	elif [ "$OS" == "ubuntu" ]; then
 		echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu/ bionic main' | sudo tee /etc/apt/sources.list.d/intel-sgx.list
-		wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | sudo apt-key add -
-		apt update
+		wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | sudo apt-key add - || exit 1
+		apt update -y || exit 1
 		apt install -y libsgx-dcap-ql || exit 1
 	fi
 	echo "${green} sgx psw and qgl installed ${reset}"

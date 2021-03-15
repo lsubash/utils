@@ -23,10 +23,10 @@ install_go()
 install_pre_requisites()
 {
 	if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
-		dnf install -qy wget tar git gcc-c++ make curl-devel skopeo
-		dnf install -qy https://dl.fedoraproject.org/pub/fedora/linux/releases/32/Everything/x86_64/os/Packages/m/makeself-2.4.0-5.fc32.noarch.rpm
+		dnf install -qy wget tar git gcc-c++ make curl-devel skopeo || exit 1
+		dnf install -qy https://dl.fedoraproject.org/pub/fedora/linux/releases/32/Everything/x86_64/os/Packages/m/makeself-2.4.0-5.fc32.noarch.rpm || exit 1
 	elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
-		apt install -y wget tar build-essential libcurl4-openssl-dev makeself
+		apt install -y wget tar build-essential libcurl4-openssl-dev makeself || exit 1
 	else
 		echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04"
 		exit 1

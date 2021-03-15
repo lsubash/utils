@@ -71,7 +71,7 @@ install_psw_qgl()
 	elif [ "$OS" == "ubuntu" ]; then
 		echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu/ bionic main' | sudo tee /etc/apt/sources.list.d/intel-sgx.list
 		wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | sudo apt-key add -
-		apt update
+		apt update -y || exit 1
 		apt install -y libsgx-dcap-ql || exit 1
 	fi
 	echo "${green} sgx psw and qgl installed ${reset}"
@@ -80,9 +80,9 @@ install_psw_qgl()
 install_multipackage_agent_rpm()
 {
 	if [ "$OS" == "rhel" ]; then
-		rpm -ivh $SGX_AGENT_BIN/libsgx-ra-uefi-$MP_RPM_VER.el8.x86_64.rpm
+		rpm -ivh $SGX_AGENT_BIN/libsgx-ra-uefi-$MP_RPM_VER.el8.x86_64.rpm || exit 1
 	elif [ "$OS" == "ubuntu" ]; then
-		apt install -y libsgx-ra-uefi
+		apt install -y libsgx-ra-uefi || exit 1
 	fi
 	echo "${green} sgx multipackage registration agent installed ${reset}"
 }

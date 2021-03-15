@@ -12,7 +12,6 @@ temp="${OS%\"}"
 temp="${temp#\"}"
 OS="$temp"
 VER=$(cat /etc/os-release | grep ^VERSION_ID | tr -d 'VERSION_ID="')
-OS_FLAVOUR="$OS""$VER"
 
 red=`tput setaf 1`
 green=`tput setaf 2`
@@ -55,7 +54,6 @@ uninstall_skc()
 	sh $SKC_DEVOPS_SCRIPTS_PATH/uninstall.sh
 }
 
-
 install_prerequisites()
 {
 	source deployment_prerequisites.sh 
@@ -80,14 +78,14 @@ install_dcap_driver()
 install_psw_qgl()
 {
 	if [ "$OS" == "rhel" ]; then
-		tar -xf $SKCLIB_BIN/sgx_rpm_local_repo.tgz
+		tar -xf $SKCLIB_BIN/sgx_rpm_local_repo.tgz || exit 1
 		yum-config-manager --add-repo file://$PWD/sgx_rpm_local_repo || exit 1
 		dnf install -qy --nogpgcheck libsgx-launch libsgx-uae-service libsgx-urts libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-ql-devel libsgx-dcap-default-qpl-devel libsgx-dcap-default-qpl || exit 1
 		rm -rf sgx_rpm_local_repo /etc/yum.repos.d/*sgx_rpm_local_repo.repo
 	elif [ "$OS" == "ubuntu" ]; then
 		echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu/ bionic main' | sudo tee /etc/apt/sources.list.d/intel-sgx.list
-		wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | sudo apt-key add -
-		apt update -y
+		wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | sudo apt-key add - || exit 1
+		apt update -y || exit 1
 		apt install -y libsgx-launch libsgx-uae-service libsgx-urts || exit 1
 		apt install -y libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-ql-dev libsgx-dcap-default-qpl-dev libsgx-dcap-default-qpl || exit 1
 	fi
@@ -96,7 +94,7 @@ install_psw_qgl()
 	sed -i "s|USE_SECURE_CERT=.*|USE_SECURE_CERT=FALSE|g" /etc/sgx_default_qcnl.conf
 	
 	#Update SCS root CA Certificate in SGX Compute node certificate store in order for  QPL to verify SCS
-	curl -k -H 'Accept:application/x-pem-file' https://$CSP_CMS_IP:8445/cms/v1/ca-certificates > /etc/pki/ca-trust/source/anchors/skc-lib-cms-ca.cert
+	curl -k -H 'Accept:application/x-pem-file' https://$CSP_CMS_IP:8445/cms/v1/ca-certificates > /etc/pki/ca-trust/source/anchors/skc-lib-cms-ca.cert || exit 1
 	# 'update-ca-trust' command is specific to RHEL OS, to update the system-wide trust store configuration.
 	update-ca-trust extract
 }

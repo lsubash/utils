@@ -26,9 +26,9 @@ AAS_BASE_URL=https://$SYSTEM_IP:$AAS_PORT/aas/v1
 rm -rf output *response.* *debug.*
 
 if [ "$OS" == "rhel" ]; then
-dnf install jq -y
+dnf install jq -y || exit 1
 elif [ "$OS" == "ubuntu" ]; then
-apt-get install jq -y
+apt-get install jq -y || exit 1
 fi
 
 aas_token=`curl -k -H "$CONTENT_TYPE" -H "$ACCEPT" --data \{\"username\":\"$AAS_USERNAME\",\"password\":\"$AAS_PASSWORD\"\} $AAS_BASE_URL/token`
