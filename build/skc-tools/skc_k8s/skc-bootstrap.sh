@@ -318,22 +318,16 @@ deploy_sqvs() {
     echo "|      DEPLOY:SGX QUOTE VERIFICATION SERVICE       |"
     echo "----------------------------------------------------"
 
-    required_variables="SQVS_USERNAME,SQVS_PASSWORD,SQVS_INCLUDE_TOKEN,SGX_TRUSTED_ROOT_CA_PATH"
+    required_variables="SQVS_INCLUDE_TOKEN,SGX_TRUSTED_ROOT_CA_PATH"
     check_mandatory_variables $SQVS $required_variables
 
     cd sqvs/		
-    mkdir -p secrets
-
-    # generate server.crt,server.key
-    openssl req -new -x509 -days 365 -newkey rsa:4096 -addext "subjectAltName = DNS:sqvsdb-svc.isecl.svc.cluster.local" -nodes -text -out secrets/server.crt -keyout secrets/server.key -sha384 -subj "/CN=ISecl Self Sign Cert"
 
     # The variables BEARER_TOKEN and CMS_TLS_CERT_SHA384 get loaded with below functions, this required if we want to deploy individual hvs service 
     get_bearer_token
     get_cms_tls_cert_sha384
     
     # update sqvs configMap & secrets
-    sed -i "s/SQVS_USERNAME:.*/SQVS_USERNAME: ${SQVS_USERNAME}/g" secrets.yml
-    sed -i "s/SQVS_PASSWORD:.*/SQVS_PASSWORD: ${SQVS_PASSWORD}/g" secrets.yml
     sed -i "s#AAS_API_URL:.*#AAS_API_URL: ${AAS_API_URL}#g" configMap.yml
     sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: ${CMS_BASE_URL}#g" configMap.yml
     sed -i "s/BEARER_TOKEN:.*/BEARER_TOKEN: ${BEARER_TOKEN}/g" configMap.yml
@@ -739,11 +733,7 @@ cleanup_sqvs(){
     sed -i "s/BEARER_TOKEN: .*/BEARER_TOKEN: \${BEARER_TOKEN}/g" configMap.yml
     sed -i "s/CMS_TLS_CERT_SHA384: .*/CMS_TLS_CERT_SHA384: \${CMS_TLS_CERT_SHA384}/g" configMap.yml
     sed -i "s/SAN_LIST: .*/SAN_LIST: \${SAN_LIST}/g" configMap.yml
-    sed -i "s/SQVS_SERVICE_USERNAME: .*/SQVS_SERVICE_USERNAME: \${sqvs_service_username}/g" secrets.yml
-    sed -i "s/SQVS_SERVICE_PASSWORD: .*/SQVS_SERVICE_PASSWORD: \${sqvs_service_password}/g" secrets.yml
     
-    
-    $KUBECTL delete secret sqvs-service-credentials --namespace isecl
     $KUBECTL delete configmap sqvs-config --namespace isecl
     $KUBECTL delete deploy sqvs-deployment --namespace isecl
     $KUBECTL delete svc sqvs-svc --namespace isecl

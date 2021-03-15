@@ -29,7 +29,7 @@ spec:
         app: isecl-controller
     spec:
       tolerations:
-       - key: node-role.kubernetes.io/master
+       - key: <microk8s.io/cluster or node-role.kubernetes.io/master>
          operator: Exists
          effect: NoSchedule
       affinity:
