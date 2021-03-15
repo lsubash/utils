@@ -5,14 +5,6 @@ if [ $? != 0 ]; then
     echo "failed to source isecl-skc-k8s.env"
 fi
 
-if [ "$K8S_DISTRIBUTION" == "microk8s" ]; then
-  KUBECTL=microk8s.kubectl
-elif [ "$K8S_DISTRIBUTION" == "kubeadm" ]; then
-  KUBECTL=kubectl
-else
-  echo "K8s Distribution" $K8S_DISTRIBUTION "not supported"
-fi
-
 CMS_TLS_CERT_SHA384=""
 AAS_BOOTSTRAP_TOKEN=""
 BEARER_TOKEN=""
@@ -31,6 +23,16 @@ SGX_AGENT="sgx-agent"
 SKC_LIB="skc-library"
 ISECL_SCHEDULER="isecl-k8s-scheduler"
 ISECL_CONTROLLER="isecl-k8s-controller"
+
+check_k8s_distribution() {
+  if [ "$K8S_DISTRIBUTION" == "microk8s" ]; then
+    KUBECTL=microk8s.kubectl
+  elif [ "$K8S_DISTRIBUTION" == "kubeadm" ]; then
+    KUBECTL=kubectl
+  else
+    echo "K8s Distribution \"$K8S_DISTRIBUTION\" not supported"
+  fi
+}
 
 check_mandatory_variables() {
   IFS=',' read -ra ADDR <<< "$2"
@@ -168,8 +170,6 @@ get_bearer_token(){
 
     sed -i "s/INSTALL_ADMIN_USERNAME=.*/INSTALL_ADMIN_USERNAME=$INSTALL_ADMIN_USERNAME/g" $aas_scripts_dir/populate-users.env
     sed -i "s/INSTALL_ADMIN_PASSWORD=.*/INSTALL_ADMIN_PASSWORD=$INSTALL_ADMIN_PASSWORD/g" $aas_scripts_dir/populate-users.env
-
-
 
     # TODO: need to check if this can be fetched from builds instead of bundling the script here
     chmod +x $aas_scripts_dir/populate-users
@@ -934,8 +934,8 @@ print_help() {
     echo "Usage: $0 [-help/up/down/purge]"
     echo "    -help                                     Print help and exit"
     echo "    up   [all/<agent>/<service>/<usecase>]    Bootstrap SKC K8s environment for specified agent/service/usecase"
-    echo "    down [all/<agent>/<service>/<usecase>]    Delete SKC K8s environment for specified agent/service/usecase [will not delete data,config and logs]"
-    echo "    purge                                     Delete SKC K8s environment with data,config,logs"
+    echo "    down [all/<agent>/<service>/<usecase>]    Delete SKC K8s environment for specified agent/service/usecase [will not delete data,config,logs]"
+    echo "    purge                                     Delete SKC K8s environment with data,config,logs [only supported for single node deployments]"
     echo ""
     echo "    Available Options for up/down command:"
     echo "        agent      Can be one of sagent,skclib"
@@ -970,6 +970,7 @@ dispatch_works() {
 
     case $1 in
         "up" )
+                  check_k8s_distribution
                   case $2 in
             	    "cms") deploy_cms
             	    ;;
@@ -1019,6 +1020,7 @@ dispatch_works() {
 	      ;;
 
         "down" )
+              check_k8s_distribution
               case $2 in
                	 "cms") cleanup_cms
 		  ;;
@@ -1069,13 +1071,22 @@ dispatch_works() {
 	         ;;
 	        "purge")
               if [ "$K8S_DISTRIBUTION" == "microk8s" ]; then
+                  KUBECTL=microk8s.kubectl
                   cleanup
                   purge
                   if [ $? -ne 0 ]; then exit 1; fi
               else
-                  echo "-purge not supported"
+                  echo "purge command not supported for this K8s distribution"
                   exit 1
               fi
+	         ;;
+	        "-help")
+                  print_help
+	         ;;
+	        *)
+                  echo "Invalid Command"
+                  print_help
+                  exit 1
     esac
 }
 
@@ -1083,23 +1094,6 @@ if [ $# -eq 0 ]; then
     print_help
     exit 1
 fi
-
-work_list=""
-while getopts h:u:d:p opt; do
-    case ${opt} in
-    h)
-        print_help
-        exit 0
-        ;;
-    u) work_list+="up" ;;
-    d) work_list+="down" ;;
-    p) work_list+="purge";;
-    *)
-        print_help
-        exit 1
-        ;;
-    esac
-done
 
 # run commands
 dispatch_works $*
