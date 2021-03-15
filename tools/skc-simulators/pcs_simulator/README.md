@@ -52,6 +52,7 @@ Build PCS Simulator
 git clone https://github.com/intel-secl/utils.git && cd utils
 git checkout v3.4/develop
 cd tools/skc-simulators/pcs_simulator
+nohup go run main.go &
 ```
 
 -   Replace PCS URL in /etc/scs/config.yml Sample: http://pcssimulator_ip:8080/sgx/certification/v3
