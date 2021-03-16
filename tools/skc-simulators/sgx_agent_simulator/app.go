@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020  Intel Corporation
+ * Copyright (C) 2020 Intel Corporation
  * SPDX-License-Identifier: BSD-3-Clause
  */
 package main
@@ -7,6 +7,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	e "intel/isecl/lib/common/v3/exec"
 	commLog "intel/isecl/lib/common/v3/log"
@@ -17,6 +18,8 @@ import (
 	"intel/isecl/sgx_agent/v3/config"
 	"intel/isecl/sgx_agent/v3/constants"
 	"intel/isecl/sgx_agent/v3/resource"
+	"intel/isecl/sgx_agent/v3/tasks"
+	"intel/isecl/sgx_agent/v3/utils"
 	"intel/isecl/sgx_agent/v3/version"
 	"io"
 	"os"
@@ -24,7 +27,6 @@ import (
 	"os/user"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 )
 
@@ -45,13 +47,17 @@ type App struct {
 	SecLogWriter   io.Writer
 }
 
+var (
+	hardwareUUIDCmd = []string{"dmidecode", "-s", "system-uuid"}
+)
+
 func (a *App) printUsage() {
 	w := a.consoleWriter()
 	fmt.Fprintln(w, "Usage:")
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "    sgx_agent <command> [arguments]")
 	fmt.Fprintln(w, "")
-	fmt.Fprintln(w, "Avaliable Commands:")
+	fmt.Fprintln(w, "Available Commands:")
 	fmt.Fprintln(w, "    help|-h|--help        Show this help message")
 	fmt.Fprintln(w, "    setup [task]          Run setup task")
 	fmt.Fprintln(w, "    start                 Start sgx_agent")
@@ -60,18 +66,30 @@ func (a *App) printUsage() {
 	fmt.Fprintln(w, "    uninstall             Uninstall sgx_agent")
 	fmt.Fprintln(w, "    version|--version|-v  Show the version of sgx_agent")
 	fmt.Fprintln(w, "")
-	fmt.Fprintln(w, "Avaliable Tasks for setup:")
+	fmt.Fprintln(w, "Available Tasks for setup:")
 	fmt.Fprintln(w, "    all                       Runs all setup tasks")
 	fmt.Fprintln(w, "                              Required env variables:")
 	fmt.Fprintln(w, "                                  - get required env variables from all the setup tasks")
 	fmt.Fprintln(w, "                              Optional env variables:")
 	fmt.Fprintln(w, "                                  - get optional env variables from all the setup tasks")
 	fmt.Fprintln(w, "")
-	fmt.Fprintln(w, "    download_ca_cert      Download CMS root CA certificate")
-	fmt.Fprintln(w, "                          - Option [--force] overwrites any existing files, and always downloads new root CA cert")
-	fmt.Fprintln(w, "                          Required env variables specific to setup task are:")
-	fmt.Fprintln(w, "                              - CMS_BASE_URL=<url>                                : for CMS API url")
-	fmt.Fprintln(w, "                              - CMS_TLS_CERT_SHA384=<CMS TLS cert sha384 hash>    : to ensure that SGX-Agent is talking to the right CMS instance")
+	fmt.Fprintln(w, "    update_service_config    Updates Service Configuration")
+	fmt.Fprintln(w, "                             Required env variables:")
+	fmt.Fprintln(w, "                                 - SCS_BASE_URL                                     : SCS Base URL")
+	fmt.Fprintln(w, "                                 - SGX_AGENT_LOGLEVEL                               : SGX_AGENT Log Level")
+	fmt.Fprintln(w, "                                 - SGX_AGENT_LOG_MAX_LENGTH                         : SGX Agent Log maximum length")
+	fmt.Fprintln(w, "                                 - SGX_AGENT_ENABLE_CONSOLE_LOG                     : SGX Agent Enable standard output")
+	fmt.Fprintln(w, "                                 - SHVS_UPDATE_INTERVAL                             : SHVS update interval in minutes")
+	fmt.Fprintln(w, "                                 - WAIT_TIME                                        : Time between each retries to PCS")
+	fmt.Fprintln(w, "                                 - RETRY_COUNT                                      : Push Data Retry Count to SCS")
+	fmt.Fprintln(w, "                                 - SHVS_BASE_URL                                    : HVS Base URL")
+	fmt.Fprintln(w, "                                 - BEARER_TOKEN                                     : BEARER TOKEN")
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "    download_ca_cert         Download CMS root CA certificate")
+	fmt.Fprintln(w, "                             - Option [--force] overwrites any existing files, and always downloads new root CA cert")
+	fmt.Fprintln(w, "                             Required env variables specific to setup task are:")
+	fmt.Fprintln(w, "                                 - CMS_BASE_URL=<url>                                : for CMS API url")
+	fmt.Fprintln(w, "                                 - CMS_TLS_CERT_SHA384=<CMS TLS cert sha384 hash>    : to ensure that SGX-Agent is talking to the right CMS instance")
 	fmt.Fprintln(w, "")
 }
 
@@ -216,7 +234,7 @@ func (a *App) Run(args []string) error {
 		log.Info("app:Run() Uninstalled SGX Agent Service")
 		os.Exit(0)
 	case "version", "--version", "-v":
-		fmt.Fprintf(a.consoleWriter(), "SGX Agent Service %s-%s\nBuilt %s\n", version.Version, version.GitHash, version.BuildDate)
+		fmt.Println(version.GetVersion())
 	case "setup":
 		a.configureLogs(a.configuration().LogEnableStdout, true)
 		var context setup.Context
@@ -226,7 +244,7 @@ func (a *App) Run(args []string) error {
 			os.Exit(1)
 		}
 		if args[2] != "download_ca_cert" &&
-			args[2] != "server" &&
+			args[2] != "update_service_config" &&
 			args[2] != "all" {
 			a.printUsage()
 			return errors.New("No such setup task")
@@ -235,8 +253,10 @@ func (a *App) Run(args []string) error {
 		if validErr != nil {
 			return errors.Wrap(validErr, "app:Run() Invalid setup task arguments")
 		}
+
+		taskName := args[2]
 		a.Config = config.Global()
-		err := a.Config.SaveConfiguration(context)
+		err := a.Config.SaveConfiguration(taskName, context)
 		if err != nil {
 			fmt.Println("Error saving configuration: " + err.Error())
 			os.Exit(1)
@@ -252,6 +272,11 @@ func (a *App) Run(args []string) error {
 					TrustedTlsCertDigest: a.Config.CmsTLSCertDigest,
 					ConsoleWriter:        os.Stdout,
 				},
+				tasks.Update_Service_Config{
+					Flags:         args,
+					Config:        a.configuration(),
+					ConsoleWriter: os.Stdout,
+				},
 			},
 			AskInput: false,
 		}
@@ -264,6 +289,10 @@ func (a *App) Run(args []string) error {
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error running setup: %s\n", err)
 			return err
+		}
+
+		if _, err := os.Stat("/.container-env"); err == nil {
+			return nil
 		}
 
 		sgxAgentUser, err := user.Lookup(constants.SGXAgentUserName)
@@ -299,10 +328,25 @@ func (a *App) startAgent() error {
 
 	c := a.configuration()
 
-	err, sgxDiscoveryData, platformData := resource.ExtractSGXPlatformValues(0)
+	sgxDiscoveryData, platformData, err := resource.ExtractSGXPlatformValues(0)
 	if err != nil {
 		log.WithError(err).Error("Unable to extract SGX Platform Values. Terminating...")
 		return err
+	}
+
+	// Get Hardware UUID
+	result, err := utils.ReadAndParseFromCommandLine(hardwareUUIDCmd)
+	if err != nil {
+		return errors.Wrap(err, "Could not parse hardware UUID. Terminating...")
+	}
+	hardwareUUID := ""
+	for i := range result {
+		hardwareUUID = strings.TrimSpace(result[i])
+		_, err = uuid.Parse(hardwareUUID)
+		if err != nil {
+			return errors.Wrap(err, "Hardware UUID is not in UUID format. Terminating...")
+		}
+		break
 	}
 
 	// Check if SGX Supported && SGX Enabled && FLC Enabled.
@@ -327,7 +371,7 @@ func (a *App) startAgent() error {
 	}
 	log.Debug("FLC is enabled.")
 
-	status, err := resource.PushSGXData(platformData)
+	status, err := resource.PushSGXData(platformData, hardwareUUID)
 	if !status && err != nil {
 		log.WithError(err).Error("Unable to push platform data to SCS. Terminating...")
 		return err
@@ -339,7 +383,7 @@ func (a *App) startAgent() error {
 		log.Debug("SHVS Update Interval is : ", c.SHVSUpdateInterval)
 
 		// Start SHVS Update Beacon
-		err = resource.UpdateSHVSPeriodically(sgxDiscoveryData, platformData, c.SHVSUpdateInterval)
+		err = resource.UpdateSHVSPeriodically(sgxDiscoveryData, platformData, hardwareUUID, c.SHVSUpdateInterval)
 
 		if err != nil {
 			log.WithError(err).Error("Unable to update SHVS. Terminating...")
@@ -359,7 +403,11 @@ func (a *App) start() error {
 	if err != nil {
 		return err
 	}
-	return syscall.Exec(systemctl, []string{"systemctl", "start", "sgx_agent"}, os.Environ())
+	cmd := exec.Command(systemctl, "start", "sgx_agent")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Env = os.Environ()
+	return cmd.Run()
 }
 
 func (a *App) stop() error {
@@ -371,7 +419,11 @@ func (a *App) stop() error {
 	if err != nil {
 		return err
 	}
-	return syscall.Exec(systemctl, []string{"systemctl", "stop", "sgx_agent"}, os.Environ())
+	cmd := exec.Command(systemctl, "stop", "sgx_agent")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Env = os.Environ()
+	return cmd.Run()
 }
 
 func (a *App) status() error {
@@ -383,7 +435,11 @@ func (a *App) status() error {
 	if err != nil {
 		return err
 	}
-	return syscall.Exec(systemctl, []string{"systemctl", "status", "sgx_agent"}, os.Environ())
+	cmd := exec.Command(systemctl, "status", "sgx_agent")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Env = os.Environ()
+	return cmd.Run()
 }
 
 func (a *App) uninstall(purge bool) {
@@ -456,7 +512,7 @@ func validateSetupArgs(cmd string, args []string) error {
 	case "download_ca_cert":
 		return nil
 
-	case "server":
+	case "update_service_config":
 		return nil
 
 	case "all":

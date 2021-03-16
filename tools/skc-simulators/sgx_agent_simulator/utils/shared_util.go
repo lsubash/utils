@@ -1,40 +1,16 @@
 /*
- * Copyright (C) 2021  Intel Corporation
+ * Copyright (C) 2020 Intel Corporation
  * SPDX-License-Identifier: BSD-3-Clause
  */
 package utils
 
 import (
+	"github.com/Waterdrips/jwt-go"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
-	"intel/isecl/lib/clients/v3"
-	"intel/isecl/lib/clients/v3/aas"
-	"intel/isecl/sgx_agent/v3/config"
-	"intel/isecl/sgx_agent/v3/constants"
-	"net/http"
 	"os/exec"
 	"strings"
-	"sync"
+	"time"
 )
-
-var (
-	c         = config.Global()
-	AasClient = aas.NewJWTClient(c.AuthServiceURL)
-	AasRWLock = sync.RWMutex{}
-)
-
-func init() {
-	AasRWLock.Lock()
-	defer AasRWLock.Unlock()
-	if AasClient.HTTPClient == nil {
-		c, err := clients.HTTPClientWithCADir(constants.TrustedCAsStoreDir)
-		if err != nil {
-			log.Error("resource/shared_util:init() Error initializing http client.. ", err)
-			return
-		}
-		AasClient.HTTPClient = c
-	}
-}
 
 func ReadAndParseFromCommandLine(input []string) ([]string, error) {
 	cmd := exec.Command(input[0], input[1:]...)
@@ -58,49 +34,26 @@ func deleteEmptyFromSlice(s []string) []string {
 	return r
 }
 
-func AddJWTToken(req *http.Request) error {
-	log.Trace("resource/utils:AddJWTToken() Entering")
-	defer log.Trace("resource/utils:AddJWTToken() Leaving")
-
-	if AasClient.BaseURL == "" {
-		AasClient = aas.NewJWTClient(c.AuthServiceURL)
-		if AasClient.HTTPClient == nil {
-			c, err := clients.HTTPClientWithCADir(constants.TrustedCAsStoreDir)
-			if err != nil {
-				log.Error("resource/shared_util:AddJWTToken() Error initializing http client.. ", err)
-				return errors.Wrap(err, "resource/shared_util:AddJWTToken() Error initializing http client")
-			}
-			AasClient.HTTPClient = c
-		}
+// JwtHasExpired checks if the token is about to expire in 7 days or not.
+func JwtHasExpired(tokenString string) (bool, error) {
+	if tokenString == "" {
+		return true, errors.New("Token is empty")
 	}
 
-	AasRWLock.RLock()
-	jwtToken, err := AasClient.GetUserToken(c.SGXAgentUserName)
-	AasRWLock.RUnlock()
-
-	// something wrong
+	// We cannot verify the token since we don't have the key.
+	// We can only parse it.
+	token, _, err := new(jwt.Parser).ParseUnverified(tokenString, jwt.MapClaims{})
 	if err != nil {
-		// lock aas with w lock
-		AasRWLock.Lock()
-		defer AasRWLock.Unlock()
-		// check if other thread fix it already
-		jwtToken, err = AasClient.GetUserToken(c.SGXAgentUserName)
-		// it is not fixed
-		if err != nil {
-			AasClient.AddUser(c.SGXAgentUserName, c.SGXAgentPassword)
-			err = AasClient.FetchAllTokens()
-			if err != nil {
-				log.Warn("Error fetching all tokens...", err)
-			}
-			jwtToken, err = AasClient.GetUserToken(c.SGXAgentUserName)
-			if err != nil {
-				log.Error("resource/shared_util:AddJWTToken() Error initializing http client.. ", err)
-				return errors.Wrap(err, "resource/utils:AddJWTToken() Could not fetch token")
-			}
-
-		}
+		return true, errors.Wrap(err, "Unable to parse JWT")
 	}
-	log.Debug("resource/utils:AddJWTToken() successfully added jwt bearer token")
-	req.Header.Set("Authorization", "Bearer "+string(jwtToken))
-	return nil
+
+	// Get the standard claims.
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return true, errors.New("Unable to parse JWT standard claims")
+	}
+
+	// VerifyExpiresAt returns true if token is not expired
+	expired := !claims.VerifyExpiresAt(time.Now().Add(time.Duration(24*7)*time.Hour).Unix(), false)
+	return expired, nil
 }

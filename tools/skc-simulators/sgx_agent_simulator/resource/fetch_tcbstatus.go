@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2020  Intel Corporation
+* Copyright (C) 2020 Intel Corporation
 * SPDX-License-Identifier: BSD-3-Clause
  */
 package resource
@@ -8,48 +8,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
-
 	"intel/isecl/lib/clients/v3"
 	"intel/isecl/sgx_agent/v3/config"
 	"intel/isecl/sgx_agent/v3/constants"
 	"intel/isecl/sgx_agent/v3/utils"
 	"io/ioutil"
 	"net/http"
-	"time"
 )
 
-// GetTCBStatusRepeatUntilSuccess is a Wrapper over GetTCBStatus. Retries in case of error till we succeed.
-func GetTCBStatusRepeatUntilSuccess(qeid string) (string, error) {
-	conf := config.Global()
-	if conf == nil {
-		return "", errors.Wrap(errors.New("GetTCBStatus: Configuration pointer is null"), "Config error")
-	}
-
-	tcbstatus, err := GetTCBStatus(qeid)
-
-	var timeBwCalls int = conf.WaitTime
-	var retries int = 0
-	if err != nil {
-		log.WithError(err)
-		for {
-			tcbstatus, err = GetTCBStatus(qeid)
-			if err == nil {
-				return tcbstatus, err
-			}
-
-			retries++
-			if retries >= conf.RetryCount {
-				log.Errorf("GetTCBStatus: Retried %d times, Sleeping %d minutes...", conf.RetryCount, timeBwCalls)
-				time.Sleep(time.Duration(timeBwCalls) * time.Minute)
-				retries = 0
-			}
-		}
-	}
-	return tcbstatus, err
-}
-
-// GetTCBStatus Fetches TCB status from SCS using QEID.
-func GetTCBStatus(qeid string) (string, error) {
+// GetTCBStatus Fetches TCB status from SCS using QEID and PCEID.
+func GetTCBStatus(qeID, pceID string) (string, error) {
 	log.Trace("resource/fetch_tcbstatus:GetTCBStatus() Entering")
 	defer log.Trace("resource/fetch_tcbstatus:GetTCBStatus() Leaving")
 
@@ -69,14 +37,20 @@ func GetTCBStatus(qeid string) (string, error) {
 
 	log.Debug("SCS TCB Fetch URL : ", fetchURL)
 
-	// Add qeid query parameter for fetching tcb status
+	// Add qeid and pceid query parameter for fetching tcb status
 	q := request.URL.Query()
-	q.Add("qeid", qeid)
+	q.Add("qeid", qeID)
+	q.Add("pceid", pceID)
 	request.URL.RawQuery = q.Encode()
+	request.Header.Set("Authorization", "Bearer "+conf.BearerToken)
 
-	err := utils.AddJWTToken(request)
+	tokenExpired, err := utils.JwtHasExpired(conf.BearerToken)
 	if err != nil {
-		return status, errors.Wrap(err, "getTCBStatus: Failed to add JWT token to the authorization header")
+		slog.WithError(err).Error("resource/fetch_tcbstatus:GetTCBStatus() Error verifying token expiry")
+		return status, errors.Wrap(err, "resource/fetch_tcbstatus:GetTCBStatus() Error verifying token expiry")
+	}
+	if tokenExpired {
+		slog.Warn("resource/fetch_tcbstatus:GetTCBStatus() Token is about to expire within 7 days. Please refresh the token.")
 	}
 
 	client, err := clients.HTTPClientWithCADir(constants.TrustedCAsStoreDir)
@@ -92,23 +66,6 @@ func GetTCBStatus(qeid string) (string, error) {
 	}
 
 	response, err := httpClient.Do(request)
-
-	if response != nil && response.StatusCode == http.StatusUnauthorized {
-		// Token could have expired. Fetch token and try again
-		utils.AasRWLock.Lock()
-		err = utils.AasClient.FetchAllTokens()
-		if err != nil {
-			return status, errors.Wrap(err, "GetTCBStatus: FetchAllTokens() Could not fetch token")
-		}
-		utils.AasRWLock.Unlock()
-		err = utils.AddJWTToken(request)
-		if err != nil {
-			return status, errors.Wrap(err, "GetTCBStatus: Failed to add JWT token to the authorization header")
-		}
-
-		response, err = httpClient.Do(request)
-	}
-
 	if response != nil {
 		defer func() {
 			derr := response.Body.Close()

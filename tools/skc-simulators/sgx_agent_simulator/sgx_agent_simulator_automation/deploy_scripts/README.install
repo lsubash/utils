@@ -1,6 +1,6 @@
-Pre-requisite for the SGX Agent Deployment
+Pre-requisite for the SGX Agent simulator Deployment
 ==========================================
- - SGX Enabled in BIOS
+ - SGX and FLC Enabled in BIOS
  - RHEL 8.2 OS
 
 RHEL8 package Requirements
@@ -9,20 +9,23 @@ Following RHEL 8 repositories should be setup and available (/etc/yum.repos.d) t
 	BaseOS
 	AppStream
 	CodeReady
-- Ensure CMS/AAS/SHVS server/VM IP addresses are added to the no_proxy environment variable
+- Ensure that dnf update can download and install latest software updates
+
+- Ensure CSP side server/VM IP addresses are added to the no_proxy environment variable
 
 - Turn off Firewall service or ensure that the SHVS system can access the machine where SGX Agent is running
 # systemctl stop firewalld
 
 - Ensure that the system date is properly setup (to PDT time) on all machines/VMs where SKC components are being installed
+	This is important, else certificate verifications will fail
 
 How to Deploy
 ==============
-- To verify the checksum of the SGX Agent Deployment tar file and extract it
+- To verify the checksum of the SGX Agent simulator Deployment tar file and extract it
 # ./agent_untar.sh
 
 # cd sgx_agent
-- Update the IP Addresses for the SKC Components and CMS_TLS_SHA value in agent.conf. Default values for Ports are pre-filled
+- Update the SGX Server IP Addresses, SGX Agent user credentials and CMS_TLS_SHA value in agent.conf
 	To find CMS_TLA_SHA run following command on the machine where CMS is installed
 	# cms tlscertsha384
 
@@ -33,11 +36,10 @@ Contents of the Deployment Tar file
 ===================================
 - Deployment scripts:deploy_sgx_agent.sh sgx_agent_create_roles.sh and deployment_prerequisites.sh
 - Pre-filled agent.conf
-- Download binaries/rpms/libraries in bin directory.
+- Binaries/rpms/libraries in bin directory.
 
 Repo Contents
 =============
 deploy_sgx_agent.sh		Main script for Deploying SGX Agent on SGX enabled server
-deployment_prerequisites.sh	Install RHEL 8 packages dependencies required fro SGX Agent Deployment
-sgx_agent_create_roles.sh	Script to create SGX Agent user and roles with AAS
-agent.conf			Pre-filled config file with CMS/AAS/SHVS IP Address and Port Numners
+deployment_prerequisites.sh	Install RHEL 8 packages dependencies required fro SGX Agent simulator Deployment
+agent.conf			Config file for updating SGX Agent Simulator/CMS/AAS/SHVS IP Addresses

@@ -1,14 +1,14 @@
 /*
- * Copyright (C) 2020  Intel Corporation
+ * Copyright (C) 2020 Intel Corporation
  * SPDX-License-Identifier: BSD-3-Clause
  */
 package main
 
 import (
+	"fmt"
 	"intel/isecl/sgx_agent/v3/constants"
 	"os"
 	"os/user"
-	"runtime"
 	"strconv"
 )
 
@@ -40,6 +40,10 @@ func openLogFiles() (logFile, httpLogFile, secLogFile *os.File, err error) {
 		return nil, nil, nil, err
 	}
 
+	if _, err := os.Stat("/.container-env"); err == nil {
+		return logFile, httpLogFile, secLogFile, nil
+	}
+
 	agentUser, err := user.Lookup(constants.SGXAgentUserName)
 	if err != nil {
 		log.Errorf("Could not find sgx_agent user '%s'", constants.SGXAgentUserName)
@@ -67,6 +71,7 @@ func openLogFiles() (logFile, httpLogFile, secLogFile *os.File, err error) {
 	err = os.Chown(constants.SecurityLogFile, uid, gid)
 	if err != nil {
 		log.Errorf("Could not change file ownership for file: '%s'", constants.SecurityLogFile)
+		return nil, nil, nil, err
 	}
 
 	err = os.Chown(constants.LogFile, uid, gid)
@@ -86,21 +91,7 @@ func main() {
 		}
 	} else {
 		defer func() {
-			err = l.Close()
-			if err != nil {
-				log.Error("failed to complete write on sgx_agent.log ", err)
-				os.Exit(1)
-			}
-			err = h.Close()
-			if err != nil {
-				log.Error("failed to complete write on http.log ", err)
-				os.Exit(1)
-			}
-			err = s.Close()
-			if err != nil {
-				log.Error("failed to complete write on sgx_agent-security.log ", err)
-				os.Exit(1)
-			}
+			closeLogFiles(l, h, s)
 		}()
 
 		app = &App{
@@ -112,7 +103,24 @@ func main() {
 
 	err = app.Run(os.Args)
 	if err != nil {
-		log.Error("Application returned with error: ", err)
-		runtime.Goexit()
+		fmt.Println("Application returned with error: ", err.Error())
+		closeLogFiles(l, h, s)
+		os.Exit(1)
+	}
+}
+
+func closeLogFiles(logFile, httpLogFile, secLogFile *os.File) {
+	var err error
+	err = logFile.Close()
+	if err != nil {
+		fmt.Println("Failed to close default log file:", err.Error())
+	}
+	err = httpLogFile.Close()
+	if err != nil {
+		fmt.Println("Failed to close http log file:", err.Error())
+	}
+	err = secLogFile.Close()
+	if err != nil {
+		fmt.Println("Failed to close security log file:", err.Error())
 	}
 }
