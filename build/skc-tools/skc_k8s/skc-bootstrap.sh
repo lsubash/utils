@@ -952,17 +952,19 @@ deploy_control_plane_components () {
 
 deploy_common_components () {
     deploy_control_plane_components
+    deploy_shvs
     deploy_sagent
 }
 
 cleanup_control_plane_components () {
-    cleaup_cms
+    cleanup_cms
     cleanup_authservice
     cleanup_scs
 }
 
 cleanup_common_components () {
     cleanup_control_plane_components
+    cleanup_shvs
     cleanup_sagent
 }
 
@@ -977,44 +979,44 @@ dispatch_works() {
             	    ;;
             	    "authservice") deploy_authservice
             	    ;;
-                  "scs") deploy_scs
+                    "scs") deploy_scs
             	    ;;
             	    "shvs") deploy_shvs
             	    ;;
             	    "ihub") deploy_ihub
             	    ;;
-                  "sagent") deploy_sagent
+                    "sagent") deploy_sagent
             	    ;;
-                  "sqvs") deploy_sqvs
+                    "sqvs") deploy_sqvs
             	    ;;
-                  "kbs") deploy_kbs
-                  ;;
+                    "kbs") deploy_kbs
+                    ;;
             	    "isecl-controller") deploy_custom_controller
             	    ;;
             	    "isecl-scheduler") deploy_extended_scheduler
-                  ;;
-                  "skclib") deploy_SKC_library
+                    ;;
+                    "skclib") deploy_SKC_library
             	    ;;
             	    "secure-key-caching") deploy_common_components
-                                        deploy_sqvs
-                                        deploy_kbs
-                  ;;
-                  "sgx-attestation") deploy_common_components
-                  ;;
-                  "sgx-orchestration-k8s")  deploy_common_components
+                                          deploy_sqvs
+                                          deploy_kbs
+                    ;;
+                    "sgx-attestation") deploy_common_components
+                                       deploy_sqvs
+                    ;;
+                    "sgx-orchestration-k8s")  deploy_common_components
                                             deploy_custom_controller
                                             deploy_ihub
                                             if [ "$K8S_DISTRIBUTION" == "microk8s" ]; then
                                                deploy_extended_scheduler
                                             fi
-                  ;;
-                  "sgx-virtualization") deploy_control_plane_components
+                    ;;
+                    "sgx-virtualization") deploy_control_plane_components
                                         deploy_sqvs
                                         deploy_kbs
-                                        deploy_shvs
-                  ;;
-                  "all")  bootstrap
-                  ;;
+                    ;;
+                    "all")  bootstrap
+                    ;;
             	    *)
                 	    print_help
                 	    exit 1
@@ -1052,6 +1054,8 @@ dispatch_works() {
                                         cleanup_kbs
                   ;;
                   "sgx-attestation") cleanup_common_components
+                                     cleanup_sqvs
+
                   ;;
                   "sgx-orchestration-k8s")  cleanup_common_components
                                             cleanup_ihub

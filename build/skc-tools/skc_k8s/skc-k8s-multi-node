@@ -25,8 +25,8 @@ all: clean intel_secl_k8s $(TARGETS) k8s-extensions sgx_agent skc_library
 	cp utils/build/skc-tools/skc_k8s/isecl-skc-k8s.env k8s/manifests/isecl-skc-k8s.env
 	cp intel-secl/deployments/container-archive/oci/* k8s/container-images/
 	mkdir -p k8s/manifests/aas/scripts
-	cp intel-secl/deployments/k8s/aas/populate-users k8s/manifests/aas/scripts/
-	cp intel-secl/deployments/k8s/aas/populate-users.env k8s/manifests/aas/scripts/populate-users.env
+	mv k8s/manifests/aas/populate-users k8s/manifests/aas/scripts/
+	mv k8s/manifests/aas/populate-users.env k8s/manifests/aas/scripts/
 	cp -r utils/build/skc-tools/kbs_script k8s/manifests/kbs/
 	cp k8s-extensions/out/isecl-k8s-extensions/*.tar k8s/container-images/
 	cp sgx-caching-service/out/*.tar k8s/container-images/
