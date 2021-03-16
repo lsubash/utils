@@ -681,6 +681,7 @@ cleanup_isecl_scheduler(){
 
     $KUBECTL delete deploy isecl-scheduler-deployment --namespace isecl
     $KUBECTL delete svc isecl-scheduler-svc --namespace isecl
+    $KUBECTL delete secret scheduler-certs --namespace isecl
     rm -rf secrets
 
     cd ..
@@ -925,8 +926,6 @@ purge() {
     rm -rf  /var/log/cms/ /var/log/authservice /var/log/scs /var/log/shvs /var/log/ihub /var/log/sgx_agent /var/log/sqvs /var/log/kbs
     echo "Cleaning up config from /etc/"
     rm -rf /etc/cms /etc/authservice /etc/scs /etc/shvs /etc/ihub /etc/sgx_agent /etc/sqvs /etc/kbs
-    echo "Cleaning up data from /usr/local/kube/data/"
-    rm -rf  /usr/local/kube/data/authservice /usr/local/kube/data/sgx-host-verification-service /usr/local/kube/data/sgx-caching-service
 }
 
 #Help section
@@ -1001,9 +1000,11 @@ dispatch_works() {
                   "sgx-attestation") deploy_common_components
                   ;;
                   "sgx-orchestration-k8s")  deploy_common_components
-                                        deploy_custom_controller
-                                        deploy_ihub
-                                        deploy_extended_scheduler
+                                            deploy_custom_controller
+                                            deploy_ihub
+                                            if [ "$K8S_DISTRIBUTION" == "microk8s" ]; then
+                                               deploy_extended_scheduler
+                                            fi
                   ;;
                   "sgx-virtualization") deploy_control_plane_components
                                         deploy_sqvs
@@ -1034,7 +1035,7 @@ dispatch_works() {
                   ;;
             	 "isecl-controller") cleanup_isecl_controller
 		  ;;
-		 "isecl_scheduler") cleanup_isecl_scheduler
+		 "isecl-scheduler") cleanup_isecl_scheduler
 		  ;;
                  "sagent") cleanup_sagent
                   ;;

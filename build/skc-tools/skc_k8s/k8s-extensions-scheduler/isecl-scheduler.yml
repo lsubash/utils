@@ -15,7 +15,7 @@ kind: Deployment
 metadata:
   labels:
     app: isecl-scheduler
-  name: isecl-scheduler
+  name: isecl-scheduler-deployment
   namespace: isecl
 spec:
   replicas: 1
