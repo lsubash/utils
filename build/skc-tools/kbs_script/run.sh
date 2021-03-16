@@ -19,6 +19,13 @@ if [ -f ./kbs.conf ]; then
     if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
 fi
 
+CACERT_PATH=cmsca.pem
+curl -k --request GET https://$SYSTEM_IP:$CMS_PORT/cms/v1/ca-certificates --header 'Accept: application/x-pem-file' > $CACERT_PATH
+if [ $? -ne 0 ]; then
+        echo "failed to get CMS CA certificate"
+        exit 1
+fi
+
 CONTENT_TYPE="Content-Type: application/json"
 ACCEPT="Accept: application/json"
 AAS_BASE_URL=https://$SYSTEM_IP:$AAS_PORT/aas/v1
