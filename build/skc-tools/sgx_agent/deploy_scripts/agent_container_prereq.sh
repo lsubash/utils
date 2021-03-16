@@ -60,7 +60,6 @@ install_psw_qgl()
 	if [ "$OS" == "rhel" ]; then
 		tar -xf $SGX_AGENT_BIN/sgx_rpm_local_repo.tgz
 		yum-config-manager --add-repo file://$PWD/sgx_rpm_local_repo || exit 1
-		yum-config-manager --save --setopt=tmp_sgx_sgx_rpm_local_repo.gpgcheck=0 || exit 1
 		dnf install -qy --nogpgcheck libsgx-dcap-ql || exit 1
 		rm -rf sgx_rpm_local_repo /etc/yum.repos.d/*sgx_rpm_local_repo.repo
 	elif [ "$OS" == "ubuntu" ]; then
