@@ -19,3 +19,4 @@ data:
   SHVS_DB_SSLCERTSRC: /etc/postgresql/server.crt
   SHVS_DB_PORT: "5432"
   SHVS_LOGLEVEL: info
+  SHVS_ENABLE_CONSOLE_LOG: y

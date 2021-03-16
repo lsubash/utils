@@ -19,3 +19,4 @@ data:
   SCS_DB_NAME: pgscsdb
   SCS_DB_SSLCERTSRC: /etc/postgresql/server.crt
   SCS_DB_PORT: "5432"
+  SCS_ENABLE_CONSOLE_LOG: "y"
