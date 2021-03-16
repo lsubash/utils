@@ -80,13 +80,15 @@ get_cms_tls_cert_sha384(){
 }
 
 
-get_AAS_BOOTSTRAP_TOKEN(){
+get_aas_bootstrap_token(){
   cms_pod=$($KUBECTL get pod -n isecl -l app=cms -o jsonpath="{.items[0].metadata.name}")
   AAS_BOOTSTRAP_TOKEN=$($KUBECTL exec -n isecl --stdin $cms_pod -- cms setup  cms-auth-token --force  | grep "JWT Token:" | awk '{print $3}')
 }
 
 deploy_authservice(){
 
+    get_cms_tls_cert_sha384
+    get_aas_bootstrap_token
     echo "----------------------------------------------------"
     echo "|    DEPLOY:AUTHENTICATION-AUTHORIZATION-SERVICE   |"
     echo "----------------------------------------------------"
@@ -877,7 +879,7 @@ bootstrap() {
 
     deploy_cms
     get_cms_tls_cert_sha384
-    get_AAS_BOOTSTRAP_TOKEN
+    get_aas_bootstrap_token
     deploy_authservice
     get_bearer_token
     deploy_scs

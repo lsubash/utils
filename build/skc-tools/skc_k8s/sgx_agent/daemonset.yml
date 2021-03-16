@@ -19,6 +19,15 @@ spec:
       labels:
         app: sagent
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node.type
+                    operator: In
+                    values:
+                      - "SGX-ENABLED"
       securityContext:
         fsGroup: 1001
       containers:

@@ -20,6 +20,15 @@ spec:
       labels:
         app: skclib
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node.type
+                    operator: In
+                    values:
+                      - "SGX-ENABLED"
       containers:
         - name: skc-lib
           image: <image-name>:<tag>
