@@ -44,6 +44,9 @@ spec:
         - name: kbs
           image: <image-name>:<port>
           imagePullPolicy: Always
+          securityContext:
+            runAsUser: 1001
+            runAsGroup: 1001
           ports:
             - containerPort: 9443
           envFrom:
