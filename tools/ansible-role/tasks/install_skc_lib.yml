@@ -19,6 +19,32 @@
   args:
     chdir: /root/{{skclib_installer_name}}
 
+- name: ISECL - SKC LIBRARY | Copy Create Roles configuration file
+  template:
+    src: "create_roles.conf.j2"
+    dest: "/root/{{skclib_installer_name}}/create_roles.conf"
+
+- name: ISECL - SKC LIBRARY | Run Create Roles Script
+  shell: "set -o pipefail && ./skc_library_create_roles.sh 2>&1 | tee /root/skc_library_create_roles.log"
+  args:
+    chdir: /root/{{skclib_installer_name}}
+    executable: /bin/bash
+
+- name: ISECL - SKC LIBRARY | Create token for SKC Library user
+  uri:
+    url: "https://{{aas_enterprise}}:{{aas_port}}/aas/v1/token"
+    body_format: json
+    body:
+       {
+       "username": "{{skclib_admin_username}}",
+       "password": "{{skclib_admin_password}}"
+       }
+    method: POST
+    use_proxy: no
+    validate_certs: no
+    return_content: yes
+  register: skc_library_bootstrap_token
+
 - name: ISECL - SKC LIBRARY | Copy configuration file
   template:
     src: "skc_library.conf.j2"
