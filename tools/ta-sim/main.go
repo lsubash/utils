@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -38,6 +39,7 @@ import (
 var Version = ""
 var GitHash = ""
 var BuildDate = ""
+var AasToken = ""
 
 type AppConfig struct {
 	PortStart              int
@@ -424,32 +426,60 @@ func startServers(ac *AppConfig) (err error) {
 }
 
 func getAuthToken(aasUrl, apiUser, apiPass string) (string, error) {
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	client := http.Client{
-		Timeout:   time.Duration(5 * time.Second),
-		Transport: tr,
-	}
-	reqBody, err := json.Marshal(map[string]string{
-		"username": apiUser,
-		"password": apiPass,
-	})
-	req, err := http.NewRequest("POST", aasUrl+"token", bytes.NewBuffer(reqBody))
-	if err != nil {
-		return "", errors.Wrap(err, "could not create token request")
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", errors.Wrap(err, "could not obtain token from aas")
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", errors.Wrap(err, "could not read token from aas")
-	}
-	return string(body), nil
 
+	// use this to get a new token if the previous one has expired
+	getNewToken := func() (string, error) {
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+
+		client := http.Client{
+			Timeout:   5 * time.Second,
+			Transport: tr,
+		}
+		reqBody, err := json.Marshal(map[string]string{
+			"username": apiUser,
+			"password": apiPass,
+		})
+		req, err := http.NewRequest("POST", aasUrl+"token", bytes.NewBuffer(reqBody))
+		if err != nil {
+			return "", errors.Wrap(err, "could not create token request")
+		}
+		resp, err := client.Do(req)
+		if err != nil {
+			return "", errors.Wrap(err, "could not obtain token from aas")
+		}
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return "", errors.Wrap(err, "could not read token from aas")
+		}
+		return string(body), nil
+	}
+
+	// check if the current token is valid, else fetch a new one
+	token, _, tokenParseErr := new(jwt.Parser).ParseUnverified(AasToken, jwt.MapClaims{})
+	if tokenParseErr != nil {
+		AasToken, getTokenErr := getNewToken()
+		if getTokenErr != nil {
+			return "", getTokenErr
+		}
+		token, _, tokenParseErr = new(jwt.Parser).ParseUnverified(AasToken, jwt.MapClaims{})
+		if tokenParseErr != nil {
+			return "", tokenParseErr
+		}
+	}
+
+	// get a fresh token if the current one has expired
+	tokenValidErr := token.Claims.Valid()
+	if tokenValidErr != nil {
+		AasToken, tokenValidErr = getNewToken()
+		if tokenValidErr != nil {
+			return "", tokenValidErr
+		}
+	}
+
+	return AasToken, nil
 }
 
 func sendCreateHostRequest(hvsUrl, authtoken, ip, hw_uuid string, port int, client *http.Client, wg *sync.WaitGroup) {
@@ -524,13 +554,6 @@ func sendCreateFlavorRequest(flavorParts []string, hvsUrl, authtoken, ip string,
 }
 
 func registerHosts(ac *AppConfig) error {
-	log.Info("Getting Authentication token to create hosts")
-	authToken, err := getAuthToken(ac.AasApiUrl, ac.ApiUserName, ac.ApiUserPassword)
-	if err != nil {
-		return err
-	}
-	log.Info("Authentication token obtained successfully")
-
 	hwUuids, err := loadNSaveHwUuidFile(ac.hwUuidMapPath, ac.PortStart, ac.Servers)
 	if err != nil {
 		return err
@@ -541,11 +564,18 @@ func registerHosts(ac *AppConfig) error {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	client := http.Client{
-		Timeout:   time.Duration(30 * time.Second),
+		Timeout:   30 * time.Second,
 		Transport: tr,
 	}
 
 	for i := ac.PortStart; i < ac.PortStart+ac.Servers; i++ {
+		log.Info("Getting Authentication token to create hosts")
+		authToken, err := getAuthToken(ac.AasApiUrl, ac.ApiUserName, ac.ApiUserPassword)
+		if err != nil {
+			return err
+		}
+		log.Info("Authentication token obtained successfully")
+
 		wg.Add(1)
 		go sendCreateHostRequest(ac.HvsApiUrl, authToken, ac.SimulatorIP, hwUuids[i-ac.PortStart], i, &client, wg)
 		if (i+1)%ac.RequestVolume == 0 {
@@ -559,15 +589,7 @@ func registerHosts(ac *AppConfig) error {
 }
 
 func createFlavors(ac *AppConfig) error {
-	log.Info("Getting Authentication token to create flavors")
-	authToken, err := getAuthToken(ac.AasApiUrl, ac.ApiUserName, ac.ApiUserPassword)
-	if err != nil {
-		return err
-	}
-	log.Info("Authentication token obtained successfully")
-
 	wg := new(sync.WaitGroup)
-	//
 	trustedHosts := ac.Servers * ac.TrustedHostsPercentage / 100
 
 	allFlavors := []string{"PLATFORM", "OS", "HOST_UNIQUE"}
@@ -579,11 +601,18 @@ func createFlavors(ac *AppConfig) error {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	client := http.Client{
-		Timeout:   time.Duration(30 * time.Second),
+		Timeout:   30 * time.Second,
 		Transport: tr,
 	}
 
 	for ; i < ac.PortStart+trustedHosts && i < ac.PortStart+ac.DistinctFlavors; i++ {
+		log.Info("Getting Authentication token to create flavors")
+		authToken, err := getAuthToken(ac.AasApiUrl, ac.ApiUserName, ac.ApiUserPassword)
+		if err != nil {
+			return err
+		}
+		log.Info("Authentication token obtained successfully")
+
 		wg.Add(1)
 		go sendCreateFlavorRequest(allFlavors, ac.HvsApiUrl, authToken, ac.SimulatorIP, i, &client, wg)
 		if (i+1)%ac.RequestVolume == 0 {
@@ -593,6 +622,13 @@ func createFlavors(ac *AppConfig) error {
 	}
 
 	for ; i < ac.PortStart+trustedHosts; i++ {
+		log.Info("Getting Authentication token to create flavors")
+		authToken, err := getAuthToken(ac.AasApiUrl, ac.ApiUserName, ac.ApiUserPassword)
+		if err != nil {
+			return err
+		}
+		log.Info("Authentication token obtained successfully")
+
 		wg.Add(1)
 		go sendCreateFlavorRequest(hostUniqueFlavors, ac.HvsApiUrl, authToken, ac.SimulatorIP, i, &client, wg)
 		if (i+1)%ac.RequestVolume == 0 {
@@ -633,7 +669,7 @@ func createBindingKeyCertMain(ac *AppConfig) error {
 	}
 
 	aikRSAKey, ok := aikPrivateKey.(*rsa.PrivateKey)
-	if ! ok {
+	if !ok {
 		return errors.Wrap(err, "aik Private Key is not an expected RSA key ")
 	}
 
@@ -642,7 +678,7 @@ func createBindingKeyCertMain(ac *AppConfig) error {
 		return errors.Wrap(err, "failed to load Privacy CA cer and key")
 	}
 
-	if _, ok := pcaPrivateKey.(*rsa.PrivateKey); ! ok {
+	if _, ok := pcaPrivateKey.(*rsa.PrivateKey); !ok {
 		return errors.Wrap(err, "Privacy Key is not of type RSA")
 	}
 
@@ -722,7 +758,7 @@ func main() {
 		fmt.Println("Usage")
 		fmt.Printf("\n\t %s start | create-all-flavors | create-all-hosts | create-binding-key-cert ", os.Args[0])
 		fmt.Printf("\n\n\t create-binding-key-cert Usage")
-		fmt.Printf("\n\t %s create-binding-key-cert --pca-cert=<path_to_privacy_ca_cert> --pca-key=<path_to_privacy_ca_key>", os.Args[0] )
+		fmt.Printf("\n\t %s create-binding-key-cert --pca-cert=<path_to_privacy_ca_cert> --pca-key=<path_to_privacy_ca_key>", os.Args[0])
 		fmt.Println("\n create-all-flavors and create-all-host require that start is called and process is running in background ")
 	}
 
