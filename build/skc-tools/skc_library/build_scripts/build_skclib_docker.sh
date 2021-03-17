@@ -71,6 +71,7 @@ build_skc_library_docker()
         \cp -prf $SKCLIB_DIR/sgxssl ../../../../../skc_library/dist/image/
         \cp -prf ../deploy_scripts/skc_library.conf ../../../../../skc_library/dist/image/
         \cp -prf $SKCLIB_BIN_DIR ../../../../../skc_library/dist/image/
+        \cp -prf ../deploy_scripts/credential_agent.sh ../../../../../skc_library/dist/image/
 	if [ "$OS" == "rhel" ]
 	then
 		tar -xf ../../../../../skc_library/dist/image/bin/sgx_rpm_local_repo.tgz -C ../../../../../skc_library/dist/image/bin/ || exit 1
