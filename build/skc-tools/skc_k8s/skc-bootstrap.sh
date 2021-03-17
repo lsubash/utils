@@ -1012,8 +1012,9 @@ dispatch_works() {
                                             fi
                     ;;
                     "sgx-virtualization") deploy_control_plane_components
-                                        deploy_sqvs
-                                        deploy_kbs
+                                          deploy_shvs
+                                          deploy_sqvs
+                                          deploy_kbs
                     ;;
                     "all")  bootstrap
                     ;;
