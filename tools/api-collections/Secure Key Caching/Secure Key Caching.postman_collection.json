@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "6273b7a1-c75f-4921-8635-de904834409a",
+		"_postman_id": "80878b56-3337-43f2-8c8d-007d0d9668ce",
 		"name": "Secure Key Caching",
 		"description": "Key Protection is implemented by the SKC Client -- a set of libraries - which must be linked with a\ntenant workload, like Nginx, deployed in a CSP environment and the Key Broker Service (KBS)\ndeployed in the tenant's enterprise environment. The SKC Client retrieves the keys needed by the\nworkload from KBS after proving that the key can be protected in an SGX enclave.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -284,6 +284,11 @@
 			]
 		},
 		{
+			"name": "Extracting SGX Enclave values for Key Transfer Policy",
+			"item": [],
+			"description": "Values that are specific to the enclave such as sgx_enclave_issuer_anyof, sgx_enclave_measurement_anyof and sgx_enclave_issuer_product_id_anyof can be retrived using sgx_sign utility that is available as part of Intel SGX SDK.\r\n\r\nRun sgx_sign utility on the signed enclave (This command should be run on the build system).\r\n\r\n```\r\n/opt/intel/sgxsdk/bin/x64/sgx_sign dump -enclave <path to the signed enclave> -dumpfile info.txt\r\n```\r\n\r\nFor sgx_enclave_issuer_anyof, in info.txt, search for \"mrsigner->value\" . E.g mrsigner->value :\r\n\r\n```\r\nmrsigner->value: \"0x83 0xd7 0x19 0xe7 0x7d 0xea 0xca 0x14 0x70 0xf6 0xba 0xf6 0x2a 0x4d 0x77 0x43 0x03 0xc8 0x99 0xdb 0x69 0x02 0x0f 0x9c 0x70 0xee 0x1d 0xfc 0x08 0xc7 0xce 0x9e\"\r\n```\r\n\r\nRemove the whitespace and 0x characters from the above string and add it to the policy file. E.g :\r\n\r\n```\r\n\"sgx_enclave_issuer_anyof\":[\"83d719e77deaca1470f6baf62a4d774303c899db69020f9c70ee1dfc08c7ce9e\"]\r\n```\r\n\r\nFor sgx_enclave_measurement_anyof, in info.txt, search for metadata->enclave_css.body.enclave_hash.m . E.g metadata->enclave_css.body.enclave_hash.m :\r\n\r\n```\r\nmetadata->enclave_css.body.enclave_hash.m:\r\n0xad 0x46 0x74 0x9e 0xd4 0x1e 0xba 0xa2 0x32 0x72 0x52 0x04 0x1e 0xe7 0x46 0xd3\r\n0x79 0x1a 0x9f 0x24 0x31 0x83 0x0f 0xee 0x08 0x83 0xf7 0x99 0x3c 0xaf 0x31 0x6a\r\n```\r\n\r\nRemove the whitespace and 0x characters from the above string and add it to the policy file. E.g :\r\n\r\n```\r\n\"sgx_enclave_measurement_anyof\":[\"ad46749ed41ebaa2327252041ee746d3791a9f2431830fee0883f7993caf316a\"]\r\n```"
+		},
+		{
 			"name": "Creating RSA Keys in Key Broker Service",
 			"item": [
 				{
@@ -518,7 +523,7 @@
 					]
 				}
 			],
-			"description": "To create a asymmetric (RSA) key, execute the \"run.sh\" script present in /root/workspace/utils/build/skc-tools/kbs_script/ . \n\nUpdate KBS and AAS IP addresses in run.sh and update CACERT_PATH variable with trustedca certificate inside directory /etc/kbs/certs/trustedca/<id.pem>.\n\n\nThe \"./run.sh reg\"  will create the Key Transfer Policy, and Asymmetric (RSA) Key by calling the following Key Broker Service (KBS) REST endpoints.\n\nCopy the generated cert file to SGX Compute node where skc_library is deployed.\n\n```\nscp <cert path> root@<SGX Compute Node>:/root/\n```",
+			"description": "cd into /root/binaries/kbs_script folder\n\nUpdate kbs.conf with the following\n\n- Enterprise system IP address where CMS/AAS/KBS services are deployed\n- Port of CMS, AAS and KBS services deployed on enterprise system\n- AAS admin and Enterprise admin credentials\n\nUpdate sgx_enclave_measurement_anyof value in transfer_policy_request.json with enclave measurement value obtained using sgx_sign utility. Refer previous step for \"Extracting SGX Enclave values for Key Transfer Policy\".\n\nExecute the command\n\n```\n./run.sh reg\n```\n\nThe \"./run.sh reg\"  will create the Key Transfer Policy, and Asymmetric (RSA) Key by calling the following Key Broker Service (KBS) REST endpoints.\n\nCopy the generated cert file to SGX Compute node where skc_library is deployed. Also make a note of the key id generated.\n\n```\nscp <cert path> root@<SGX Compute Node>:/root/\n```",
 			"event": [
 				{
 					"listen": "prerequest",
