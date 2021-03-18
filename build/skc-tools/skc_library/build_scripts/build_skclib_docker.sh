@@ -79,7 +79,7 @@ build_skc_library_docker()
         cd ../../../../../skc_library
         mkdir -p out
         make oci-archive || exit 1
-        rm -rf dist/image/cryptoapitoolkit dist/image/sgxssl dist/image/bin dist/image/skc_library.conf
+        rm -rf dist/image/cryptoapitoolkit dist/image/sgxssl dist/image/bin dist/image/skc_library.conf dist/image/credential_agent.sh
         popd
 }
 
