@@ -14,6 +14,7 @@ SKCLIB_INST_PATH=/opt/skc
 KMS_NPM_PATH=$SKCLIB_INST_PATH/etc/kms_npm.ini
 CREDENTIAL_PATH=$SKCLIB_INST_PATH/etc/credential_agent.ini
 CURL_OPTS="-s -k"
+SGX_DEFAULT_PATH=/etc/sgx_default_qcnl.conf
 
 update_credential_ini()
 {
@@ -41,7 +42,7 @@ run_credential_agent()
 
 update_dcap_qcnl_conf()
 {
-	sed -i "s|PCCS_URL=.*|PCCS_URL=https:\/\/$CSP_SCS_IP:${SCS_PORT:-9000}/scs/sgx/certification/v1/|g" ${SGX_DEFAULT_PATH:-/etc/sgx_default_qcnl.conf}
+	sed -i "s|PCCS_URL=.*|PCCS_URL=https:\/\/$CSP_SCS_IP:${SCS_PORT:-9000}/scs/sgx/certification/v1/|g" $SGX_DEFAULT_PATH
 }
 
 update_kbshostname_in_conf_file()
