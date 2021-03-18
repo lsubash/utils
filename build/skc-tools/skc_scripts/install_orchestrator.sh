@@ -6,11 +6,6 @@ red=`tput setaf 1`
 green=`tput setaf 2`
 reset=`tput sgr0`
 
-AAS_PORT=8444
-CMS_PORT=8445
-SHVS_PORT=13000
-SCS_PORT=9000
-
 # Check OS and VERSION
 OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
 temp="${OS%\"}"
@@ -156,12 +151,12 @@ sed -i "s/^\(CMS_TLS_CERT_SHA384\s*=\s*\).*\$/\1$CMS_TLS_SHA/" ~/ihub.env
 sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/ihub.env
 sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@" ~/ihub.env
 SHVS_URL=https://$SYSTEM_IP:$SHVS_PORT/sgx-hvs/v2
-K8S_URL=https://$K8S_IP:6443/
+K8S_URL=https://$K8S_IP:$K8S_PORT/
 sed -i "s@^\(ATTESTATION_SERVICE_URL\s*=\s*\).*\$@\1$SHVS_URL@" ~/ihub.env
 sed -i "s@^\(KUBERNETES_URL\s*=\s*\).*\$@\1$K8S_URL@" ~/ihub.env
 if [[ "$OS" != "ubuntu" ]]; then
-OPENSTACK_AUTH_URL=http://$OPENSTACK_IP:5000/
-OPENSTACK_PLACEMENT_URL=http://$OPENSTACK_IP:8778/
+OPENSTACK_AUTH_URL=http://$OPENSTACK_IP:$OPENSTACK_AUTH_PORT/
+OPENSTACK_PLACEMENT_URL=http://$OPENSTACK_IP:$OPENSTACK_PLACEMENT_PORT/
 sed -i "s@^\(OPENSTACK_AUTH_URL\s*=\s*\).*\$@\1$OPENSTACK_AUTH_URL@" ~/ihub.env
 sed -i "s@^\(OPENSTACK_PLACEMENT_URL\s*=\s*\).*\$@\1$OPENSTACK_PLACEMENT_URL@" ~/ihub.env
 fi

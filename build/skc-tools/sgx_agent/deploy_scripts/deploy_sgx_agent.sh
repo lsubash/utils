@@ -101,15 +101,15 @@ install_sgx_agent() {
 		echo "${red} please set correct values in agent.conf ${reset}"
 		exit 1
 	fi
-	CMS_URL=https://$CMS_IP:8445/cms/v1
-	SCS_URL=https://$SCS_IP:9000/scs/sgx
+	CMS_URL=https://$CMS_IP:$CMS_PORT/cms/v1
+	SCS_URL=https://$SCS_IP:$SCS_PORT/scs/sgx
 	sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@" ~/sgx_agent.env
 	sed -i "s@^\(SCS_BASE_URL\s*=\s*\).*\$@\1$SCS_URL@" ~/sgx_agent.env
 	sed -i "s/^\(CMS_TLS_CERT_SHA384\s*=\s*\).*\$/\1$CMS_TLS_SHA/" ~/sgx_agent.env
 	if [ -z $SHVS_IP ]; then
 		sed -i "/SHVS_BASE_URL/d" ~/sgx_agent.env
 	else
-		SHVS_URL=https://$SHVS_IP:13000/sgx-hvs/v2
+		SHVS_URL=https://$SHVS_IP:$SHVS_PORT/sgx-hvs/v2
 		sed -i "s@^\(SHVS_BASE_URL\s*=\s*\).*\$@\1$SHVS_URL@" ~/sgx_agent.env
 	fi
 	LONG_LIVED_TOKEN=`./create_roles.sh`

@@ -10,7 +10,7 @@ if [ $? -ne 0 ]; then
         exit 1
 fi
 
-AAS_BASE_URL=https://$AAS_IP:8444/aas/v1
+AAS_BASE_URL=https://$AAS_IP:$AAS_PORT/aas/v1
 CURL_OPTS="-s -k"
 CONTENT_TYPE="Content-Type: application/json"
 ACCEPT="Accept: application/jwt"

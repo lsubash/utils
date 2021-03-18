@@ -6,12 +6,6 @@ red=`tput setaf 1`
 green=`tput setaf 2`
 reset=`tput sgr0`
 
-CMS_PORT=8445
-AAS_PORT=8444
-SCS_PORT=9000
-SQVS_PORT=12000
-KBS_PORT=9443
-
 # Copy env files to Home directory
 \cp -pf $SKC_BINARY_DIR/env/cms.env $HOME_DIR
 \cp -pf $SKC_BINARY_DIR/env/authservice.env $HOME_DIR
