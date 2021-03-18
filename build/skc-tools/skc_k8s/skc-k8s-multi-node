@@ -9,9 +9,9 @@ all: clean intel_secl_k8s $(TARGETS) k8s-extensions sgx_agent skc_library
 	cp -r utils/build/skc-tools/sgx_agent/build_scripts/sgx_agent.sha2 k8s/platform-dependencies/
 	cp -r utils/build/skc-tools/sgx_agent/deploy_scripts/agent_container_prereq.sh k8s/platform-dependencies/
 	cp -r utils/build/skc-tools/sgx_agent/deploy_scripts/deployment_prerequisites.sh k8s/platform-dependencies/
-	cp -r utils/build/skc-tools/sgx_agent/deploy_scripts/create_roles.conf utils/build/skc-tools/skc_k8s/skc_library/resources/
-	cp -r utils/build/skc-tools/sgx_agent/deploy_scripts/skc_library_create_roles.sh utils/build/skc-tools/skc_k8s/skc_library/resources/
-	cp -r utils/build/skc-tools/sgx_agent/deploy_scripts/skc_library.conf utils/build/skc-tools/skc_k8s/skc_library/resources/
+	cp -r utils/build/skc-tools/skc_library/deploy_scripts/create_roles.conf utils/build/skc-tools/skc_k8s/skc_library/resources/
+	cp -r utils/build/skc-tools/skc_library/deploy_scripts/skc_library_create_roles.sh utils/build/skc-tools/skc_k8s/skc_library/resources/
+	cp -r utils/build/skc-tools/skc_library/deploy_scripts/skc_library.conf utils/build/skc-tools/skc_k8s/skc_library/resources/
 	cp -r intel-secl/deployments/k8s/* k8s/manifests/
 	cp -r utils/build/skc-tools/skc_k8s/create-skc-dirs-nfs.sh k8s/
 	cp -r utils/build/skc-tools/skc_k8s/pre-requisites.sh k8s/manifests/
