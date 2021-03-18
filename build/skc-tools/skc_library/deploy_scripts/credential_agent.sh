@@ -42,7 +42,7 @@ run_credential_agent()
 
 update_dcap_qcnl_conf()
 {
-	sed -i "s|PCCS_URL=.*|PCCS_URL=https:\/\/$CSP_SCS_IP:${SCS_PORT:-9000}/scs/sgx/certification/v1/|g" $SGX_DEFAULT_PATH
+	sed -i "s|PCCS_URL=.*|PCCS_URL=https:\/\/$CSP_SCS_IP:${CSP_SCS_PORT:-9000}/scs/sgx/certification/v1/|g" $SGX_DEFAULT_PATH
 }
 
 update_kbshostname_in_conf_file()
