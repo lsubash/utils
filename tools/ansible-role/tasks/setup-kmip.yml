@@ -1,0 +1,40 @@
+---
+- name: KMIP KBS | Install pip3
+  dnf:
+    name: python3-pip
+    state: present
+    
+- name: KMIP KBS | Install PyKMIP
+  pip:
+    name: pykmip==0.9.1
+
+- name: KMIP KBS | Create directory for pykmip
+  file:
+    state: directory
+    path: /etc/pykmip/
+
+- name: KMIP KBS | Create directory for pykmip policies
+  file:
+    state: directory
+    path: /etc/pykmip/policies
+
+- name: KMIP KBS | Copy create_certificates.py to pykmip package folder
+  copy:
+    src: create_certificates.py
+    dest: /etc/pykmip
+
+- name: KMIP KBS | Run certificate scripts
+  shell: python3 create_certificates.py
+  args:
+    chdir: /etc/pykmip
+
+- name: KMIP KBS | Configure PyKMIP
+  template:
+    src: kmip-server.j2
+    dest: /etc/pykmip/server.conf
+  
+- name: KMIP KBS | Copy run_server to root location
+  copy:
+    src: run_server.py
+    dest: /root/
+  
