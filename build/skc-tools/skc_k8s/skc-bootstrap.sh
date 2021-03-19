@@ -53,8 +53,8 @@ deploy_cms() {
    cd cms/
 
      # update configMap
-    sed -i "s/\${SAN_LIST}/cms-svc.isecl.svc.cluster.local/g" configMap.yml
-    sed -i "s/\${AAS_TLS_SAN}/aas-svc.isecl.svc.cluster.local/g" configMap.yml
+    sed -i "s/SAN_LIST:.*/SAN_LIST: $CMS_SAN_LIST/g" configMap.yml
+    sed -i "s/AAS_TLS_SAN:.*/AAS_TLS_SAN: $AAS_SAN_LIST/g" configMap.yml
 
     # deploy
     $KUBECTL kustomize . | $KUBECTL apply -f -
