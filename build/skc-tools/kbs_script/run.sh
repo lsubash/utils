@@ -66,29 +66,43 @@ curl -H "Authorization: Bearer ${BEARER_TOKEN}" -H "$CONTENT_TYPE" --cacert $CAC
 
 transfer_policy_id=$(cat transfer_policy_response.json | jq '.id');
 
+#create a RSA key
 if [ "$1" = "reg" ]; then
-# create a RSA key
-	source gen_cert_key.sh
-printf "{
-   \"key_information\":{
-      \"algorithm\":\"RSA\",
-      \"key_length\":3072,
-      \"key_string\":\"$(cat ${SERVER_PKCS8_KEY} | tr '\r\n' '@')\"
-   },
-    \"transfer_policy_ID\": ${transfer_policy_id}
-}" > key_request.json
+        if [ -z "${KMIP_KEY_ID}"]; then
+                source gen_cert_key.sh
+            printf "{
+            \"key_information\":{
+                    \"algorithm\":\"RSA\",
+                    \"key_length\":3072,
+                    \"key_string\":\"$(cat ${SERVER_PKCS8_KEY} | tr '\r\n' '@')\"
+            },
+                    \"transfer_policy_ID\": ${transfer_policy_id}
+            }" > key_request.json
 
-sed -i "s/@/\\\n/g" key_request.json
+            sed -i "s/@/\\\n/g" key_request.json
 
+        else
+            printf "{
+            \"key_information\":{
+                    \"algorithm\":\"RSA\",
+                    \"key_length\":3072,
+                    \"kmip_key_id\":\"${KMIP_KEY_ID}\"
+            },
+                    \"transfer_policy_ID\": ${transfer_policy_id}
+            }" > key_request.json
+
+            sed -i "s/@/\\\n/g" key_request.json
+
+        fi
 else
 # create a AES key
-printf "{
-   \"key_information\":{
-   \"algorithm\":\"AES\",
-   \"key_length\":256
-   },
-   \"transfer_policy_ID\":${transfer_policy_id}
-}" > key_request.json
+    printf "{
+    \"key_information\":{
+        \"algorithm\":\"AES\",
+        \"key_length\":256
+    },
+    \"transfer_policy_ID\":${transfer_policy_id}
+    }" > key_request.json
 fi
 
 curl -H "Authorization: Bearer ${BEARER_TOKEN}" -H "$CONTENT_TYPE" --cacert $CACERT_PATH \
@@ -99,8 +113,13 @@ key_id=$(cat key_response.json | jq '.key_information.id');
 
 if [ "$1" = "reg" ]; then
     file_name=$(echo $key_id | sed -e "s|\"||g")
-    mv output/server.cert output/$file_name.crt
-    echo "cert path:$(realpath output/$file_name.crt)"
+    if [ -z "${KMIP_KEY_ID}" ]; then
+        mv output/server.cert output/$file_name.crt
+        echo "cert path:$(realpath output/$file_name.crt)"
+    else
+        mv ${SERVER_CERT} $file_name.crt
+        echo "cert path:$(realpath $file_name.crt)"
+    fi
 fi
 
 echo "Created Key:$key_id"
