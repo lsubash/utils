@@ -1,9 +1,15 @@
 CMS_IP={{ cms }}
 AAS_IP={{ aas }}
+SCS_IP={{ scs }}
+
 {% if setup == 'secure-key-caching' or setup == 'sgx-orchestration-kubernetes' or setup == 'sgx-orchestration-openstack' or setup == 'sgx-attestation-kubernetes' or setup == 'sgx-attestation-openstack' %}
 SHVS_IP={{ shvs }}
+SHVS_PORT={{ shvs_port }}
 {% endif %}
-SCS_IP={{ scs }}
+
+AAS_PORT={{ aas_port }}
+CMS_PORT={{ cms_port }}
+SCS_PORT={{ scs_port }}
 
 # Long-lived token validity period in days, maximum validity period is 2 years.
 VALIDITY_DAYS=7
