@@ -75,9 +75,9 @@ spec:
            - mountPath: /etc/hosts
              name: haproxy-hosts
              subPath: hosts
-           - mountPath: /root/94dcee8a-580b-416f-ba6a-52d126cb2cb0.crt
+           - mountPath: /root/<kbs public certificate>.crt
              name: kbs-cert-secret-volume
-             subPath: 94dcee8a-580b-416f-ba6a-52d126cb2cb0.crt
+             subPath: <kbs public certificate>.crt
              readOnly: true
            - name: sagent-sgx-device
              mountPath: /dev/sgx/

@@ -162,11 +162,6 @@ get_bearer_token(){
     sed -i "s/CSP_ADMIN_USERNAME=.*/CSP_ADMIN_USERNAME=$CSP_ADMIN_USERNAME/g" $aas_scripts_dir/populate-users.env
     sed -i "s/CSP_ADMIN_PASSWORD=.*/CSP_ADMIN_PASSWORD=$CSP_ADMIN_PASSWORD/g" $aas_scripts_dir/populate-users.env
 
-    sed -i "s/SKC_LIBRARY_USERNAME=.*/SKC_LIBRARY_USERNAME=$SKC_LIBRARY_USERNAME/g" $aas_scripts_dir/populate-users.env
-    sed -i "s/SKC_LIBRARY_PASSWORD=.*/SKC_LIBRARY_PASSWORD=$SKC_LIBRARY_PASSWORD/g" $aas_scripts_dir/populate-users.env
-    sed -i "s/SKC_LIBRARY_KEY_TRANSFER_CONTEXT=.*/SKC_LIBRARY_KEY_TRANSFER_CONTEXT=$SKC_LIBRARY_KEY_TRANSFER_CONTEXT/g" $aas_scripts_dir/populate-users.env
-    sed -i "s/SKC_LIBRARY_CERT_COMMON_NAME=.*/SKC_LIBRARY_CERT_COMMON_NAME=$SKC_LIBRARY_CERT_COMMON_NAME/g" $aas_scripts_dir/populate-users.env
-
     sed -i "s/GLOBAL_ADMIN_USERNAME=.*/GLOBAL_ADMIN_USERNAME=$GLOBAL_ADMIN_USERNAME/g" $aas_scripts_dir/populate-users.env
     sed -i "s/GLOBAL_ADMIN_PASSWORD=.*/GLOBAL_ADMIN_PASSWORD=$GLOBAL_ADMIN_PASSWORD/g" $aas_scripts_dir/populate-users.env
 
@@ -291,7 +286,7 @@ deploy_SKC_library()
     $KUBECTL create configmap sgx-qcnl-config --from-file=resources/sgx_default_qcnl.conf --namespace=isecl
     $KUBECTL create configmap openssl-config --from-file=resources/openssl.cnf --namespace=isecl
     $KUBECTL create configmap pkcs11-config --from-file=resources/pkcs11-apimodule.ini --namespace=isecl
-    $KUBECTL create secret generic kbs-cert-secret --from-file=resources/94dcee8a-580b-416f-ba6a-52d126cb2cb0.crt --namespace=isecl
+    $KUBECTL create secret generic kbs-cert-secret --from-file=resources/$KBS_PUBLIC_CERTIFICATE --namespace=isecl
     $KUBECTL create configmap haproxy-hosts-config --from-file=resources/hosts --namespace=isecl
     $KUBECTL kustomize . | $KUBECTL apply -f -
 
@@ -610,7 +605,7 @@ cleanup_SKC_library()
     echo "Cleaning up skc LIBRARY..."
     cd skc_library
     $KUBECTL delete secret kbs-cert-secret --namespace isecl
-    $KUBECTL delete configmap skc-lib-config nginx-config kbs-key-config sgx-qcnl-config openssl-config pkcs11-config kbs-cert-config haproxy-hosts-config --namespace isecl
+    $KUBECTL delete configmap skc-lib-config nginx-config kbs-key-config sgx-qcnl-config openssl-config pkcs11-config haproxy-hosts-config --namespace isecl
     $KUBECTL delete deploy skclib-deployment --namespace isecl
     $KUBECTL delete svc skclib-svc --namespace isecl
     cd ../
@@ -941,7 +936,7 @@ print_help() {
     echo "    Available Options for up/down command:"
     echo "        agent      Can be one of sagent,skclib"
     echo "        service    Can be one of cms,authservice,scs,shvs,ihub,sqvs,kbs,isecl-controller,isecl-scheduler"
-    echo "        usecase    Can be one of secure-key-caching,sgx-attestation,sgx-orchestration-k8s,sgx-virtualization"
+    echo "        usecase    Can be one of secure-key-caching,sgx-attestation,sgx-orchestration-k8s,sgx-virtualization,csp,enterprise"
 }
 
 deploy_control_plane_components () {
@@ -1016,6 +1011,12 @@ dispatch_works() {
                                           deploy_sqvs
                                           deploy_kbs
                     ;;
+                    "enterprise")         deploy_control_plane_components
+                                          deploy_sqvs
+                                          deploy_kbs
+                    ;;
+                    "csp") deploy_common_components
+                    ;;
                     "all")  bootstrap
                     ;;
             	    *)
@@ -1067,6 +1068,12 @@ dispatch_works() {
                                          cleanup_kbs
                                          cleanup_sqvs
                                          cleanup_shvs
+                  ;;
+                  "enterprise") cleanup_control_plane_components
+                                cleanup_sqvs
+                                cleanup_kbs
+                  ;;
+                  "csp") cleanup_common_components
                   ;;
                   "all")  cleanup
                   ;;
