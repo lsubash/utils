@@ -29,6 +29,7 @@ containers-common
 docker-ce-19.03.13
 docker-ce-cli-19.03.13
 containerd
+skopeo
 )
 
 declare -a PRE_REQ_PACKAGES_CRIO
