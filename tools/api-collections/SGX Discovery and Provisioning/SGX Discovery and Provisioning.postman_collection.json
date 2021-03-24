@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "88a93d53-8f48-498a-b9a0-52c4f751914d",
+		"_postman_id": "e781c4b1-6eaa-492c-960d-fb1cbe1e2eb3",
 		"name": "SGX Discovery and Provisioning",
 		"description": "For the secrets to be provisioned securely to SGX compute nodes in public clouds, the owner of the secret needs to ensure that the secrets will be protected in SGX enclaves by performing an SGX Attestation.\r\n\r\nSGX Attestation involves provisioning SGX nodes with Platform Certification Key (PCK) certificates. PCK certificates for SGX nodes are obtained by providing the node SGX data to the Intel SGX Provisioning Certificate Service (PCS), a cloud hosted service. PCS also returns SGX collateral such as CRLs, TCB information and QE Identity.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -10,13 +10,13 @@
 			"name": "Authorization",
 			"item": [
 				{
-					"name": "createSagentToken",
+					"name": "createCspAdminToken",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.environment.set(\"bearerTokenSagent\", pm.response.text());"
+									"pm.environment.set(\"bearerTokenCspAdmin\", pm.response.text());"
 								],
 								"type": "text/javascript"
 							}
@@ -40,10 +40,10 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\": \"{{sagentUser}}\",\n    \"password\": \"{{sagentUserPass}}\"\n}"
+							"raw": "{\n    \"username\": \"{{cspAdminUser}}\",\n    \"password\": \"{{cspAdminUserPass}}\"\n}"
 						},
 						"url": {
-							"raw": "https://{{aasCsp}}:{{aasPortCsp}}/aas/token",
+							"raw": "https://{{aasCsp}}:{{aasPortCsp}}/aas/v1/token",
 							"protocol": "https",
 							"host": [
 								"{{aasCsp}}"
@@ -51,10 +51,11 @@
 							"port": "{{aasPortCsp}}",
 							"path": [
 								"aas",
+								"v1",
 								"token"
 							]
 						},
-						"description": "Creates a new bearer token that can be used in the Authorization header for other API \nrequests. Bearer token Authorization is not required when requesting token for Authservice \nadmin user. Authservice admin user bearer token should be provided in Authorization header \nwhen requesting bearer token for other users."
+						"description": "Creates a new bearer token that can be used in the Authorization header for other API\nrequests. Bearer token Authorization is not required when requesting token for Authservice\nregistered users."
 					},
 					"response": [
 						{
@@ -64,7 +65,9 @@
 								"header": [
 									{
 										"key": "Content-Type",
-										"value": "application/json"
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
 									},
 									{
 										"key": "Accept",
@@ -74,10 +77,15 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"username\": \"{{sagentUser}}\",\n    \"password\": \"{{sagentUserPass}}\"\n}"
+									"raw": "{\n    \"username\": \"{{cspAdminUser}}\",\n    \"password\": \"{{cspAdminUserPass}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
 								},
 								"url": {
-									"raw": "https://{{aasCsp}}:{{aasPortCsp}}/aas/token",
+									"raw": "https://{{aasCsp}}:{{aasPortCsp}}/aas/v1/token",
 									"protocol": "https",
 									"host": [
 										"{{aasCsp}}"
@@ -85,6 +93,7 @@
 									"port": "{{aasPortCsp}}",
 									"path": [
 										"aas",
+										"v1",
 										"token"
 									]
 								}
@@ -99,15 +108,138 @@
 								},
 								{
 									"key": "Date",
-									"value": "Thu, 19 Nov 2020 07:35:46 GMT"
+									"value": "Thu, 11 Mar 2021 06:46:51 GMT"
 								},
 								{
 									"key": "Content-Length",
-									"value": "1063"
+									"value": "883"
 								}
 							],
 							"cookie": [],
-							"body": "eyJhbGciOiJSUzM4NCIsImtpZCI6IjU1MDFmOGVhY2M3ZmY4NTYwMWUxZGFiYzdlZDljYWIzMmMyYTAwMjkiLCJ0eXAiOiJKV1QifQ.eyJyb2xlcyI6W3sic2VydmljZSI6IlNDUyIsIm5hbWUiOiJIb3N0RGF0YVVwZGF0ZXIifSx7InNlcnZpY2UiOiJDTVMiLCJuYW1lIjoiQ2VydEFwcHJvdmVyIiwiY29udGV4dCI6IkNOPVNHWF9BR0VOVCBUTFMgQ2VydGlmaWNhdGU7U0FOPTEwLjEwNS4xNjcuMjM5O0NFUlRUWVBFPVRMUyJ9LHsic2VydmljZSI6IlNIVlMiLCJuYW1lIjoiSG9zdFJlZ2lzdHJhdGlvbiJ9LHsic2VydmljZSI6IlNHWF9BR0VOVCIsIm5hbWUiOiJIb3N0RGF0YVJlYWRlciJ9XSwiZXhwIjoxNjA1OTQ0MTQ2LCJpYXQiOjE2MDU3NzEzMTYsImlzcyI6IkFBUyBKV1QgSXNzdWVyIiwic3ViIjoic2d4X2FnZW50In0.l_ITqN4d-hwc9OKAHSUO3kHxMtD2CsvHw3j3WUAQBs9dYW2roomspFQH0ZL6-s0xeig0gHbZDN3ihp_FdK-kXfwl6Psr1SuVqY3eRveh-cubgJIERZj8OG6leh9SubwqgIJTqQ5oP_fOhuH83LWxJzNQapovxrOpWkCA35terRRRObKAP9FMUWieKRcyg0w5iFoVysEeuv5SOJ91iZgIXYmzfeaeis-9kV_gkGxfrLDZOGVomj4ZOw5XtduMrJ5mRB87cLGxTmaLngdHiDg6qLUwkmuZ0YEtrYUnHQaTUkL9-1USb8NPH6gTOvZENpcyoctSiJ8R9Crl1apxu8YulCdzCRQirOHUQJ6f9Q6e8hPf-gPzBd1Cdw-LwZ0dTwZPF2UpBzoByf4iOKAxpMY1amemqllbC5YbvJpmwJRNXeqokz6hcogo8c_zMzl9IoJ9QoPoQ5mSaBaCr1py5tq9n7omAzBYZ08ywP6aMmV1DW7_xliP6VIgN4pqA0vz6yCf"
+							"body": "eyJhbGciOiJSUzM4NCIsImtpZCI6IjUxNTcxYmZmYjdhNDY1NTIyNzZmNWVkZjU2NWJlZDdkZmU3ZTkzZTEiLCJ0eXAiOiJKV1QifQ.eyJyb2xlcyI6W3sic2VydmljZSI6IkFBUyIsIm5hbWUiOiJDdXN0b21DbGFpbXNDcmVhdG9yIn1dLCJwZXJtaXNzaW9ucyI6W3sic2VydmljZSI6IkFBUyIsInJ1bGVzIjpbImN1c3RvbV9jbGFpbXM6Y3JlYXRlIl19XSwiZXhwIjoxNjE1NDUyNDExLCJpYXQiOjE2MTU0NDUxODEsImlzcyI6IkFBUyBKV1QgSXNzdWVyIiwic3ViIjoiY3NwX2FkbWluIn0.clwnpJZpkD_zOFviJ741VCf1n-nz9ban5JrgyvUwxA82fiNZ1F1oP78tpBPOHxGmkCxH-tkAhuj-88JcsRbbEtMsefHCHXWtN0XCY-1KYkRWuEezYRZQfMkPYEp7k01r3CL35h-rpDNWBW89aIkcqSbD0rOZ422puK1GJmiPYOExXnR5GjwSWMtrzsErLtv0ubtiSbEMfNkL9BgSCd0bI2Bt8NgTVSKvwdL2zzXxcgyMBDun4rVLTYd3uZcNEOy0LD5XFGka_1rp4uuXeHEFEt6jbFS4fvIypPcTJ-M29NZXCyJ5Mz2EPOH2L-tWPGx0Tr2vihPF64f-zGlVAY2k69tYQMM2zk4sGlHkkjQ_zuAcDD3D9aAFPPPTrLKcWeSd7xceGzXH5ZJhU4xSMogAaZWAHJV2BZUJ-uBza9IL_p9NwBXfcNg2P5nqhKwBBstctTHm9vro5ASgXjh3zthwg2vPRxQdoTGdmNT92O_tLGx_0VoBK3S6hhMks4TL82Ud"
+						}
+					]
+				},
+				{
+					"name": "CreateSagentToken",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.environment.set(\"bearerTokenSagent\", pm.response.text());"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{bearerTokenCspAdmin}}",
+								"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/jwt",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"subject\": \"{{hostHardwareUuid}}\",\n    \"validity_seconds\": {{validity}},\n    \"claims\": {\n        \"roles\": [\n            {\n                \"service\": \"SCS\",\n                \"name\": \"HostDataUpdater\"\n            },\n            {\n                \"service\": \"SCS\",\n                \"name\": \"HostDataReader\"\n            },\n            {\n                \"service\": \"SHVS\",\n                \"name\": \"HostDataUpdater\"\n            }\n        ]\n    }\n}"
+						},
+						"url": {
+							"raw": "https://{{aasCsp}}:{{aasPortCsp}}/aas/v1/custom-claims-token",
+							"protocol": "https",
+							"host": [
+								"{{aasCsp}}"
+							],
+							"port": "{{aasPortCsp}}",
+							"path": [
+								"aas",
+								"v1",
+								"custom-claims-token"
+							]
+						},
+						"description": "Creates a new bearer token that can be used in the Authorization header for other API\nrequests. Bearer token Authorization is required when requesting custom claims token\nfrom Authservice."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{bearerTokenCspAdmin}}",
+										"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+										"type": "text"
+									},
+									{
+										"key": "Accept",
+										"value": "application/jwt",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"subject\": \"{{hostHardwareUuid}}\",\n    \"validity_seconds\": {{validity}},\n    \"claims\": {\n        \"roles\": [\n            {\n                \"service\": \"SCS\",\n                \"name\": \"HostDataUpdater\"\n            },\n            {\n                \"service\": \"SCS\",\n                \"name\": \"HostDataReader\"\n            },\n            {\n                \"service\": \"SHVS\",\n                \"name\": \"HostDataUpdater\"\n            }\n        ]\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://{{aasCsp}}:{{aasPortCsp}}/aas/v1/custom-claims-token",
+									"protocol": "https",
+									"host": [
+										"{{aasCsp}}"
+									],
+									"port": "{{aasPortCsp}}",
+									"path": [
+										"aas",
+										"v1",
+										"custom-claims-token"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/jwt"
+								},
+								{
+									"key": "Date",
+									"value": "Thu, 11 Mar 2021 10:35:42 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "939"
+								}
+							],
+							"cookie": [],
+							"body": "eyJhbGciOiJSUzM4NCIsImtpZCI6IjUxNTcxYmZmYjdhNDY1NTIyNzZmNWVkZjU2NWJlZDdkZmU3ZTkzZTEiLCJ0eXAiOiJKV1QifQ.eyJyb2xlcyI6W3sibmFtZSI6Ikhvc3REYXRhVXBkYXRlciIsInNlcnZpY2UiOiJTQ1MifSx7Im5hbWUiOiJIb3N0RGF0YVJlYWRlciIsInNlcnZpY2UiOiJTQ1MifSx7Im5hbWUiOiJIb3N0RGF0YVVwZGF0ZXIiLCJzZXJ2aWNlIjoiU0hWUyJ9XSwiZXhwIjoxNjE1NDk0OTQyLCJpYXQiOjE2MTU0NTg5MTIsImlzcyI6IkFBUyBKV1QgSXNzdWVyIiwic3ViIjoiODg4ODg4ODgtODg4Ny0wZjE1LTAxMTEtMTcxZWE1YTVhNWE1In0.DNAqis1G0dnokWxabLfz0nsUVSX1-VooxRqdo4UwOsEeueCaG2FlltA_ix-KzYH4-B47OrD5L9_vMLj1CzW_WWQ6yfrLQu91iDk6DjtL12NjDk0LMRLDgdEBIzLBFKJZPNFVj7ThwO_0LORLO-ctMwQSvizSIXe-ZUCW5o1HjSn20w9FDUxlE-jXbfubo9OFPouSbQ20OM6M4F79b3KUNm2di3jAmGnGSsSuaesAJhx66IEMK0kzBpEjyaVaGBbKQwfSZaORTtncENr9yW000SZjDdQP4UzZWA7wr3_6TAznf3nqPB81V2rkdxyR4gDpvNdaDAyIzt8fuwEjP0U7skA85SVVFrvGbBAJnD7XPJnu6Om5x9fQ8fICGpGRtebrLA38iLc26-m_FXCpvoSUUo51s22rATjqovdrtFEQeHe2ZCVRHPQBzZjZlCwkNZo2Xet7cax0IZ_qyfVCbhotKQ6-pNry0K9asVXsTP2eM3TQWj9NJJfCAdB_dKkKTBiL"
 						}
 					]
 				},
@@ -148,7 +280,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://{{aasEnt}}:{{aasPortEnt}}/aas/token",
+							"raw": "https://{{aasEnt}}:{{aasPortEnt}}/aas/v1/token",
 							"protocol": "https",
 							"host": [
 								"{{aasEnt}}"
@@ -156,6 +288,7 @@
 							"port": "{{aasPortEnt}}",
 							"path": [
 								"aas",
+								"v1",
 								"token"
 							]
 						},
@@ -188,7 +321,7 @@
 									}
 								},
 								"url": {
-									"raw": "https://{{aasEnt}}:{{aasPortEnt}}/aas/token",
+									"raw": "https://{{aasEnt}}:{{aasPortEnt}}/aas/v1/token",
 									"protocol": "https",
 									"host": [
 										"{{aasEnt}}"
@@ -196,6 +329,7 @@
 									"port": "{{aasPortEnt}}",
 									"path": [
 										"aas",
+										"v1",
 										"token"
 									]
 								}
@@ -262,7 +396,6 @@
 						"method": "POST",
 						"header": [
 							{
-								"warning": "This is a duplicate header and will be overridden by the Authorization header generated by Postman.",
 								"key": "Authorization",
 								"value": "Bearer {{bearerTokenSagent}}",
 								"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
@@ -280,7 +413,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"cpu_svn\": \"{{cpusvn}}\",\n    \"enc_ppid\": \"{{encppid}}\",\n    \"manifest\": \"{{manifest}}\",\n    \"pce_id\": \"{{pceid}}\",\n    \"pce_svn\": \"{{pcesvn}}\",\n    \"qe_id\": \"{{qeid}}\"\n}"
+							"raw": "{\n    \"cpu_svn\": \"{{cpusvn}}\",\n    \"enc_ppid\": \"{{encppid}}\",\n    \"manifest\": \"{{manifest}}\",\n    \"pce_id\": \"{{pceid}}\",\n    \"pce_svn\": \"{{pcesvn}}\",\n    \"qe_id\": \"{{qeid}}\",\n    \"hardware_uuid\": \"{{hostHardwareUuid}}\"  \n}"
 						},
 						"url": {
 							"raw": "https://{{scs}}:{{scsPort}}/scs/sgx/certification/v1/platforms",
@@ -297,7 +430,7 @@
 								"platforms"
 							]
 						},
-						"description": "SGX Agent uses this API to push the platform values (such as enc_ppi, pceid, cpisvn, pcesvn, qeid and manifest) to SCS.\nA valid bearer token should be provided to authorize this REST call.\n"
+						"description": "SGX Agent uses this API to push the platform values (such as enc_ppi, pceid, cpisvn, pcesvn, qeid, hardware UUID and manifest) to SCS.\nA valid bearer token should be provided to authorize this REST call."
 					},
 					"response": [
 						{
@@ -326,7 +459,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"cpu_svn\": \"{{cpusvn}}\",\n    \"enc_ppid\": \"{{encppid}}\",\n    \"manifest\": \"{{manifest}}\",\n    \"pce_id\": \"{{pceid}}\",\n    \"pce_svn\": \"{{pcesvn}}\",\n    \"qe_id\": \"{{qeid}}\"\n}",
+									"raw": "{\n    \"cpu_svn\": \"{{cpusvn}}\",\n    \"enc_ppid\": \"{{encppid}}\",\n    \"manifest\": \"{{manifest}}\",\n    \"pce_id\": \"{{pceid}}\",\n    \"pce_svn\": \"{{pcesvn}}\",\n    \"qe_id\": \"{{qeid}}\",\n    \"hardware_uuid\": \"{{hostHardwareUuid}}\" \n}",
 									"options": {
 										"raw": {
 											"language": "json"

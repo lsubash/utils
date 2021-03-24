@@ -4,6 +4,18 @@
  */
 package version
 
-var Version = "unknown"
-var GitHash = "unknown"
-var BuildDate = "unknown"
+import (
+	"fmt"
+	"intel/isecl/sgx_agent/v3/constants"
+)
+
+var Version = ""
+var GitHash = ""
+var BuildDate = ""
+
+func GetVersion() string {
+	verStr := fmt.Sprintf("Service Name: %s\n", constants.ExplicitServiceName)
+	verStr += fmt.Sprintf("Version: %s-%s\n", Version, GitHash)
+	verStr += fmt.Sprintf("Build Date: %s\n", BuildDate)
+	return verStr
+}

@@ -50,7 +50,7 @@ Build PCS Simulator
 
 ``` {.shell}
 git clone https://github.com/intel-secl/utils.git && cd utils
-git checkout v3.4/develop
+git checkout v3.5/develop
 cd tools/skc-simulators/pcs_simulator
 ```
 
@@ -63,7 +63,10 @@ scs start
 ```
 
 -   Run command to run the PCS simulator
-	go run main.go
+
+``` {.shell}
+	nohup go run main.go &
+```
 
 
 ### Direct dependencies

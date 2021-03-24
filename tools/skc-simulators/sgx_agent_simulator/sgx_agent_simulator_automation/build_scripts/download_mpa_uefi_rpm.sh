@@ -1,8 +1,8 @@
 #!/bin/bash
 SGX_AGENT_DIR=$PWD/sgx_agent
-DCAP_VERSION=1.9
+DCAP_VERSION=1.10
 SGX_AGENT_BIN_DIR=$SGX_AGENT_DIR/bin
-MP_RPM_VER=1.9.100.3-1
+MP_RPM_VER=1.10.100.4-1
 
 # Check OS and VERSION
 OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)

@@ -2,7 +2,7 @@ Pre Requisites
 --------------
 - VM/Server running RHEL 8.2
 
-- RHEL package repositories are setup and dnf updates are completed
+- RHEL package repositories are setup
 
 - root account access. All SKC components are installed with root user permissions
 

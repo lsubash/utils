@@ -9,8 +9,6 @@ Following RHEL 8 repositories should be setup and available (/etc/yum.repos.d) t
 	BaseOS
 	AppStream
 	CodeReady
-- Ensure that dnf update can download and install latest software updates
-
 - If there are kernel updates updates avaiable, please install them and reboot the machine, so that SGX driver can build against proper kernel
 
 - Ensure CMS/AAS/KBS server/VM IP addresses are added to the no_proxy environment variable.

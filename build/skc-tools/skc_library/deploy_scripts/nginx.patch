@@ -48,7 +48,7 @@
 +        root         /usr/share/nginx/html;
 +
 +        ssl_certificate "/root/e299c0cf-db96-461b-a279-a14430af9448.crt";
-+        ssl_certificate_key "engine:pkcs11:pkcs11:token=KMS;id=e299c0cf-db96-461b-a279-a14430af9448;object=RSAKEY;type=private;pin-value=1234";
++        ssl_certificate_key "engine:pkcs11:pkcs11:token=KMS;object=RSAKEY;pin-value=1234";
 +        ssl_session_cache shared:SSL:1m;
 +        ssl_session_timeout  10m;
 +        ssl_ciphers PROFILE=SYSTEM;

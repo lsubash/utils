@@ -6,23 +6,17 @@ red=`tput setaf 1`
 green=`tput setaf 2`
 reset=`tput sgr0`
 
-AAS_PORT=8444
-CMS_PORT=8445
-SHVS_PORT=13000
-SCS_PORT=9000
-
 # Check OS and VERSION
 OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
 temp="${OS%\"}"
 temp="${temp#\"}"
 OS="$temp"
 VER=$(cat /etc/os-release | grep ^VERSION_ID | tr -d 'VERSION_ID="')
-OS_FLAVOUR="$OS""$VER"
 
 if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
-	dnf install -qy jq
+	dnf install -qy jq || exit 1
 elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
-	apt install -y jq curl
+	apt install -y jq curl || exit 1
 else
 	echo "${red} Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04 ${reset}"
 	exit 1
@@ -34,8 +28,8 @@ fi
 \cp -pf $SKC_BINARY_DIR/env/iseclpgdb.env $HOME_DIR
 \cp -pf $SKC_BINARY_DIR/env/populate-users.env $HOME_DIR
 
-# Copy DB scripts to Home directory
-\cp -pf $SKC_BINARY_DIR/install_pgshvsdb.sh $HOME_DIR
+# Copy DB and user/role creation script to Home directory
+\cp -pf $SKC_BINARY_DIR/create_db.sh $HOME_DIR
 \cp -pf $SKC_BINARY_DIR/populate-users.sh $HOME_DIR
 
 if [ -f ./orchestrator.conf ]; then
@@ -59,30 +53,28 @@ echo "Uninstalling Integration HUB...."
 ihub uninstall --purge
 popd
 
-function is_database() {
-    export PGPASSWORD=$3
-    psql -U $2 -lqt | cut -d \| -f 1 | grep -wq $1
-}
-
 pushd $PWD
 cd ~
-if is_database $SHVS_DB_NAME $SHVS_DB_USERNAME $SHVS_DB_PASSWORD
-then
-   echo "$SHVS_DB_NAME database exists"
-else
-   echo "Updating iseclpgdb.env for SGX Host Verification Service...."
-   sed -i "s@^\(ISECL_PGDB_DBNAME\s*=\s*\).*\$@\1$SHVS_DB_NAME@" ~/iseclpgdb.env
-   sed -i "s@^\(ISECL_PGDB_USERNAME\s*=\s*\).*\$@\1$SHVS_DB_USERNAME@" ~/iseclpgdb.env
-   sed -i "s@^\(ISECL_PGDB_USERPASSWORD\s*=\s*\).*\$@\1$SHVS_DB_PASSWORD@" ~/iseclpgdb.env
-   bash install_pgshvsdb.sh
-   if [ $? -ne 0 ]; then
-	echo "${red} shvs db creation failed ${reset}"
-	exit 1
-   fi
+
+echo "Installing Postgres....."
+bash install_pg.sh
+if [ $? -ne 0 ]; then
+        echo "${red} postgres installation failed ${reset}"
+        exit 1
 fi
+echo "Postgres installated successfully"
+
+echo "Creating SHVS database....."
+bash create_db.sh $SHVS_DB_NAME $SHVS_DB_USERNAME $SHVS_DB_PASSWORD
+if [ $? -ne 0 ]; then
+        echo "${red} shvs db creation failed ${reset}"
+        exit 1
+fi
+echo "SHVS database created successfully"
+
 popd
 
-AAS_URL=https://$SYSTEM_IP:$AAS_PORT/aas
+AAS_URL=https://$SYSTEM_IP:$AAS_PORT/aas/v1
 CMS_URL=https://$SYSTEM_IP:$CMS_PORT/cms/v1/
 echo "Updating Populate users env ...."
 ISECL_INSTALL_COMPONENTS=SHVS,SIH
@@ -123,7 +115,7 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "Getting AAS Admin user token...."
-INSTALL_ADMIN_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:$AAS_PORT/aas/token -d '{"username": "'"$INSTALL_ADMIN_USERNAME"'", "password": "'"$INSTALL_ADMIN_PASSWORD"'"}'`
+INSTALL_ADMIN_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:$AAS_PORT/aas/v1/token -d '{"username": "'"$INSTALL_ADMIN_USERNAME"'", "password": "'"$INSTALL_ADMIN_PASSWORD"'"}'`
 if [ $? -ne 0 ]; then
   echo "${red} could not get AAS Admin token ${reset}"
   exit 1
@@ -159,12 +151,12 @@ sed -i "s/^\(CMS_TLS_CERT_SHA384\s*=\s*\).*\$/\1$CMS_TLS_SHA/" ~/ihub.env
 sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/ihub.env
 sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@" ~/ihub.env
 SHVS_URL=https://$SYSTEM_IP:$SHVS_PORT/sgx-hvs/v2
-K8S_URL=https://$K8S_IP:6443/
+K8S_URL=https://$K8S_IP:$K8S_PORT/
 sed -i "s@^\(ATTESTATION_SERVICE_URL\s*=\s*\).*\$@\1$SHVS_URL@" ~/ihub.env
 sed -i "s@^\(KUBERNETES_URL\s*=\s*\).*\$@\1$K8S_URL@" ~/ihub.env
 if [[ "$OS" != "ubuntu" ]]; then
-OPENSTACK_AUTH_URL=http://$OPENSTACK_IP:5000/
-OPENSTACK_PLACEMENT_URL=http://$OPENSTACK_IP:8778/
+OPENSTACK_AUTH_URL=http://$OPENSTACK_IP:$OPENSTACK_AUTH_PORT/
+OPENSTACK_PLACEMENT_URL=http://$OPENSTACK_IP:$OPENSTACK_PLACEMENT_PORT/
 sed -i "s@^\(OPENSTACK_AUTH_URL\s*=\s*\).*\$@\1$OPENSTACK_AUTH_URL@" ~/ihub.env
 sed -i "s@^\(OPENSTACK_PLACEMENT_URL\s*=\s*\).*\$@\1$OPENSTACK_PLACEMENT_URL@" ~/ihub.env
 fi

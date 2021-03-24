@@ -6,7 +6,6 @@ temp="${OS%\"}"
 temp="${temp#\"}"
 OS="$temp"
 VER=$(cat /etc/os-release | grep ^VERSION_ID | tr -d 'VERSION_ID="')
-OS_FLAVOUR="$OS""$VER"
 
 # read from environment variables file if it exists
 if [ -f ./iseclpgdb.env ]; then
@@ -14,13 +13,6 @@ if [ -f ./iseclpgdb.env ]; then
     source ./iseclpgdb.env
     env_file_exports=$(cat ./iseclpgdb.env | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
     if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
-fi
-
-if [ -z $ISECL_PGDB_USERPASSWORD ] && [ -z $1 ]; then
-    echo "Must supply password in iseclpgdb.env file or as argument to script"
-    echo "Usage :-"
-    echo "      $0 db_password"
-    exit 1
 fi
 
 DEFAULT_CERTSUBJECT="/CN=ISecl Self Sign Cert"
@@ -31,9 +23,6 @@ DEFAULT_CERT_IP="127.0.0.1"
 
 ISECL_PGDB_IP_INTERFACES="${ISECL_PGDB_IP_INTERFACES:-localhost}"    # network interfaces to listen for connection
 ISECL_PGDB_PORT="${ISECL_PGDB_PORT:-5432}"
-ISECL_PGDB_DBNAME="${ISECL_PGDB_DBNAME:-pgdb}"                # database name
-ISECL_PGDB_USERNAME="${ISECL_PGDB_USERNAME:-dbuser}"          # name of user used to connect to database
-ISECL_PGDB_USERPASSWORD="${1:-$ISECL_PGDB_USERPASSWORD}"      # password for database user
 
 ISECL_PGDB_SERVICEHOST="${ISECL_PGDB_SERVICEHOST:-localhost}" # host name or ip address of service whic connects to this database
 ISECL_PGDB_ALLOW_NONSSL="${ISECL_PGDB_ALLOW_NONSSL:-false}"
@@ -215,13 +204,4 @@ service postgresql-11 start &>> $log_file
 
 sudo -E PGDATA=$PGDATA -E PGHOST=$PGHOST -E PGPORT=$PGPORT -u postgres psql postgres -c "alter system set log_connections = 'on';" &>> $log_file
 sudo -E PGDATA=$PGDATA -E PGHOST=$PGHOST -E PGPORT=$PGPORT -u postgres psql postgres -c "alter system set log_disconnections = 'on';" &>> $log_file
-sudo -E PGDATA=$PGDATA -E PGHOST=$PGHOST -E PGPORT=$PGPORT -u postgres psql postgres -c "CREATE EXTENSION \"uuid-ossp\";" &>> $log_file
-sudo -E PGDATA=$PGDATA -E PGHOST=$PGHOST -E PGPORT=$PGPORT -u postgres psql postgres -c "CREATE USER ${ISECL_PGDB_USERNAME} WITH PASSWORD '${ISECL_PGDB_USERPASSWORD}';" &>> $log_file
-sudo -E PGDATA=$PGDATA -E PGHOST=$PGHOST -E PGPORT=$PGPORT -u postgres psql postgres -c "CREATE DATABASE ${ISECL_PGDB_DBNAME}" &>> $log_file
-sudo -E PGDATA=$PGDATA -E PGHOST=$PGHOST -E PGPORT=$PGPORT -u postgres psql postgres -c "GRANT ALL PRIVILEGES ON DATABASE ${ISECL_PGDB_DBNAME} TO ${ISECL_PGDB_USERNAME};" &>> $log_file
-sudo -E PGDATA=$PGDATA -E PGHOST=$PGHOST -E PGPORT=$PGPORT -u postgres psql postgres -c "ALTER ROLE ${ISECL_PGDB_USERNAME} NOSUPERUSER;" &>> $log_file
-sudo -E PGDATA=$PGDATA -E PGHOST=$PGHOST -E PGPORT=$PGPORT -u postgres psql postgres -c "ALTER ROLE ${ISECL_PGDB_USERNAME} NOCREATEROLE;" &>> $log_file
-sudo -E PGDATA=$PGDATA -E PGHOST=$PGHOST -E PGPORT=$PGPORT -u postgres psql postgres -c "ALTER ROLE ${ISECL_PGDB_USERNAME} NOCREATEDB;" &>> $log_file
-sudo -E PGDATA=$PGDATA -E PGHOST=$PGHOST -E PGPORT=$PGPORT -u postgres psql postgres -c "ALTER ROLE ${ISECL_PGDB_USERNAME} NOREPLICATION;" &>> $log_file
-sudo -E PGDATA=$PGDATA -E PGHOST=$PGHOST -E PGPORT=$PGPORT -u postgres psql postgres -c "ALTER ROLE ${ISECL_PGDB_USERNAME} NOBYPASSRLS;" &>> $log_file
-sudo -E PGDATA=$PGDATA -E PGHOST=$PGHOST -E PGPORT=$PGPORT -u postgres psql postgres -c "ALTER ROLE ${ISECL_PGDB_USERNAME} NOINHERIT;" &>> $log_file
+sudo -E PGDATA=$PGDATA -E PGHOST=$PGHOST -E PGPORT=$PGPORT -u postgres psql postgres -c "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";" &>> $log_file

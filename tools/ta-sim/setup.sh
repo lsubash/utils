@@ -93,8 +93,8 @@ sed -i "s/^\(ApiUserPassword\s*:\s*\).*\$/\1$AAS_PASSWORD/" configuration/config
 
 echo "Setting up environment............"
 echo "Downloading token that can be used get/add certificate role..."
-TOKEN=`curl --noproxy "*" -k -X POST https://$AAS_IP:$AAS_PORT/aas/token -d '{"username": "'"$AAS_USERNAME"'", "password": "'"$AAS_PASSWORD"'" }'`
-RESPONSE=`curl --noproxy "*" -k https://$AAS_IP:$AAS_PORT/aas/users?name=$AAS_USERNAME -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json'`
+TOKEN=`curl --noproxy "*" -k -X POST https://$AAS_IP:$AAS_PORT/aas/v1/token -d '{"username": "'"$AAS_USERNAME"'", "password": "'"$AAS_PASSWORD"'" }'`
+RESPONSE=`curl --noproxy "*" -k https://$AAS_IP:$AAS_PORT/aas/v1/users?name=$AAS_USERNAME -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json'`
 USER_ID=$(GetValue user_id $RESPONSE)
 if [ -z "$USER_ID" ]; then
   echo "Error - cannot get user id"
@@ -104,11 +104,11 @@ echo userid:$USER_ID
 
 # Get the RoleID
 echo "Checking if role exists for retrieving certificate.. "
-RESPONSE=`curl --noproxy "*" -G --data-urlencode service="CMS" --data-urlencode name="CertApprover" --data-urlencode context="CN=$SIM_TLS_CERT_CN;SAN=$SIM_TLS_CERT_SAN;certType=TLS" --insecure https://$AAS_IP:$AAS_PORT/aas/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json'`
+RESPONSE=`curl --noproxy "*" -G --data-urlencode service="CMS" --data-urlencode name="CertApprover" --data-urlencode context="CN=$SIM_TLS_CERT_CN;SAN=$SIM_TLS_CERT_SAN;certType=TLS" --insecure https://$AAS_IP:$AAS_PORT/aas/v1/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json'`
 ROLE_ID=$(GetValue role_id $RESPONSE)
 if [ -z $ROLE_ID ]; then
   echo "Certificate Request roles does not exist. Creating new role.."
-	RESPONSE=`curl --noproxy "*" -k  -X POST https://$AAS_IP:$AAS_PORT/aas/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"service": "CMS","name": "CertApprover","context": "CN='"$SIM_TLS_CERT_CN"';SAN='$SIM_TLS_CERT_SAN';certType=TLS"}'`
+	RESPONSE=`curl --noproxy "*" -k  -X POST https://$AAS_IP:$AAS_PORT/aas/v1/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"service": "CMS","name": "CertApprover","context": "CN='"$SIM_TLS_CERT_CN"';SAN='$SIM_TLS_CERT_SAN';certType=TLS"}'`
 	echo Response:$RESPONSE
 	ROLE_ID=$(GetValue role_id $RESPONSE)
 fi
@@ -120,10 +120,10 @@ fi
 echo role_id:$ROLE_ID
 # assign user to role id. Don't care about return code..
 echo "Adding certificate role to user in case user does not already have it...."
-curl --noproxy "*" -k  -X POST https://$AAS_IP:$AAS_PORT/aas/users/$USER_ID/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"role_ids": ["'"$ROLE_ID"'"]}'
+curl --noproxy "*" -k  -X POST https://$AAS_IP:$AAS_PORT/aas/v1/users/$USER_ID/roles -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"role_ids": ["'"$ROLE_ID"'"]}'
 
 echo "Obtaining new token with additional role for user..."
-TOKEN=`curl --noproxy "*" -k -X POST https://$AAS_IP:$AAS_PORT/aas/token -d '{"username": "'"$AAS_USERNAME"'", "password": "'"$AAS_PASSWORD"'" }'`
+TOKEN=`curl --noproxy "*" -k -X POST https://$AAS_IP:$AAS_PORT/aas/v1/token -d '{"username": "'"$AAS_USERNAME"'", "password": "'"$AAS_PASSWORD"'" }'`
 
 echo "Token with role to request certificate : $TOKEN"
 

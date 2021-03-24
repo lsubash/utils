@@ -6,12 +6,6 @@ red=`tput setaf 1`
 green=`tput setaf 2`
 reset=`tput sgr0`
 
-CMS_PORT=8445
-AAS_PORT=8444
-SCS_PORT=9000
-SQVS_PORT=12000
-KBS_PORT=9443
-
 # Copy env files to Home directory
 \cp -pf $SKC_BINARY_DIR/env/cms.env $HOME_DIR
 \cp -pf $SKC_BINARY_DIR/env/authservice.env $HOME_DIR
@@ -21,9 +15,9 @@ KBS_PORT=9443
 \cp -pf $SKC_BINARY_DIR/env/iseclpgdb.env $HOME_DIR
 \cp -pf $SKC_BINARY_DIR/env/populate-users.env $HOME_DIR
 
-# Copy DB scripts to Home directory
+# Copy DB and user/role creation script to Home directory
 \cp -pf $SKC_BINARY_DIR/install_pg.sh $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/install_pgscsdb.sh $HOME_DIR
+\cp -pf $SKC_BINARY_DIR/create_db.sh $HOME_DIR
 \cp -pf $SKC_BINARY_DIR/populate-users.sh $HOME_DIR
 
 \cp -pf $SKC_BINARY_DIR/trusted_rootca.pem /tmp
@@ -61,47 +55,37 @@ echo "Uninstalling Key Broker Service...."
 kbs uninstall --purge
 popd
 
-function is_database() {
-    export PGPASSWORD=$3
-    psql -U $2 -lqt | cut -d \| -f 1 | grep -wq $1
-}
-
 pushd $PWD
 cd ~
-if is_database $AAS_DB_NAME $AAS_DB_USERNAME $AAS_DB_PASSWORD
-then 
-   echo "$AAS_DB_NAME database exists"
-else
-   echo "Updating iseclpgdb.env for AuthService...."
-   sed -i "s@^\(ISECL_PGDB_DBNAME\s*=\s*\).*\$@\1$AAS_DB_NAME@" ~/iseclpgdb.env
-   sed -i "s@^\(ISECL_PGDB_USERNAME\s*=\s*\).*\$@\1$AAS_DB_USERNAME@" ~/iseclpgdb.env
-   sed -i "s@^\(ISECL_PGDB_USERPASSWORD\s*=\s*\).*\$@\1$AAS_DB_PASSWORD@" ~/iseclpgdb.env
-   bash install_pg.sh
-   if [ $? -ne 0 ]; then
-	echo "${red} aas db creation failed ${reset}"
-	exit 1
-   fi
-fi
 
-if is_database $SCS_DB_NAME $SCS_DB_USERNAME $SCS_DB_PASSWORD
-then
-   echo "$SCS_DB_NAME database exists"
-else
-   echo "Updating iseclpgdb.env for SGX Caching Service...."
-   sed -i "s@^\(ISECL_PGDB_DBNAME\s*=\s*\).*\$@\1$SCS_DB_NAME@" ~/iseclpgdb.env
-   sed -i "s@^\(ISECL_PGDB_USERNAME\s*=\s*\).*\$@\1$SCS_DB_USERNAME@" ~/iseclpgdb.env
-   sed -i "s@^\(ISECL_PGDB_USERPASSWORD\s*=\s*\).*\$@\1$SCS_DB_PASSWORD@" ~/iseclpgdb.env
-   bash install_pgscsdb.sh
-   if [ $? -ne 0 ]; then
-	echo "${red} scs db creation failed ${reset}"
-	exit 1
-   fi
+echo "Installing Postgres....."
+bash install_pg.sh
+if [ $? -ne 0 ]; then
+        echo "${red} postgres installation failed ${reset}"
+        exit 1
 fi
+echo "Postgres installated successfully"
+
+echo "Creating AAS database....."
+bash create_db.sh $AAS_DB_NAME $AAS_DB_USERNAME $AAS_DB_PASSWORD
+if [ $? -ne 0 ]; then
+        echo "${red} aas db creation failed ${reset}"
+        exit 1
+fi
+echo "AAS database created successfully"
+
+echo "Creating SCS database....."
+bash create_db.sh $SCS_DB_NAME $SCS_DB_USERNAME $SCS_DB_PASSWORD
+if [ $? -ne 0 ]; then
+        echo "${red} scs db creation failed ${reset}"
+        exit 1
+fi
+echo "SCS database created successfully"
 
 popd
 
 echo "Installing Certificate Management Service...."
-AAS_URL=https://$SYSTEM_IP:$AAS_PORT/aas
+AAS_URL=https://$SYSTEM_IP:$AAS_PORT/aas/v1
 sed -i "s/^\(AAS_TLS_SAN\s*=\s*\).*\$/\1$SYSTEM_SAN/" ~/cms.env
 sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/cms.env
 sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_SAN/" ~/cms.env
@@ -118,7 +102,7 @@ echo "Installing AuthService...."
 
 echo "Copying Certificate Management Service token to AuthService...."
 export AAS_TLS_SAN=$SYSTEM_SAN
-CMS_TOKEN=`cms setup cms_auth_token --force | grep 'JWT Token:' | awk '{print $3}'`
+CMS_TOKEN=`cms setup cms-auth-token --force | grep 'JWT Token:' | awk '{print $3}'`
 sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$CMS_TOKEN/"  ~/authservice.env
 
 CMS_TLS_SHA=`cms tlscertsha384`
@@ -170,6 +154,9 @@ sed -i "s/^\(INSTALL_ADMIN_PASSWORD\s*=\s*\).*\$/\1$INSTALL_ADMIN_PASSWORD/" ~/p
 sed -i "/GLOBAL_ADMIN_USERNAME/d" ~/populate-users.env
 sed -i "/GLOBAL_ADMIN_PASSWORD/d" ~/populate-users.env
 
+sed -i "/CSP_ADMIN_USERNAME/d" ~/populate-users.env
+sed -i "/CSP_ADMIN_PASSWORD/d" ~/populate-users.env
+
 echo "Invoking populate users script...."
 pushd $PWD
 cd ~
@@ -181,7 +168,7 @@ fi
 popd
 
 echo "Getting AuthService Admin token...."
-INSTALL_ADMIN_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:$AAS_PORT/aas/token -d '{"username": "'"$INSTALL_ADMIN_USERNAME"'", "password": "'"$INSTALL_ADMIN_PASSWORD"'"}'`
+INSTALL_ADMIN_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:$AAS_PORT/aas/v1/token -d '{"username": "'"$INSTALL_ADMIN_USERNAME"'", "password": "'"$INSTALL_ADMIN_PASSWORD"'"}'`
 
 if [ $? -ne 0 ]; then
   echo "${red} Could not get AuthService Admin token ${reset}"

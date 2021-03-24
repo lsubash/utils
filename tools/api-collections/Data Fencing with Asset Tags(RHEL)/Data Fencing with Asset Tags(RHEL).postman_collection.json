@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "2b7ccec4-c447-4fdf-a891-aa408141213e",
+		"_postman_id": "be606fd3-fb35-46b3-b10f-dd8736be4761",
 		"name": "Data Fencing with Asset Tags(RHEL)",
 		"description": "Data Fencing and Asset Tags builds on the Platform Integrity use case to allow physical\nTPMs to be written with Asset Tags containing any number of key/value pairs.\nThis use case is typically used to identify the geographic location of the\nphysical server, but can also be used to identify other attributes. For example,\nthe Asset Tags provided by the Data Fencing and Asset Tags use case could be used to\nidentify hosts that meet specific compliance requirements and can run\ncontrolled workloads.\n\n> **Note:** Ensure to follow the Hardware requirements and installation required from the [Product Guide](https://01.org/intel-secl/documentation/intel%C2%AE-secl-dc-product-guide)",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -15,7 +15,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "a4f4c2df-c241-45a7-9cbf-50da2917f2ee",
+								"id": "e90a139a-acd3-4001-a0d8-914e8b649006",
 								"exec": [
 									"pm.environment.set(\"bearerToken\", pm.response.text());"
 								],
@@ -47,7 +47,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://{{aas}}:{{aasPort}}/aas/token",
+							"raw": "https://{{aas}}:{{aasPort}}/aas/v1/token",
 							"protocol": "https",
 							"host": [
 								"{{aas}}"
@@ -55,6 +55,7 @@
 							"port": "{{aasPort}}",
 							"path": [
 								"aas",
+								"v1",
 								"token"
 							]
 						},
@@ -135,7 +136,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "1642f96c-f4b3-40d8-b579-9048fbcfae23",
+								"id": "fe7cc206-2084-4c8f-9c3b-80e726ae541f",
 								"exec": [
 									"var report = pm.response.json();\r",
 									"pm.environment.set(\"hostHardwareUuid\",report.reports[0].host_info.hardware_uuid)\r",
@@ -147,7 +148,7 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "459db4b4-fb18-43e2-b41c-6770fdc1b823",
+								"id": "18ccfd7f-51b3-4d63-abee-eeb218ff2c44",
 								"exec": [
 									""
 								],
@@ -363,7 +364,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "0f20ef8f-aed3-492c-9dc1-f680795bba3b",
+						"id": "6aa402fe-783c-4b19-8945-e913a313cb5e",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -373,7 +374,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "83770b9e-0e91-45ff-8f75-dcef36c0920d",
+						"id": "80b1535a-c92d-4c9d-96fb-adf508c92dff",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -392,7 +393,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "dda6db7b-4cc2-42e5-969f-daa75163b598",
+								"id": "e453590a-8a4c-4d62-be69-4080b55f683a",
 								"exec": [
 									"var tagCertResponse = pm.response.json();\r",
 									"pm.environment.set(\"certificateId\",tagCertResponse.id)"
@@ -521,7 +522,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "54c65ba8-bb3b-4df9-9d39-609f7c2007d3",
+						"id": "d0e4df33-3ae2-4f2a-a2ec-19d1160a1997",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -531,7 +532,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "62cd90fc-3354-4de6-bb06-ae478cd098e3",
+						"id": "8118f016-307c-4f81-a660-022aa985686d",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -667,7 +668,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "3500fa03-a392-49e5-b0ca-f4f0144196ba",
+						"id": "d83398ef-38fb-4b5c-8c1d-c4d4d90a5435",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -677,7 +678,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "95b74560-c00f-4882-b6d6-f0b5d2c8c107",
+						"id": "8b99b7f0-ac9f-4de9-bccb-c78b3df24734",
 						"type": "text/javascript",
 						"exec": [
 							""

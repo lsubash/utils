@@ -9,8 +9,6 @@ Following RHEL 8 repositories should be setup and available (/etc/yum.repos.d) t
 	BaseOS
 	AppStream
 	CodeReady
-- Ensure that dnf update can download and install latest software updates
-
 - Ensure CSP side server/VM IP addresses are added to the no_proxy environment variable
 
 - Turn off Firewall service or ensure that the SHVS system can access the machine where SGX Agent is running

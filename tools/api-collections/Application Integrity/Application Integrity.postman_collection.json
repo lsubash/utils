@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "4fad45b7-59ac-414c-ac7d-6a33041a2b65",
+		"_postman_id": "d1e3ed75-798b-4388-8580-be427817fde5",
 		"name": "Application Integrity",
 		"description": "Application Integrity allows any files and folders on a Linux host system to be included in the Chain of Trust integrity measurements.  These measurements are attested by the Verification Service along with the other platform measurements, and are included in determining the host’s overall Trust status.  The measurements are performed by a measurement agent called tbootXM, which is built into initrd during Trust Agent installation.  Because initrd is included in other Trusted Computing measurements, this allows Intel® SecL-DC to carry the Chain of Trust all the way to the Linux filesystem.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -15,7 +15,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "47c11851-bc5a-4e6e-ab9f-fc18fb6bcd1a",
+								"id": "aabd8f54-98ba-4e37-8721-0cb813b322b5",
 								"exec": [
 									"pm.environment.set(\"bearerToken\", pm.response.text());"
 								],
@@ -49,7 +49,7 @@
 							}
 						},
 						"url": {
-							"raw": "https://{{aas}}:{{aasPort}}/aas/token",
+							"raw": "https://{{aas}}:{{aasPort}}/aas/v1/token",
 							"protocol": "https",
 							"host": [
 								"{{aas}}"
@@ -57,6 +57,7 @@
 							"port": "{{aasPort}}",
 							"path": [
 								"aas",
+								"v1",
 								"token"
 							]
 						},
@@ -132,7 +133,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "16625e3a-7312-4713-b593-943307de617e",
+								"id": "31f94f6b-b5f0-43aa-bef9-d22c9a993dca",
 								"exec": [
 									"var report=pm.response.json()\r",
 									"pm.environment.set(\"hostId\", report.reports[0].host_id)"
@@ -143,7 +144,7 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "98be432a-241f-4b3f-a2f2-8b33a28ff6f7",
+								"id": "07051214-7c9c-448a-94b4-81c032102a48",
 								"exec": [
 									""
 								],
@@ -359,7 +360,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "6bf63c39-540a-40f2-bdda-40993752ddb9",
+						"id": "fa4fdf70-1ccd-4251-bdab-55846b38df98",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -369,7 +370,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "8a3adf74-10e5-4786-a506-9b54411e99ee",
+						"id": "bbf5e850-9a28-44d9-a772-1ccb2e4e771b",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -388,7 +389,7 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "c15dd0bf-296d-47d8-80ab-54a17295eb64",
+								"id": "a1cfe44c-09ba-43db-ba45-db44cba215ab",
 								"exec": [
 									"var flavorResponseBody=pm.response.json()\r",
 									"pm.environment.set(\"flavorId\",flavorResponseBody.meta.id)"
@@ -630,7 +631,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "38ad3dde-5797-4bc2-b031-aed28d33196c",
+						"id": "01ce958e-b13a-477e-9e36-30939300c002",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -640,7 +641,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "e3765ca2-1083-4b7b-af4b-4b1bdb503c2c",
+						"id": "719a8f0c-3855-4ba1-90f3-b27962cda951",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -897,7 +898,7 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "da41ace5-7868-4362-9feb-380f947b2146",
+						"id": "5888ed05-b2fd-44bc-8c1d-a524855732ed",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -907,7 +908,7 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "3d2fca27-bd31-480c-b681-1734cd4e110d",
+						"id": "e5272655-c847-4430-9487-537d92b1bdf2",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -922,7 +923,7 @@
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "5ebe5359-1136-4d93-92d6-c22ae55fcd98",
+				"id": "feeceb46-eb25-4e61-84fe-52c8d664b39d",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -932,7 +933,7 @@
 		{
 			"listen": "test",
 			"script": {
-				"id": "73777185-c516-438a-bb9c-31bf20b5fefe",
+				"id": "c77c39e9-0469-45fb-895f-a0c46e320f54",
 				"type": "text/javascript",
 				"exec": [
 					""

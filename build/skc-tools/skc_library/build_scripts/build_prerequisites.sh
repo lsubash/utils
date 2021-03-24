@@ -10,18 +10,18 @@ VER=$(cat /etc/os-release | grep ^VERSION_ID | tr -d 'VERSION_ID="')
 install_pre_requisites()
 {
 	if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
-		dnf install -qy bc wget tar git gcc-c++ make automake autoconf libtool yum-utils p11-kit-devel cppunit-devel openssl-devel
+		dnf install -qy bc wget tar git gcc-c++ make automake autoconf libtool yum-utils p11-kit-devel cppunit-devel openssl-devel skopeo || exit 1
 	elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
-		apt install -y build-essential ocaml ocamlbuild automake autoconf libtool cmake perl libcppunit-dev libssl-dev
-                wget http://archive.ubuntu.com/ubuntu/pool/main/libt/libtasn1-6/libtasn1-6_4.16.0-2_amd64.deb
-                wget http://archive.ubuntu.com/ubuntu/pool/main/libf/libffi/libffi8ubuntu1_3.4~20200819gead65ca871-0ubuntu3_amd64.deb
-                wget http://archive.ubuntu.com/ubuntu/pool/main/p/p11-kit/libp11-kit0_0.23.22-1_amd64.deb
-                wget http://archive.ubuntu.com/ubuntu/pool/main/p/p11-kit/libp11-kit-dev_0.23.22-1_amd64.deb
+		apt install -y build-essential ocaml ocamlbuild automake autoconf libtool cmake perl libcppunit-dev libssl-dev || exit 1
+                wget http://archive.ubuntu.com/ubuntu/pool/main/libt/libtasn1-6/libtasn1-6_4.16.0-2_amd64.deb || exit 1
+                wget http://archive.ubuntu.com/ubuntu/pool/main/libf/libffi/libffi8ubuntu1_3.4~20200819gead65ca871-0ubuntu3_amd64.deb || exit 1
+                wget http://archive.ubuntu.com/ubuntu/pool/main/p/p11-kit/libp11-kit0_0.23.22-1_amd64.deb || exit 1
+                wget http://archive.ubuntu.com/ubuntu/pool/main/p/p11-kit/libp11-kit-dev_0.23.22-1_amd64.deb || exit 1
 
-                apt install -f ./libtasn1-6_4.16.0-2_amd64.deb
-                apt install -f ./libffi8ubuntu1_3.4~20200819gead65ca871-0ubuntu3_amd64.deb
-                apt install -f ./libp11-kit0_0.23.22-1_amd64.deb
-                apt install -f ./libp11-kit-dev_0.23.22-1_amd64.deb
+                apt install -f ./libtasn1-6_4.16.0-2_amd64.deb || exit 1
+                apt install -f ./libffi8ubuntu1_3.4~20200819gead65ca871-0ubuntu3_amd64.deb || exit 1
+                apt install -f ./libp11-kit0_0.23.22-1_amd64.deb || exit 1
+                apt install -f ./libp11-kit-dev_0.23.22-1_amd64.deb || exit 1
 
 		rm -rf *.deb
 	else

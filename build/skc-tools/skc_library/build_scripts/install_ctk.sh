@@ -14,10 +14,10 @@ install_cryptoapitoolkit()
 	pushd $PWD
 	mkdir -p $GIT_CLONE_PATH
         rm -rf $GIT_CLONE_SGX_CTK
-        git clone $CTK_REPO $GIT_CLONE_SGX_CTK
+        git clone $CTK_REPO $GIT_CLONE_SGX_CTK || exit 1
         cd $GIT_CLONE_SGX_CTK
 	sed  's/16/32/' -i src/p11/trusted/SoftHSMv2/common/QuoteGenerationDefs.h 
-        bash autogen.sh
+        bash autogen.sh || exit 1
         ./configure --with-p11-kit-path=$P11_KIT_PATH --prefix=$CTK_INSTALL --enable-dcap || exit 1
 	make install || exit 1
 	popd

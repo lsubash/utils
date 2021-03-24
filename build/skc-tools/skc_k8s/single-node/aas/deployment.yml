@@ -1,0 +1,93 @@
+# Copyright (C) 2021  Intel Corporation
+# SPDX-License-Identifier: BSD-3-Clause
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aas-deployment
+  namespace: isecl
+  labels:
+    env: demo
+    app: aas
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aas
+  template:
+    metadata:
+      labels:
+        app: aas
+    spec:
+      securityContext:
+        fsGroup: 1001
+      initContainers:
+        - image: busybox:latest
+          imagePullPolicy: Always
+          name: chmod-aas-data
+          command:
+            - /bin/chown
+            - -R
+            - "1001"
+            - /etc/authservice
+            - /var/log/authservice
+          volumeMounts:
+            - name: aas-config-volume
+              mountPath: /etc/authservice
+            - name: aas-logs-volume
+              mountPath: /var/log/authservice
+      containers:
+        - image: <image-name>:<tag>
+          name: aas
+          imagePullPolicy: Always
+          securityContext:
+            runAsUser: 1001
+            runAsGroup: 1001
+          envFrom:
+            - configMapRef:
+                name: aas-config
+          env:
+            - name: AAS_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: aas-db-credentials
+                  key: AAS_DB_USERNAME
+            - name: AAS_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: aas-db-credentials
+                  key: AAS_DB_PASSWORD
+            - name: AAS_ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: aas-service-credentials
+                  key: AAS_ADMIN_USERNAME
+            - name: AAS_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: aas-service-credentials
+                  key: AAS_ADMIN_PASSWORD
+          ports:
+            - containerPort: 8444
+          volumeMounts:
+            - name: aas-config-volume
+              mountPath: /etc/authservice/
+            - name: aas-logs-volume
+              mountPath: /var/log/authservice/
+            - name: aas-db-certs
+              mountPath: /etc/postgresql/
+      volumes:
+        - name: aas-config-volume
+          hostPath:
+            path: /etc/authservice/
+            type: DirectoryOrCreate
+        - name: aas-logs-volume
+          hostPath:
+            path: /var/log/authservice/
+            type: DirectoryOrCreate
+        - name: aas-db-certs
+          secret:
+            secretName: aas-db-certs
+            defaultMode: 0640
+            

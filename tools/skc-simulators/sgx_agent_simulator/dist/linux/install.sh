@@ -154,6 +154,7 @@ else
 	    # When SHVS URL is not configured, the agent 
 	    # would update SCS and terminate.
             echo "Installation completed successfully!"
+	    echo "Check journalctl logs for any systemctl error"
         else
             echo "Waiting for daemon to settle down before checking status"
 	    sleep 3
@@ -165,6 +166,7 @@ else
 	    fi
 	    echo "$COMPONENT_NAME daemon is running"
 	    echo "Installation completed successfully!"
+	    echo "Check journalctl logs for any systemctl error"
         fi
     else
         echo "Installation completed with errors"

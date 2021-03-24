@@ -8,7 +8,6 @@ temp="${OS%\"}"
 temp="${temp#\"}"
 OS="$temp"
 VER=$(cat /etc/os-release | grep ^VERSION_ID | tr -d 'VERSION_ID="')
-OS_FLAVOUR="$OS""$VER"
 
 create_sgx_agent_tar()
 {
@@ -72,6 +71,16 @@ if [ $? -ne 0 ]
 then
         echo "sgx agent build failed"
         exit
+fi
+
+if [ "$OS" == "rhel" ]
+then
+	source build_sgx_agent_docker.sh
+	if [ $? -ne 0 ]
+	then
+		echo "sgx agent docker build failed"
+		exit
+	fi
 fi
 
 create_sgx_agent_tar

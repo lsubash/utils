@@ -1,15 +1,20 @@
-SGX_AGENT_IP={{ sgx_agent }}
 CMS_IP={{ cms }}
 AAS_IP={{ aas }}
-SHVS_IP={{ shvs }}
 SCS_IP={{ scs }}
 
-CMS_PORT={{ cms_port }}
-AAS_PORT={{ aas_port }}
+{% if setup == 'secure-key-caching' or setup == 'sgx-orchestration-kubernetes' or setup == 'sgx-orchestration-openstack' or setup == 'sgx-attestation-kubernetes' or setup == 'sgx-attestation-openstack' %}
+SHVS_IP={{ shvs }}
 SHVS_PORT={{ shvs_port }}
+{% endif %}
+
+AAS_PORT={{ aas_port }}
+CMS_PORT={{ cms_port }}
 SCS_PORT={{ scs_port }}
 
-AGENT_USER={{ sgxagent_admin_username }}
-AGENT_PASSWORD={{ sgxagent_admin_password }}
+# Long-lived token validity period in days, maximum validity period is 2 years.
+VALIDITY_DAYS=7
+
+CSP_ADMIN_USERNAME={{ csp_admin_username }}
+CSP_ADMIN_PASSWORD={{ csp_admin_password }}
 
 CMS_TLS_SHA={{ cmstlscertsha384_csp }}
