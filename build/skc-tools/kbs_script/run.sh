@@ -68,7 +68,7 @@ transfer_policy_id=$(cat transfer_policy_response.json | jq '.id');
 
 #create a RSA key
 if [ "$1" = "reg" ]; then
-        if [ -z "${KMIP_KEY_ID}"]; then
+        if [ -z "${KMIP_KEY_ID}" ]; then
                 source gen_cert_key.sh
             printf "{
             \"key_information\":{
