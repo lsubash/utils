@@ -1,11 +1,10 @@
 TARGETS = intel-secl workload-service k8s-extensions trust-agent
 
-all: clean $(TARGETS) workload-agent workload-policy-manager skopeo cri-o
+all: clean $(TARGETS) workload-agent skopeo cri-o
 	mkdir binaries
 	cp intel-secl/deployments/installer/*.bin binaries/
 	cp intel-secl/deployments/installer/*.sh binaries/
 	cp workload-service/out/*.bin binaries/
-	cp workload-policy-manager/out/*.bin binaries/
 	cp trust-agent/out/*.bin binaries/
 	cp workload-agent/out/*.bin binaries/
 	cp skopeo/skopeo binaries/
@@ -14,10 +13,6 @@ all: clean $(TARGETS) workload-agent workload-policy-manager skopeo cri-o
 
 clean: $(patsubst %, %-clean, $(TARGETS))
 	rm -rf binaries/
-
-workload-policy-manager: 
-	cd workload-policy-manager && \
-	make installer-no-docker
 
 workload-agent:
 	cd workload-agent && \
@@ -38,4 +33,4 @@ $(TARGETS):
 %-clean:
 	cd $* && make clean
 
-.PHONY: all clean $(TARGETS)  workload-policy-manager workload-agent skopeo cri-o
+.PHONY: all clean $(TARGETS) workload-agent skopeo cri-o

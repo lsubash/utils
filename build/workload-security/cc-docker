@@ -5,7 +5,6 @@ all: clean $(TARGETS)
 	cp intel-secl/deployments/installer/*.bin binaries/
 	cp intel-secl/deployments/installer/*.sh binaries/
 	cp workload-service/out/*.bin binaries/
-	cp workload-policy-manager/out/*.bin binaries/
 	cp trust-agent/out/*.bin binaries/
 	cp workload-agent/out/*.bin binaries/
 	cp k8s-extensions/out/isecl-k8s-extensions-v*.tar.gz binaries/
@@ -16,7 +15,12 @@ clean: $(patsubst %, %-clean, $(TARGETS))
 $(TARGETS):
 	cd $@ && make installer
 
+wpm-with-docker: 
+	cd intel-secl && make wpm-docker-installer
+	cp intel-secl/deployments/installer/*.bin binaries/
+	cp intel-secl/deployments/installer/*.sh binaries/
+
 %-clean:
 	cd $* && make clean
 
-.PHONY: all clean $(TARGETS)
+.PHONY: all clean $(TARGETS) wpm-with-docker

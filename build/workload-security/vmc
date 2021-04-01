@@ -1,11 +1,10 @@
 TARGETS = intel-secl workload-service trust-agent
 
-all: clean $(TARGETS) workload-agent workload-policy-manager
+all: clean $(TARGETS) workload-agent
 	mkdir binaries
 	cp intel-secl/deployments/installer/*.bin binaries/
 	cp intel-secl/deployments/installer/*.sh binaries/
 	cp workload-service/out/*.bin binaries/
-	cp workload-policy-manager/out/*.bin binaries/
 	cp trust-agent/out/*.bin binaries/
 	cp workload-agent/out/*.bin binaries/
 
@@ -21,7 +20,4 @@ $(TARGETS):
 workload-agent:
 	cd $@ && make installer-no-docker
 
-workload-policy-manager:
-	cd $@ && make installer-no-docker
-
-.PHONY: all clean $(TARGETS) workload-agent workload-policy-manager
+.PHONY: all clean $(TARGETS) workload-agent

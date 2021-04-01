@@ -671,7 +671,7 @@ Default Port: `9443`<br>
 
 Installation log location: `/root/key_broker_service-install.log`<br>
 Service files: `/opt/workload-policy-manager`<br>
-Configuration files: `/etc//workload-policy-manager`<br>
+Configuration files: `/etc/workload-policy-manager`<br>
 Log files: `/var/log/workload-policy-manager`<br>
 Default Port: `none`<br>
 <br>
