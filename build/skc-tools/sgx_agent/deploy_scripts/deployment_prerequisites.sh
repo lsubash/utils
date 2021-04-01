@@ -18,6 +18,8 @@ install_pre_requisites()
 		dnf install -qy yum-utils kernel-devel dkms tar make jq || exit 1
 	elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
 		apt install -y dkms tar make jq curl || exit 1
+		sed -i "/msr/d" /etc/modules
+		sed -i "$ a msr" /etc/modules
 		modprobe msr || exit 1
 	else
 		echo "${red} Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04 ${reset}"

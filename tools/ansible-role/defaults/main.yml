@@ -128,7 +128,7 @@ global_admin_username: global_admin_user
 global_admin_password: globalAdminPass
 
 # The installer admin username for installing services based on usecases
-install_admin_username: superadmin
+install_admin_username: superAdmin
 
 # The installer admin password for installing services based on usecases
 install_admin_password: superAdminPass
