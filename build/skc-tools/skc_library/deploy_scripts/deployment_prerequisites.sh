@@ -33,6 +33,8 @@ install_pre_requisites()
 		apt install -y build-essential ocaml automake autoconf libtool tar wget python libssl-dev || exit 1
 		apt-get install -y libcurl4-openssl-dev libprotobuf-dev curl || exit 1
 		apt install -y dkms make jq libjsoncpp1 libjsoncpp-dev softhsm libgda-5.0-4 nginx || exit 1
+		groupadd intel
+		usermod -G intel www-data
 		\cp -rpf bin/pkcs11.so /usr/lib/x86_64-linux-gnu/engines-1.1/
 		\cp -rpf bin/libp11.so.3.4.3 /usr/lib/
 		ln -sf /usr/lib/libp11.so.3.4.3 /usr/lib/libp11.so
