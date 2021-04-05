@@ -1,10 +1,10 @@
---- /etc/nginx/nginx.conf	2018-04-05 22:31:11.000000000 -0700
-+++ /etc/nginx/nginx_ubuntu.conf	2021-04-05 01:01:20.767954265 -0700
-@@ -1,8 +1,10 @@
+--- /etc/nginx/nginx.conf	2021-04-05 04:34:31.699842720 -0700
++++ nginx.conf	2021-04-05 04:10:31.979855275 -0700
+@@ -1,8 +1,11 @@
 -user www-data;
--worker_processes auto;
-+user root;
-+worker_processes 1;
++#nginx version 1.14.0
++user nginx;
+ worker_processes auto;
  pid /run/nginx.pid;
  include /etc/nginx/modules-enabled/*.conf;
  
@@ -13,7 +13,7 @@
  events {
  	worker_connections 768;
  	# multi_accept on;
-@@ -27,59 +29,93 @@
+@@ -27,59 +30,93 @@
  	include /etc/nginx/mime.types;
  	default_type application/octet-stream;
  
