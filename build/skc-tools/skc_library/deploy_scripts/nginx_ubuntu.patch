@@ -1,9 +1,8 @@
 --- /etc/nginx/nginx.conf	2021-04-05 04:34:31.699842720 -0700
-+++ nginx.conf	2021-04-05 04:10:31.979855275 -0700
++++ nginx.conf	2021-04-07 21:46:36.729795768 -0700
 @@ -1,8 +1,11 @@
--user www-data;
 +#nginx version 1.14.0
-+user nginx;
+ user www-data;
  worker_processes auto;
  pid /run/nginx.pid;
  include /etc/nginx/modules-enabled/*.conf;
