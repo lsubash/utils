@@ -1,6 +1,6 @@
 TARGETS = intel-secl workload-service workload-policy-manager k8s-extensions trust-agent workload-agent
 
-all: clean $(TARGETS)
+all: clean download-eca $(TARGETS)
 	mkdir binaries
 	cp intel-secl/deployments/installer/*.bin binaries/
 	cp intel-secl/deployments/installer/*.sh binaries/
@@ -11,6 +11,9 @@ all: clean $(TARGETS)
 
 clean: $(patsubst %, %-clean, $(TARGETS))
 	rm -rf binaries/
+
+download-eca:
+	cd intel-secl && make download-eca && cd -
 
 $(TARGETS):
 	cd $@ && make installer

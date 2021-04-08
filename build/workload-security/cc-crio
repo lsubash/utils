@@ -1,6 +1,6 @@
 TARGETS = intel-secl workload-service k8s-extensions trust-agent
 
-all: clean $(TARGETS) workload-agent skopeo cri-o
+all: clean download-eca $(TARGETS) workload-agent skopeo cri-o
 	mkdir binaries
 	cp intel-secl/deployments/installer/*.bin binaries/
 	cp intel-secl/deployments/installer/*.sh binaries/
@@ -13,6 +13,9 @@ all: clean $(TARGETS) workload-agent skopeo cri-o
 
 clean: $(patsubst %, %-clean, $(TARGETS))
 	rm -rf binaries/
+
+download-eca:
+	cd intel-secl && make download-eca && cd -
 
 workload-agent:
 	cd workload-agent && \

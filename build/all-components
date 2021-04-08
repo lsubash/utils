@@ -1,6 +1,6 @@
 TARGETS = intel-secl workload-service k8s-extensions trust-agent workload-agent sgx-caching-service sgx-verification-service sgx-hvs
 
-all: clean $(TARGETS) skc-all
+all: clean download-eca $(TARGETS) skc-all
 	mkdir -p binaries
 	cp intel-secl/deployments/installer/*.bin binaries/
 	cp intel-secl/deployments/installer/*.sh binaries/
@@ -8,6 +8,9 @@ all: clean $(TARGETS) skc-all
 	cp trust-agent/out/*.bin binaries/
 	cp workload-agent/out/*.bin binaries/
 	cp k8s-extensions/out/isecl-k8s-extensions-v*.tar.gz binaries/
+
+download-eca:
+	cd intel-secl && make download-eca && cd -
 
 sgx_agent:
 	cd utils/build/skc-tools/sgx_agent/build_scripts/ && ./sgxagent_build.sh
