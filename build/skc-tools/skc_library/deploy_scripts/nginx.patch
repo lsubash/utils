@@ -1,6 +1,11 @@
---- nginx.conf	2019-08-30 03:17:22.000000000 -0700
-+++ /root/nginx.conf	2021-02-27 10:13:13.551903199 -0800
-@@ -6,6 +6,7 @@
+--- nginx.conf	2021-04-09 03:12:03.225390037 -0700
++++ /root/nginx.conf	2021-04-09 03:20:02.512974720 -0700
+@@ -2,10 +2,12 @@
+ #   * Official English Documentation: http://nginx.org/en/docs/
+ #   * Official Russian Documentation: http://nginx.org/ru/docs/
+ 
++# nginx verson 1.14.1 (Rhel)
+ user nginx;
  worker_processes auto;
  error_log /var/log/nginx/error.log;
  pid /run/nginx.pid;
@@ -8,7 +13,7 @@
  
  # Load dynamic modules. See /usr/share/doc/nginx/README.dynamic.
  include /usr/share/nginx/modules/*.conf;
-@@ -57,34 +58,34 @@
+@@ -57,34 +59,34 @@
      }
  
  # Settings for a TLS enabled server.
@@ -47,7 +52,7 @@
 +        server_name  _;
 +        root         /usr/share/nginx/html;
 +
-+        ssl_certificate "/root/e299c0cf-db96-461b-a279-a14430af9448.crt";
++        ssl_certificate "/root/da3f8d06-5906-4584-8d9f-dccdbc151845.crt";
 +        ssl_certificate_key "engine:pkcs11:pkcs11:token=KMS;object=RSAKEY;pin-value=1234";
 +        ssl_session_cache shared:SSL:1m;
 +        ssl_session_timeout  10m;

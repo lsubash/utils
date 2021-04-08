@@ -1,5 +1,11 @@
---- /root/openssl.cnf	2021-02-27 09:49:09.659811398 -0800
-+++ openssl.cnf	2021-02-27 10:03:48.979867304 -0800
+--- openssl.cnf	2021-04-09 03:12:03.078032995 -0700
++++ /root/openssl.cnf	2021-04-09 03:24:19.899820746 -0700
+@@ -1,4 +1,4 @@
+-#
++# OpenSSL 1.1.1g (Rhel)
+ # OpenSSL example configuration file.
+ # This is mostly being used for generation of certificate requests.
+ #
 @@ -13,7 +13,6 @@
  
  # Extra OBJECT IDENTIFIER info:
@@ -13,8 +19,7 @@
  # Load default TLS policy configuration
  
 -openssl_conf = default_modules
-+openssl_conf = openssl_def
- 
+-
 -[ default_modules ]
 -
 -ssl_conf = ssl_module
@@ -24,7 +29,8 @@
 -system_default = crypto_policy
 -
 -[ crypto_policy ]
--
++openssl_conf = openssl_def
+ 
 -.include /etc/crypto-policies/back-ends/opensslcnf.config
 +[ openssl_def ]
 +engines = engine_section

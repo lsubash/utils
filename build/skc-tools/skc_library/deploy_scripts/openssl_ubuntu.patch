@@ -1,8 +1,8 @@
---- /etc/ssl/openssl.cnf	2020-05-27 12:15:54.000000000 -0700
+--- /root/openssl.cnf	2020-05-27 12:15:54.000000000 -0700
 +++ openssl.cnf	2021-04-05 04:14:15.155853329 -0700
 @@ -1,4 +1,4 @@
 -#
-+#OpenSSL 1.1.1
++# OpenSSL 1.1.1 (Ubuntu)
  # OpenSSL example configuration file.
  # This is mostly being used for generation of certificate requests.
  #
