@@ -32,7 +32,7 @@ fi
 \cp -pf ./env/populate-users.env $HOME_DIR
 
 # Copy DB and user/role creation script to Home directory
-\cp -pf ./install_pg.sh $HOME_DIR
+\cp -pf ./install_pgdb.sh $HOME_DIR
 \cp -pf ./create_db.sh $HOME_DIR
 \cp -pf ./populate-users.sh $HOME_DIR
 
@@ -77,7 +77,7 @@ pushd $PWD
 cd ~
 
 echo "Installing Postgres....."
-bash install_pg.sh
+bash install_pgdb.sh
 if [ $? -ne 0 ]; then
         echo "${red} postgres installation failed ${reset}"
         exit 1

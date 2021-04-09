@@ -57,7 +57,7 @@ pushd $PWD
 cd ~
 
 echo "Installing Postgres....."
-bash install_pg.sh
+bash install_pgdb.sh
 if [ $? -ne 0 ]; then
         echo "${red} postgres installation failed ${reset}"
         exit 1

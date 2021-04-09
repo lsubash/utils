@@ -15,10 +15,6 @@ Deploying all SKC components (CMS/AAS/SCS/SQVS/KBS/SHVS/IHUB) on a single VM/bar
 --------------------------------------------------------------------------------------
 # ./install_skc.sh
 
-Deploying SKC components without orchestration support(CMS/AAS/SCS/SQVS/KBS) on a single VM/baremetal
------------------------------------------------------------------------------------------------------
-# ./install_basic.sh
-
 Deploying SKC CSP side components (CMS/AAS/SCS/SHVS/IHUB) on a single VM/baremetal
 ----------------------------------------------------------------------------------
 # ./install_csp_skc.sh

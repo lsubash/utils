@@ -16,7 +16,7 @@ reset=`tput sgr0`
 \cp -pf $SKC_BINARY_DIR/env/populate-users.env $HOME_DIR
 
 # Copy DB and user/role creation script to Home directory
-\cp -pf $SKC_BINARY_DIR/install_pg.sh $HOME_DIR
+\cp -pf $SKC_BINARY_DIR/install_pgdb.sh $HOME_DIR
 \cp -pf $SKC_BINARY_DIR/create_db.sh $HOME_DIR
 \cp -pf $SKC_BINARY_DIR/populate-users.sh $HOME_DIR
 
@@ -59,7 +59,7 @@ pushd $PWD
 cd ~
 
 echo "Installing Postgres....."
-bash install_pg.sh
+bash install_pgdb.sh
 if [ $? -ne 0 ]; then
         echo "${red} postgres installation failed ${reset}"
         exit 1

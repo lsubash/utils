@@ -1,5 +1,5 @@
 #!/bin/bash
-source install_basic.sh
+source install_enterprise_skc.sh
 if [ $? -ne 0 ]
 then
         echo "${red} SKC Basic components installation failed ${reset}"
