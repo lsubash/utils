@@ -24,8 +24,13 @@ create_skc_library_tar()
 	\cp -pf ../deploy_scripts/skc_library.conf $SKCLIB_DIR
 	\cp -pf ../deploy_scripts/create_roles.conf $SKCLIB_DIR
 	\cp -pf ../deploy_scripts/README.install $SKCLIB_DIR
-	\cp -pf ../deploy_scripts/openssl.patch $SKCLIB_DIR
-	\cp -pf ../deploy_scripts/nginx.patch $SKCLIB_DIR
+	if [ "$OS" == "rhel" && "$VER" == "8.2" ]; then
+	        \cp -pf ../deploy_scripts/nginx.patch $SKCLIB_DIR
+	        \cp -pf ../deploy_scripts/openssl.patch $SKCLIB_DIR
+        elif [ "$OS" == "ubuntu" && "$VER" == "18.04" ]; then
+	        \cp -pf ../deploy_scripts/nginx_ubuntu.patch $SKCLIB_DIR
+	        \cp -pf ../deploy_scripts/openssl_ubuntu.patch $SKCLIB_DIR
+        fi
 	tar -cf $TAR_NAME.tar -C $SKCLIB_DIR . --remove-files || exit 1
 	sha256sum $TAR_NAME.tar > $TAR_NAME.sha2
 	echo "skc_library.tar file and skc_library.sha2 checksum file created"
