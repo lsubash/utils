@@ -90,14 +90,14 @@ k8s_common: clean intel_secl_k8s skc_k8s k8s_extensions sgx_agent_k8s skc_librar
 	cp -r utils/build/skc-tools/sgx_agent/deploy_scripts/agent_container_prereq.sh k8s/platform-dependencies/
 	cp -r utils/build/skc-tools/sgx_agent/deploy_scripts/deployment_prerequisites.sh k8s/platform-dependencies/
 	cp -r utils/build/skc-tools/skc_k8s/pre-requisites.sh k8s/manifests/
-	cp -r utils/build/skc-tools/skc_k8s/db-deployments/skc-bootstrap-db-services.sh k8s/manifests/skc-bootstrap-db-services.sh
+	cp -r utils/build/skc-tools/skc_k8s/skc-bootstrap-db-services.sh k8s/manifests/skc-bootstrap-db-services.sh
 	cp -r utils/build/skc-tools/skc_k8s/sgx_agent k8s/manifests/sgx_agent
 	cp  utils/build/skc-tools/skc_library/deploy_scripts/create_roles.conf utils/build/skc-tools/skc_k8s/skc_library/resources/
 	cp  utils/build/skc-tools/skc_library/deploy_scripts/skc_library_create_roles.sh utils/build/skc-tools/skc_k8s/skc_library/resources/
 	cp  utils/build/skc-tools/skc_library/deploy_scripts/skc_library.conf utils/build/skc-tools/skc_k8s/skc_library/resources/
 	cp -r utils/build/skc-tools/skc_k8s/skc_library k8s/manifests/skc_library
-	cp -r utils/build/skc-tools/skc_k8s/k8s-extensions-controller k8s/manifests/
-	cp -r utils/build/skc-tools/skc_k8s/k8s-extensions-scheduler k8s/manifests/
+	cp -r utils/build/k8s-manifests/k8s-extensions-controller k8s/manifests/
+	cp -r utils/build/k8s-manifests/k8s-extensions-scheduler k8s/manifests/
 	cp -r utils/build/skc-tools/skc_k8s/skc-bootstrap.sh k8s/manifests/skc-bootstrap.sh
 	cp utils/build/skc-tools/skc_k8s/isecl-skc-k8s.env k8s/manifests/isecl-skc-k8s.env
 	cp -r intel-secl/deployments/container-archive/oci/*.tar k8s/container-images/
