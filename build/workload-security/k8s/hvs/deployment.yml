@@ -1,0 +1,97 @@
+# Copyright (C) 2021  Intel Corporation
+# SPDX-License-Identifier: BSD-3-Clause
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hvs-deployment
+  namespace: isecl
+  labels:
+    app: hvs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hvs
+  template:
+    metadata:
+      labels:
+        app: hvs
+    spec:
+      hostAliases:
+      securityContext:
+        fsGroup: 1001
+      initContainers:
+        - image: busybox:latest
+          imagePullPolicy: Always
+          name: chmod-pg-data
+          command:
+            - /bin/chown
+            - -R
+            - "1001"
+            - /etc/hvs
+            - /var/log/hvs
+          volumeMounts:
+            - name: hvs-config-volume
+              mountPath: /etc/hvs
+            - name: hvs-logs-volume
+              mountPath: /var/log/hvs
+      containers:
+        - name: hvs
+          image: <image-name>:<image-tag>
+          imagePullPolicy: Always
+          securityContext:
+           runAsUser: 1001
+           runAsGroup: 1001
+          ports:
+            - containerPort: 8443
+          envFrom:
+            - configMapRef:
+                name: hvs-config
+          env:
+            - name: HVS_SERVICE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: hvs-service-credentials
+                  key: HVS_SERVICE_USERNAME
+            - name: HVS_SERVICE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hvs-service-credentials
+                  key: HVS_SERVICE_PASSWORD
+            - name: BEARER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hvs-service-credentials
+                  key: BEARER_TOKEN
+            - name: HVS_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: hvs-db-credentials
+                  key: HVS_DB_USERNAME
+            - name: HVS_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hvs-db-credentials
+                  key: HVS_DB_PASSWORD
+          volumeMounts:
+            - name: hvs-config-volume
+              mountPath: /etc/hvs/
+            - name: hvs-logs-volume
+              mountPath: /var/log/hvs/
+            - name: hvs-db-certs
+              mountPath: /etc/postgresql/
+      volumes:
+        - name: hvs-logs-volume
+          hostPath:
+            path: /var/log/hvs/
+            type: DirectoryOrCreate
+        - name: hvs-config-volume
+          hostPath:
+            path: /etc/hvs/
+            type: DirectoryOrCreate
+        - name: hvs-db-certs
+          secret:
+            secretName: hvs-db-certs
+            defaultMode: 0640

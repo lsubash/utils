@@ -20,8 +20,8 @@ zip
 unzip 
 make 
 tpm2-tss-2.0.0-4.el8.x86_64 
-tpm2-abrmd-2.1.1-3.el8.x86_64 
 openssl-devel
+cabextract
 )
 
 declare -a PRE_REQ_PACKAGES_DOCKER

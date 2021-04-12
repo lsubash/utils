@@ -1,0 +1,97 @@
+# Copyright (C) 2021  Intel Corporation
+# SPDX-License-Identifier: BSD-3-Clause
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wls-deployment
+  namespace: isecl
+  labels:
+    env: test
+    app: wls
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wls
+  template:
+    metadata:
+      labels:
+        app: wls
+    spec:
+      securityContext:
+        fsGroup: 1001
+      initContainers:
+        - image: busybox:latest
+          imagePullPolicy: Always
+          name: chmod-wls-data
+          command:
+            - /bin/chown
+            - -R
+            - "1001"
+            - /etc/workload-service
+            - /var/log/workload-service
+          volumeMounts:
+            - name: wls-config-volume
+              mountPath: /etc/workload-service
+            - name: wls-logs-volume
+              mountPath: /var/log/workload-service
+      containers:
+        - image: <image-name>:<image-path>
+          name: wls
+          imagePullPolicy: Always
+          securityContext:
+            runAsUser: 1001
+            runAsGroup: 1001
+          envFrom:
+            - configMapRef:
+                name: wls-config
+          env:
+            - name: WLS_SERVICE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: wls-service-credentials
+                  key: WLS_SERVICE_USERNAME
+            - name: WLS_SERVICE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wls-service-credentials
+                  key: WLS_SERVICE_PASSWORD
+            - name: WLS_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: wls-db-credentials
+                  key: WLS_DB_USERNAME
+            - name: WLS_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wls-db-credentials
+                  key: WLS_DB_PASSWORD
+            - name: BEARER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: wls-service-credentials
+                  key: BEARER_TOKEN
+          ports:
+            - containerPort: 5000
+          volumeMounts:
+            - name: wls-logs-volume
+              mountPath: /var/log/workload-service/
+            - name: wls-config-volume
+              mountPath: /etc/workload-service
+            - name: wls-db-certs
+              mountPath: /etc/postgresql/
+      volumes:
+        - name: wls-logs-volume
+          hostPath:
+            path: /var/log/workload-service/
+            type: DirectoryOrCreate
+        - name: wls-config-volume
+          hostPath:
+            path: /etc/workload-service/
+            type: DirectoryOrCreate
+        - name: wls-db-certs
+          secret:
+            secretName: wls-db-certs
+            defaultMode: 0640

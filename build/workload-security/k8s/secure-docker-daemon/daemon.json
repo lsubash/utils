@@ -1,0 +1,4 @@
+{
+ "authorization-plugins": ["secure-docker-plugin"],
+ "storage-driver": "secureoverlay2"
+}
