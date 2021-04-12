@@ -24,7 +24,7 @@ if [ $? -ne 0 ]; then
 fi
 
 KDIR=/lib/modules/$(uname -r)/build
-cat $KDIR/.config | grep "CONFIG_INTEL_SGX=y" > /dev/null
+cat $KDIR/.config | grep 'CONFIG_INTEL_SGX=y\|CONFIG_X86_SGX=y' > /dev/null
 INKERNEL_SGX=$?
 
 uninstall_skc()
@@ -41,14 +41,30 @@ uninstall_skc()
 
 	echo "uninstalling sgx psw/qgl"
         if [ "$OS" == "rhel" ]; then
-                rpm -qa | grep 'sgx' | xargs rpm -e
-                rm -rf /etc/yum.repos.d/*sgx_rpm_local_repo.repo
+		dnf remove -y libsgx-launch libsgx-uae-service libsgx-urts libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-ql-devel libsgx-dcap-default-qpl-devel libsgx-dcap-default-qpl
         elif [ "$OS" == "ubuntu" ]; then
-                apt remove -y libsgx-*
+                apt remove -y libsgx-launch libsgx-uae-service libsgx-urts libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-ql-dev libsgx-dcap-default-qpl-dev libsgx-dcap-default-qpl
         fi
-
-	echo "uninstalling sgx dcap driver"
-	sh $SGX_INSTALL_DIR/sgxdriver/uninstall.sh
+	
+	if [[ "$INKERNEL_SGX" -eq 1 ]]; then
+                DRIVER_VERSION=`modinfo intel_sgx | grep -w 'version:' | awk '{print $2}'`
+                if [ "$DRIVER_VERSION" == "" ]; then
+                        echo "SGX DCAP driver not installed"
+			echo "Uninstalling skc-library"
+                        sh $SKC_DEVOPS_SCRIPTS_PATH/uninstall.sh
+                        return
+                fi
+                if [ "$DRIVER_VERSION" != "$SGX_DRIVER_VERSION" ]; then
+                        echo "uninstalling sgx dcap driver"
+                        sh $SGX_INSTALL_DIR/sgxdriver/uninstall.sh
+                        if [[ $? -ne 0 ]]; then
+                                echo "${red} sgx dcap driver uninstallation failed. exiting ${reset}"
+                                exit 1
+                        fi
+                fi
+        else
+                echo "found inbuilt sgx driver, skipping dcap driver uninstallation"
+        fi
 
 	echo "Uninstalling skc-library"
 	sh $SKC_DEVOPS_SCRIPTS_PATH/uninstall.sh
@@ -67,11 +83,16 @@ install_dcap_driver()
 {
 	chmod u+x $SKCLIB_BIN/sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin
         if [[ "$INKERNEL_SGX" -eq 1 ]]; then
-                echo "Installing sgx dcap driver...."
-                ./$SKCLIB_BIN/sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin -prefix=$SGX_INSTALL_DIR || exit 1
-                echo "sgx dcap driver installed successfully"
-        else
-                echo "found inbuilt sgx driver, skipping dcap driver installation"
+		DRIVER_VERSION=`modinfo intel_sgx | grep -w 'version:' | awk '{print $2}'`
+		if [ "$DRIVER_VERSION" == "" ]  || [ "$DRIVER_VERSION" != "$SGX_DRIVER_VERSION" ]; then
+			echo "Installing sgx dcap driver...."
+			./$SKCLIB_BIN/sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin -prefix=$SGX_INSTALL_DIR || exit 1
+			echo "sgx dcap driver installed successfully"
+		else
+			echo "sgx dcap driver with same version $DRIVER_VERSION already installed, skipping installation..."
+		fi
+	else
+		echo "found inbuilt sgx driver, skipping dcap driver installation"
         fi
 }
 
