@@ -78,15 +78,15 @@ wls_k8s:
 	cd workload-service && make k8s
 
 secure_docker_daemon:
+	make clean
 	cd secure-docker-daemon && make installer
 
 secure_docker_plugin:
+	make clean
 	cd secure-docker-plugin && make
 
 clean: $(patsubst %, %-clean, $(TARGETS))
 	rm -rf binaries/
-	cd secure-docker-daemon && make clean
-	cd secure-docker-plugin && make clean
 
 download-eca:
 	cd intel-secl && make download-eca && cd -

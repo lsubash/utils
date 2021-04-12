@@ -66,7 +66,7 @@ skc_k8s:
 	cd sgx-verification-service && make k8s
 
 intel_secl_k8s:
-	cd intel-secl && make aas-k8s && make cms-k8s && make ihub-k8s && make kbs-k8s
+	cd intel-secl && make authservice-k8s && make cms-k8s && make ihub-k8s && make kbs-k8s
 
 $(COMMON_TARGETS):
 	cd intel-secl && make $@-installer && make aas-manager
