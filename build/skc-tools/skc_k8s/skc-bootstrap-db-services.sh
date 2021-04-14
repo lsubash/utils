@@ -46,8 +46,8 @@ deploy_authservice_db() {
 
   # wait to get ready
   echo "Wait for pods to initialize..."
-  sleep 60
-  $KUBECTL get pod -n isecl -l app=aasdb | grep Running
+  POD_NAME=`$KUBECTL get pod -l app=aasdb -n isecl -o name`
+  $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
   if [ $? == 0 ]; then
     echo "AUTHENTICATION-AUTHORIZATION-SERVICE DATABASE DEPLOYED SUCCESSFULLY"
   else
@@ -84,8 +84,8 @@ deploy_scs_db() {
 
   # wait to get ready
   echo "Wait for pods to initialize..."
-  sleep 60
-  $KUBECTL get pod -n isecl -l app=scsdb | grep Running
+  POD_NAME=`$KUBECTL get pod -l app=scsdb -n isecl -o name`
+  $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
   if [ $? == 0 ]; then
     echo "SGX CACHING SERVICE DATABASE DEPLOYED SUCCESSFULLY"
   else
@@ -119,8 +119,8 @@ deploy_shvs_db() {
 
   # wait to get ready
   echo "Wait for pods to initialize..."
-  sleep 60
-  $KUBECTL get pod -n isecl -l app=shvsdb | grep Running
+  POD_NAME=`$KUBECTL get pod -l app=shvsdb -n isecl -o name`
+  $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
   if [ $? == 0 ]; then
     echo "SGX-HOST-VERIFICATION-SERVICE DATABASE DEPLOYED SUCCESSFULLY"
   else

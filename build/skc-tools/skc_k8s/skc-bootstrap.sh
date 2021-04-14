@@ -58,12 +58,11 @@ deploy_cms() {
 
     # deploy
     $KUBECTL kustomize . | $KUBECTL apply -f -
-
+    local cms_pod=''
     # wait to get ready
     echo "Wait for pods to initialize..."
-    sleep 60
-    local cms_pod=''
-    $KUBECTL get pod -n isecl -l app=cms | grep Running
+    POD_NAME=`$KUBECTL get pod -l app=cms -n isecl -o name`
+    $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
     if [ $? == 0 ]; then
         echo "CERTIFICATE-MANAGEMENT-SERVICE DEPLOYED SUCCESSFULLY"
     else
@@ -116,8 +115,8 @@ deploy_authservice(){
 
     # wait to get ready
     echo "Wait for pods to initialize..."
-    sleep 60
-    $KUBECTL get pod -n isecl -l app=aas | grep Running
+    POD_NAME=`$KUBECTL get pod -l app=aas -n isecl -o name`
+    $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
     if [ $? == 0 ]; then
         echo "AUTHENTICATION-AUTHORIZATION-SERVICE DEPLOYED SUCCESSFULLY"
     else
@@ -208,11 +207,10 @@ deploy_scs() {
 
     # deploy
     $KUBECTL kustomize . | $KUBECTL apply -f -
-
+ 
     # wait to get ready
-    echo "Wait for pods to initialize..."
-    sleep 60
-    $KUBECTL get pod -n isecl -l app=scs | grep Running
+    POD_NAME=`$KUBECTL get pod -l app=scs -n isecl -o name`
+    $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
     if [ $? == 0 ]; then
         echo "SGX CACHING SERVICE DEPLOYED SUCCESSFULLY"
     else
@@ -259,8 +257,8 @@ deploy_shvs() {
 
     # wait to get ready
     echo "Wait for pods to initialize..."
-    sleep 60
-    $KUBECTL get pod -n isecl -l app=shvs | grep Running
+    POD_NAME=`$KUBECTL get pod -l app=shvs -n isecl -o name`
+    $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
     if [ $? == 0 ]; then
         echo "SGX-HOST-VERIFICATION-SERVICE DEPLOYED SUCCESSFULLY"
     else
@@ -293,8 +291,8 @@ deploy_SKC_library()
 
  # wait to get ready
     echo "Wait for pods to initialize..."
-    sleep 60
-    $KUBECTL get pod -n isecl -l app=skclib | grep Running
+    POD_NAME=`$KUBECTL get pod -l app=skclib -n isecl -o name`
+    $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
     if [ $? == 0 ]; then
         echo "SKC LIBRARY DEPLOYED SUCCESSFULLY"
     else
@@ -338,8 +336,8 @@ deploy_sqvs() {
 
     # wait to get ready
     echo "Wait for pods to initialize..."
-    sleep 60
-    $KUBECTL get pod -n isecl -l app=sqvs | grep Running
+    POD_NAME=`$KUBECTL get pod -l app=sqvs -n isecl -o name`
+    $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
     if [ $? == 0 ]; then
         echo "SGX QUOTE VERIFICATION SERVICE DEPLOYED SUCCESSFULLY"
     else
@@ -365,8 +363,8 @@ deploy_custom_controller(){
 
     # wait to get ready
     echo "Wait for pods to initialize..."
-    sleep 60
-    $KUBECTL get pod -n isecl -l app=isecl-controller | grep Running
+    POD_NAME=`$KUBECTL get pod -l app=isecl-controller -n isecl -o name`
+    $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
     if [ $? == 0 ]; then
         echo "K8S-CONTROLLER DEPLOYED SUCCESSFULLY"
     else
@@ -421,14 +419,13 @@ deploy_ihub(){
     sed -i "s#AAS_API_URL:.*#AAS_API_URL: ${AAS_API_URL}#g" configMap.yml
     sed -i "s#ATTESTATION_SERVICE_URL:.*#ATTESTATION_SERVICE_URL: ${ATTESTATION_SERVICE_URL}#g" configMap.yml
     sed -i "s#ATTESTATION_TYPE:.*#ATTESTATION_TYPE: ${ATTESTATION_TYPE}#g" configMap.yml
-
     # deploy
     $KUBECTL kustomize . | $KUBECTL apply -f -
 
     # wait to get ready
     echo "Wait for pods to initialize..."
-    sleep 30
-    $KUBECTL get pod -n isecl -l app=ihub | grep Running
+    POD_NAME=`$KUBECTL get pod -l app=ihub -n isecl -o name`
+    $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
     if [ $? == 0 ]; then
         echo "INTEGRATION-HUB DEPLOYED SUCCESSFULLY"
     else
@@ -483,6 +480,18 @@ deploy_extended_scheduler(){
 
     # deploy
     $KUBECTL kustomize . | $KUBECTL apply -f -
+ 
+    # wait to get ready
+    echo "Wait for pods to initialize..."
+    POD_NAME=`$KUBECTL get pod -l app=isecl-scheduler -n isecl -o name`
+    $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
+    if [ $? == 0 ]; then
+        echo "ISECL SCHEDULER DEPLOYED SUCCESSFULLY"
+    else
+        echo "Error: Deploying ISECL SCHEDULER"
+        echo "Exiting with error..."
+        exit 1
+    fi
 
     cd ../
 }
@@ -514,8 +523,8 @@ deploy_sagent(){
 
     # wait to get ready
     echo "Wait for pods to initialize..."
-    sleep 60
-    $KUBECTL get pod -n isecl -l app=sagent | grep Running
+    POD_NAME=`$KUBECTL get pod -l app=sagent -n isecl -o name`
+    $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
     if [ $? == 0 ]; then
         echo "SGX-AGENT DEPLOYED SUCCESSFULLY"
     else
@@ -559,8 +568,8 @@ deploy_kbs(){
 
     # wait to get ready
     echo "Wait for pods to initialize..."
-    sleep 60
-    $KUBECTL get pod -n isecl -l app=kbs | grep Running
+    POD_NAME=`$KUBECTL get pod -l app=kbs -n isecl -o name`
+    $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
     if [ $? == 0 ]; then
         echo "KBS DEPLOYED SUCCESSFULLY"
     else
