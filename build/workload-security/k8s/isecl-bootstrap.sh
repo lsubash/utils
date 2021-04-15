@@ -419,12 +419,12 @@ deploy_wls() {
     sed -i "s/WLS_SERVICE_PASSWORD:.*/WLS_SERVICE_PASSWORD: ${WLS_SERVICE_PASSWORD}/g" secrets.yml
 
     # deploy
-    kubectl kustomize . | kubectl apply -f -
+    $KUBECTL kustomize . | $KUBECTL apply -f -
 
     # wait to get ready
     echo "Wait for pods to initialize..."
     sleep 60
-    kubectl get pod -n isecl -l app=wls | grep Running
+    $KUBECTL get pod -n isecl -l app=wls | grep Running
     if [ $? == 0 ]; then
         echo "WORKLOAD-SERVICE DEPLOYED SUCCESSFULLY"
     else
@@ -454,11 +454,11 @@ deploy_tagent() {
     sed -i "s/BEARER_TOKEN:.*/BEARER_TOKEN: $BEARER_TOKEN/g" secrets.yml
     sed -i "s/TPM_OWNER_SECRET:.*/TPM_OWNER_SECRET: $TPM_OWNER_SECRET/g" secrets.yml
 
-    kubectl kustomize . | kubectl apply -f -
+    $KUBECTL kustomize . | $KUBECTL apply -f -
     # wait to get ready
     echo "Wait for daemonset to initialize..."
     sleep 20
-    kubectl get pod -n isecl -l app=ta | grep Running
+    $KUBECTL get pod -n isecl -l app=ta | grep Running
     if [ $? == 0 ]; then
         echo "TA DAEMONSET DEPLOYED SUCCESSFULLY"
     else
@@ -488,11 +488,11 @@ deploy_wlagent(){
     sed -i "s/WLA_SERVICE_USERNAME:.*/WLA_SERVICE_USERNAME: $WLA_SERVICE_USERNAME/g" secrets.yml
     sed -i "s/WLA_SERVICE_PASSWORD:.*/WLA_SERVICE_PASSWORD: $WLA_SERVICE_PASSWORD/g" secrets.yml
 
-    kubectl kustomize . | kubectl apply -f -
+    $KUBECTL kustomize . | $KUBECTL apply -f -
     # wait to get ready
     echo "Wait for daemonset to initialize..."
     sleep 20
-    kubectl get pod -n isecl -l app=wla | grep Running
+    $KUBECTL get pod -n isecl -l app=wla | grep Running
     if [ $? == 0 ]; then
         echo "WLA DAEMONSET DEPLOYED SUCCESSFULLY"
     else
@@ -509,9 +509,9 @@ cleanup_wls() {
     echo "Cleaning up WORKLOAD-SERVICE..."
 
 
-    kubectl delete secret wls-service-credentials --namespace isecl
-    kubectl delete configmap wls-config  --namespace isecl
-    kubectl delete deploy wls-deployment --namespace isecl
+    $KUBECTL delete secret wls-service-credentials --namespace isecl
+    $KUBECTL delete configmap wls-config  --namespace isecl
+    $KUBECTL delete deploy wls-deployment --namespace isecl
 
     if [ "$K8S_DISTRIBUTION" == "kubeadm" ]; then
       $KUBECTL delete pvc wls-config-pvc --namespace isecl
@@ -524,15 +524,15 @@ cleanup_wls() {
 }
 
 cleanup_tagent(){
-  kubectl delete configmap ta-config  --namespace isecl
-  kubectl delete secret ta-secret  --namespace isecl
-  kubectl delete daemonset ta-daemonset --namespace isecl
+  $KUBECTL delete configmap ta-config  --namespace isecl
+  $KUBECTL delete secret ta-secret  --namespace isecl
+  $KUBECTL delete daemonset ta-daemonset --namespace isecl
 }
 
 cleanup_wlagent(){
-  kubectl delete configmap wla-config  --namespace isecl
-  kubectl delete secret wla-credentials  --namespace isecl
-  kubectl delete daemonset wla-daemonset --namespace isecl
+  $KUBECTL delete configmap wla-config  --namespace isecl
+  $KUBECTL delete secret wla-credentials  --namespace isecl
+  $KUBECTL delete daemonset wla-daemonset --namespace isecl
 }
 
 cleanup_kbs() {
