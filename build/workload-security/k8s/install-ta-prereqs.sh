@@ -47,13 +47,31 @@ echo_info() {
   return 1
 }
 
-TBOOT_DEPENDENCY="tboot-1.9.*"
+is_uefi_boot() {
+  if [ -d /sys/firmware/efi ]; then
+    return 0
+  else
+    return 1
+  fi
+}
 
+TBOOT_DEPENDENCY="tboot-1.9.*"
+GRUB_FILE=${GRUB_FILE:-"/boot/grub2/grub.cfg"}
 echo "Starting trustagent pre-requisites installation from " $USER_PWD
 
 if [[ $EUID -ne 0 ]]; then
     echo_failure "This script must be run as root"
     exit 1
+fi
+
+# Check for legacy mode and install tboot
+if ! is_uefi_boot; then
+  SUEFI_ENABLED="false"
+  yum install -y tboot-1.9.10
+  if [ $? -ne 0 ]; then
+    echo_failure "failed to install tboot"
+    exit 1
+  fi
 fi
 
 # if secure efi is not enabled, require tboot has been installed.  Note: This must
@@ -94,14 +112,6 @@ is_txtstat_installed() {
 is_measured_launch() {
   local mle=$(txt-stat | grep 'TXT measured launch: TRUE')
   if [ -n "$mle" ]; then
-    return 0
-  else
-    return 1
-  fi
-}
-
-is_uefi_boot() {
-  if [ -d /sys/firmware/efi ]; then
     return 0
   else
     return 1
@@ -199,8 +209,17 @@ fi
 
 echo_success "Installation succeeded"
 
+configure_tboot_grub_menu(){
+  TBOOT_VERSION=$(rpm -qa | grep tboot | cut -d'-' -f2)
+  MENUENTRY="tboot ${TBOOT_VERSION}"
+  sed -i "s#GRUB_DEFAULT=.*#GRUB_DEFAULT=\'${MENUENTRY}\'#g" /etc/default/grub
+  define_grub_file
+  grub2-mkconfig -o $GRUB_FILE
+}
+
 if [[ $rebootRequired -eq 0 ]] && [[ $SUEFI_ENABLED == "false" ]]; then
+    configure_tboot_grub_menu
     echo
-    echo "Trust Agent: A reboot is required."
+    echo "Reboot is required."
     echo
 fi
