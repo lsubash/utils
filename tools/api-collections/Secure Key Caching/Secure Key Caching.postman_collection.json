@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "80878b56-3337-43f2-8c8d-007d0d9668ce",
+		"_postman_id": "39a6470d-1f46-459e-8eb3-782bcb1e7bed",
 		"name": "Secure Key Caching",
 		"description": "Key Protection is implemented by the SKC Client -- a set of libraries - which must be linked with a\ntenant workload, like Nginx, deployed in a CSP environment and the Key Broker Service (KBS)\ndeployed in the tenant's enterprise environment. The SKC Client retrieves the keys needed by the\nworkload from KBS after proving that the key can be protected in an SGX enclave.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -518,12 +518,122 @@
 								}
 							],
 							"cookie": [],
-							"body": "{\n    \"key_information\": {\n        \"id\": \"{{keyId}}\",\n        \"algorithm\": \"RSA\"\n    },\n    \"transfer_policy_id\": \"{{keyTransferPolicyId}}\",\n    \"transfer_link\": \"https://{{kbs}}:{{kbsPort}}/v1/keys/1403a86e-e75e-451e-a481-c12cbfe3bd21/transfer\",\n    \"created_at\": \"2020-11-09T10:46:23.354730925Z\"\n}"
+							"body": "{\n    \"key_information\": {\n        \"id\": \"{{keyId}}\",\n        \"algorithm\": \"RSA\",\n        \"key_length\": 3072\n    },\n    \"transfer_policy_id\": \"{{keyTransferPolicyId}}\",\n    \"transfer_link\": \"https://{{kbs}}:{{kbsPort}}/v1/keys/1403a86e-e75e-451e-a481-c12cbfe3bd21/transfer\",\n    \"created_at\": \"2020-11-09T10:46:23.354730925Z\"\n}"
+						}
+					]
+				},
+				{
+					"name": "createKeyUsingKMIPId",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+								"key": "Authorization",
+								"value": "Bearer {{bearerTokenEa}}"
+							},
+							{
+								"description": "(Required) Accept header",
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"description": "(Required) Content-Type header",
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"key_information\": {\n        \"algorithm\": \"RSA\",\n        \"key_length\": 3072,\n        \"kmip_key_id\": \"{{kmipKeyId}}\"\n    },\n    \"transfer_policy_ID\": \"{{keyTransferPolicyId}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{kbs}}:{{kbsPort}}/v1/keys",
+							"protocol": "https",
+							"host": [
+								"{{kbs}}"
+							],
+							"port": "{{kbsPort}}",
+							"path": [
+								"v1",
+								"keys"
+							]
+						},
+						"description": "Creates or Registers a key.\n\nThe serialized KeyRequest Go struct object represents the content of the request body.\n\n | Attribute          | Description |\n |--------------------|-------------|\n | key_information    | A json object having all the required information about a key. |\n | transfer_policy_id | Unique identifier of the transfer policy to apply to this key. |\n | label              | String to attach optionally a text description to the key, e.g. \"US Nginx key\". |\n | usage              | String to attach optionally a usage criteria for the key, e.g. \"Country:US,State:CA\". |\n\nThe serialized KeyInformation Go struct object represents the content of the key_information field.\n\n | Attribute   | Description |\n |-------------|-------------|\n | algorithm   | Encryption algorithm used to create or register key. Supported algorithms are AES, RSA and EC. |\n | key_length  | Key length used to create key. Supported key lengths are 128,192,256 bits for AES and 2048,3072,4096,7680,15360 bits for RSA. |\n | curve_type  | Elliptic curve used to create key. Supported curves are secp256r1, secp384r1 and secp521r1. |\n | key_string  | Base64 encoded private key to be registered. Supported only if key is created locally. |\n | kmip_key_id | Unique KMIP identifier of key to be registered. Supported only if key is created on KMIP server. |\n"
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+										"key": "Authorization",
+										"value": "Bearer {{bearerTokenEa}}"
+									},
+									{
+										"description": "(Required) Accept header",
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"description": "(Required) Content-Type header",
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"key_information\": {\n        \"algorithm\": \"RSA\",\n        \"key_length\": 3072,\n        \"kmip_key_id\": \"{{kmipKeyId}}\"\n    },\n    \"transfer_policy_ID\": \"{{keyTransferPolicyId}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://{{kbs}}:{{kbsPort}}/v1/keys",
+									"protocol": "https",
+									"host": [
+										"{{kbs}}"
+									],
+									"port": "{{kbsPort}}",
+									"path": [
+										"v1",
+										"keys"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 14 Apr 2021 07:30:39 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "324"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"key_information\": {\n        \"id\": \"{{keyId}}\",\n        \"algorithm\": \"RSA\",\n\t\t\"key_length\": 3072,\n         \"kmip_key_id\": \"{{kmipKeyId}}\"\n    },\n    \"transfer_policy_id\": \"{{keyTransferPolicyId}}\",\n    \"transfer_link\": \"https://{{kbs}}:{{kbsPort}}/v1/keys/1403a86e-e75e-451e-a481-c12cbfe3bd21/transfer\",\n    \"created_at\": \"2020-11-09T10:46:23.354730925Z\"\n}"
 						}
 					]
 				}
 			],
-			"description": "cd into /root/binaries/kbs_script folder\n\nUpdate kbs.conf with the following\n\n- Enterprise system IP address where CMS/AAS/KBS services are deployed\n- Port of CMS, AAS and KBS services deployed on enterprise system\n- AAS admin and Enterprise admin credentials\n\nUpdate sgx_enclave_measurement_anyof value in transfer_policy_request.json with enclave measurement value obtained using sgx_sign utility. Refer previous step for \"Extracting SGX Enclave values for Key Transfer Policy\".\n\nExecute the command\n\n```\n./run.sh reg\n```\n\nThe \"./run.sh reg\"  will create the Key Transfer Policy, and Asymmetric (RSA) Key by calling the following Key Broker Service (KBS) REST endpoints.\n\nCopy the generated cert file to SGX Compute node where skc_library is deployed. Also make a note of the key id generated.\n\n```\nscp <cert path> root@<SGX Compute Node>:/root/\n```",
+			"description": "**Create RSA key in PyKMIP and generate certificate**\n\nNOTE: This step is required only when PyKMIP is configured as backend KMIP. Run this script to generate keys and certificate to register in KMIP KBS.\n\nPrerequisite:\n``` \nInstall Python3 and PyKMIP.\n\n- dnf install python3\n\n- pip3 install pykmip==0.9.1\n\n- dnf install vim-common\n\nEdit rsa_create.py with proper HOSTNAME_IP, CERT_PATH, KEY_PATH and CA_PATH (certificates will be available in PyKMIP server in the location /etc/pykmip/) \n\n> python3 rsa_create.py \n\n```\n\nNOTE: The server certificate can be provided in kbs.conf\n\n**Configuration Update to create Keys in KBS**\n```\ncd into /root/binaries/kbs_script folder\n\nUpdate SYSTEM_IP address in kbs.conf (where AAS and KBS are deployed)\n\nUpdate CACERT_PATH variable with trustedca certificate (/etc/kbs/certs/trustedca/<id.pem>)\n\n**To register keys with KBS KMIP**\n\nUpdate the following variables in kbs.conf:\n\n    KMIP_KEY_ID (Private key ID registered in KMIP server)\n\n    SERVER_CERT (Server certificate for created private key)\n```\n\nNOTE: If KMIP_KEY_ID is not provided then RSA key register will be done with keystring.\n```\nUpdate kbs.conf with the following\n```\n\n- Enterprise system IP address where CMS, AAS and KBS services are deployed\n- Port of CMS, AAS and KBS services deployed on enterprise system\n- AAS admin and Enterprise admin credentials\n\nUpdate sgx_enclave_measurement_anyof value in transfer_policy_request.json with enclave measurement value obtained using sgx_sign utility. Refer to the \"Extracting SGX Enclave values for Key Transfer Policy\" section.\n\n**Create RSA Key**\n```\nExecute the below command:\n\n./run.sh reg\n```\n\nThe \"./run.sh reg\"  will create the Key Transfer Policy, and Asymmetric (RSA) Key by calling the following Key Broker Service (KBS) REST endpoints.\n\nCopy the generated cert file to SGX Compute node where skc_library is deployed. Also make a note of the key id generated.\n\n```\nscp <cert path> root@<SGX Compute Node>:/root/\n```",
 			"event": [
 				{
 					"listen": "prerequest",
