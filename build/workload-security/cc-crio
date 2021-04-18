@@ -58,7 +58,7 @@ k8s_common: clean $(INTEL_SECL_K8S) wls_k8s k8s-extensions tagent_k8s wlagent_k8
 	cp trust-agent/out/*.tar k8s/container-images/
 	cp workload-service/out/*.tar k8s/container-images/
 	cp utils/build/workload-security/k8s/install-ta-prereqs.sh k8s/platform-dependencies/
-	cp skopeo/skopeo binaries/
+	cp skopeo/skopeo k8s/binaries/
 
 tagent_k8s:
 	cd trust-agent && make oci-archive
