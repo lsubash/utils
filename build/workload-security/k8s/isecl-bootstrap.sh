@@ -458,11 +458,21 @@ deploy_tagent() {
     # wait to get ready
     echo "Wait for daemonset to initialize..."
     sleep 20
-    $KUBECTL get pod -n isecl -l app=ta | grep Running
+    $KUBECTL get pod -n isecl -l app=ta-txt | grep Running
     if [ $? == 0 ]; then
-        echo "TA DAEMONSET DEPLOYED SUCCESSFULLY"
+        echo "TA DAEMONSET-TXT DEPLOYED SUCCESSFULLY"
     else
-        echo "Error: Deploying TA"
+        echo "Error: Deploying TA DAEMONSET-TXT "
+        echo "Exiting with error..."
+        exit 1
+    fi
+
+    $KUBECTL apply -f daemonset-suefi.yml
+    $KUBECTL get pod -n isecl -l app=ta-suefi | grep Running
+    if [ $? == 0 ]; then
+        echo "TA DAEMONSET-SUEFI DEPLOYED SUCCESSFULLY"
+    else
+        echo "Error: Deploying TA DAEMONSET-SUEFI"
         echo "Exiting with error..."
         exit 1
     fi

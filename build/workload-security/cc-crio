@@ -36,7 +36,7 @@ k8s-aio: k8s_common
 	cp intel-secl/deployments/k8s/aas/populate-users k8s/manifests/aas/scripts/
 	cp intel-secl/deployments/k8s/aas/populate-users.env k8s/manifests/aas/scripts/populate-users.env
 
-k8s_common: clean $(INTEL_SECL_K8S) wls_k8s k8s-extensions tagent_k8s wlagent_k8s cri-o wpm-installer
+k8s_common: clean $(INTEL_SECL_K8S) wls_k8s k8s-extensions tagent_k8s wlagent_k8s cri-o wpm-installer skopeo
 	mkdir -p k8s/binaries
 	mkdir -p k8s/container-images
 	mkdir -p k8s/manifests
@@ -49,8 +49,8 @@ k8s_common: clean $(INTEL_SECL_K8S) wls_k8s k8s-extensions tagent_k8s wlagent_k8
 	cp cri-o/bin/crio k8s/container-runtime/
 	cp -r utils/build/k8s-manifests/k8s-extensions-controller k8s/manifests/
 	cp -r utils/build/k8s-manifests/k8s-extensions-scheduler k8s/manifests/
-	cp -r trust-agent/out/k8s k8s/manifests/ta
-	cp -r workload-agent/out/k8s k8s/manifests/wla
+	cp -r utils/build/workload-security/k8s/ta k8s/manifests/ta
+	cp -r utils/build/workload-security/k8s/wla k8s/manifests/wla
 	cp intel-secl/deployments/installer/wpm-v*.bin k8s/binaries/
 	cp k8s-extensions/out/isecl-k8s-extensions/*.tar k8s/container-images/
 	cp intel-secl/deployments/container-archive/oci/* k8s/container-images/
@@ -58,12 +58,13 @@ k8s_common: clean $(INTEL_SECL_K8S) wls_k8s k8s-extensions tagent_k8s wlagent_k8
 	cp trust-agent/out/*.tar k8s/container-images/
 	cp workload-service/out/*.tar k8s/container-images/
 	cp utils/build/workload-security/k8s/install-ta-prereqs.sh k8s/platform-dependencies/
+	cp skopeo/skopeo binaries/
 
 tagent_k8s:
-	cd trust-agent && make k8s
+	cd trust-agent && make oci-archive
 
 wlagent_k8s:
-	cd workload-agent && make k8s
+	cd workload-agent && make oci-archive
 
 $(INTEL_SECL_K8S):
 	cd intel-secl && make $@-k8s

@@ -45,8 +45,8 @@ k8s_common: clean $(INTEL_SECL_K8S) wls_k8s k8s-extensions tagent_k8s wlagent_k8
 	cp utils/build/workload-security/k8s/isecl-k8s.env k8s/manifests/isecl-k8s.env
 	cp -r utils/build/k8s-manifests/k8s-extensions-controller k8s/manifests/
 	cp -r utils/build/k8s-manifests/k8s-extensions-scheduler k8s/manifests/
-	cp -r trust-agent/out/k8s k8s/manifests/ta
-	cp -r workload-agent/out/k8s k8s/manifests/wla
+	cp -r utils/build/workload-security/k8s/ta k8s/manifests/ta
+	cp -r utils/build/workload-security/k8s/wla k8s/manifests/wla
 	cp intel-secl/deployments/installer/wpm-v*.bin k8s/binaries/
 	cp k8s-extensions/out/isecl-k8s-extensions/*.tar k8s/container-images/
 	cp intel-secl/deployments/container-archive/oci/* k8s/container-images/
@@ -63,10 +63,10 @@ k8s_common: clean $(INTEL_SECL_K8S) wls_k8s k8s-extensions tagent_k8s wlagent_k8
 
 
 tagent_k8s:
-	cd trust-agent && make k8s
+	cd trust-agent && make oci-archive
 
 wlagent_k8s:
-	cd workload-agent && make k8s
+	cd workload-agent && make oci-archive
 
 $(INTEL_SECL_K8S):
 	cd intel-secl && make $@-k8s
