@@ -139,7 +139,7 @@ get_bearer_token() {
   sed -i "s#CMS_BASE_URL=.*#CMS_BASE_URL=$CMS_BASE_URL#g" $aas_scripts_dir/populate-users.env
   sed -i "s#AAS_API_URL=.*#AAS_API_URL=$AAS_API_CLUSTER_ENDPOINT_URL#g" $aas_scripts_dir/populate-users.env
   sed -i "s/HVS_CERT_SAN_LIST=.*/HVS_CERT_SAN_LIST=$HVS_CERT_SAN_LIST/g" $aas_scripts_dir/populate-users.env
-  sed -i "s/IHUB_CERT_SAN_LIST=.*/IHUB_CERT_SAN_LIST=$IH_CERT_SAN_LIST/g" $aas_scripts_dir/populate-users.env
+  sed -i "s/IH_CERT_SAN_LIST=.*/IH_CERT_SAN_LIST=$IH_CERT_SAN_LIST/g" $aas_scripts_dir/populate-users.env
   sed -i "s/KBS_CERT_SAN_LIST=.*/KBS_CERT_SAN_LIST=$KBS_CERT_SAN_LIST/g" $aas_scripts_dir/populate-users.env
   sed -i "s/WLS_CERT_SAN_LIST=.*/WLS_CERT_SAN_LIST=$WLS_CERT_SAN_LIST/g" $aas_scripts_dir/populate-users.env
   sed -i "s#TA_CERT_SAN_LIST=.*#TA_CERT_SAN_LIST=$TA_CERT_SAN_LIST#g" $aas_scripts_dir/populate-users.env
@@ -167,6 +167,12 @@ get_bearer_token() {
 
   sed -i "s/INSTALL_ADMIN_USERNAME=.*/INSTALL_ADMIN_USERNAME=$INSTALL_ADMIN_USERNAME/g" $aas_scripts_dir/populate-users.env
   sed -i "s/INSTALL_ADMIN_PASSWORD=.*/INSTALL_ADMIN_PASSWORD=$INSTALL_ADMIN_PASSWORD/g" $aas_scripts_dir/populate-users.env
+ 
+  sed -i "s/GLOBAL_ADMIN_USERNAME=.*/GLOBAL_ADMIN_USERNAME=$GLOBAL_ADMIN_USERNAME/g" $aas_scripts_dir/populate-users.env
+  sed -i "s/GLOBAL_ADMIN_PASSWORD=.*/GLOBAL_ADMIN_PASSWORD=$GLOBAL_ADMIN_PASSWORD/g" $aas_scripts_dir/populate-users.env
+
+  sed -i "s/CSP_ADMIN_USERNAME=.*//g" $aas_scripts_dir/populate-users.env
+  sed -i "s/CSP_ADMIN_PASSWORD=.*//g" $aas_scripts_dir/populate-users.env
 
   # TODO: need to check if this can be fetched from builds instead of bundling the script here
   chmod +x $aas_scripts_dir/populate-users
