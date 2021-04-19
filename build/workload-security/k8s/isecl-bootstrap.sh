@@ -60,9 +60,8 @@ deploy_cms() {
 
   # wait to get ready
   echo "Wait for pods to initialize..."
-  sleep 60
-  local cms_pod=''
-  $KUBECTL get pod -n isecl -l app=cms | grep Running
+  POD_NAME=`$KUBECTL get pod -l app=cms -n isecl -o name`
+  $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
   if [ $? == 0 ]; then
     echo "CERTIFICATE-MANAGEMENT-SERVICE DEPLOYED SUCCESSFULLY"
   else
@@ -112,14 +111,13 @@ deploy_authservice() {
   sed -i "s/AAS_ADMIN_PASSWORD=.*/AAS_ADMIN_PASSWORD=$AAS_ADMIN_PASSWORD/g" secrets.txt
 
   $KUBECTL create secret generic aas-secret --from-file=secrets.txt --namespace=isecl
-
   # deploy
   $KUBECTL kustomize . | $KUBECTL apply -f -
 
   # wait to get ready
   echo "Wait for pods to initialize..."
-  sleep 60
-  $KUBECTL get pod -n isecl -l app=aas | grep Running
+  POD_NAME=`$KUBECTL get pod -l app=aas -n isecl -o name`
+  $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
   if [ $? == 0 ]; then
     echo "AUTHENTICATION-AUTHORIZATION-SERVICE DEPLOYED SUCCESSFULLY"
   else
@@ -157,6 +155,9 @@ get_bearer_token() {
 
   sed -i "s/WLA_SERVICE_USERNAME=.*/WLA_SERVICE_USERNAME=$WLA_SERVICE_USERNAME/g" $aas_scripts_dir/populate-users.env
   sed -i "s/WLA_SERVICE_PASSWORD=.*/WLA_SERVICE_PASSWORD=$WLA_SERVICE_PASSWORD/g" $aas_scripts_dir/populate-users.env
+
+  sed -i "s/WPM_SERVICE_USERNAME=.*/WPM_SERVICE_USERNAME=$WPM_SERVICE_USERNAME/g" $aas_scripts_dir/populate-users.env
+  sed -i "s/WPM_SERVICE_PASSWORD=.*/WPM_SERVICE_PASSWORD=$WPM_SERVICE_PASSWORD/g" $aas_scripts_dir/populate-users.env
 
   sed -i "s/HVS_SERVICE_USERNAME=.*/HVS_SERVICE_USERNAME=$HVS_SERVICE_USERNAME/g" $aas_scripts_dir/populate-users.env
   sed -i "s/HVS_SERVICE_PASSWORD=.*/HVS_SERVICE_PASSWORD=$HVS_SERVICE_PASSWORD/g" $aas_scripts_dir/populate-users.env
@@ -210,8 +211,8 @@ deploy_hvs() {
 
   # wait to get ready
   echo "Wait for pods to initialize..."
-  sleep 60
-  $KUBECTL get pod -n isecl -l app=hvs | grep Running
+  POD_NAME=`$KUBECTL get pod -l app=hvs -n isecl -o name`
+  $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
   if [ $? == 0 ]; then
     echo "HOST-VERIFICATION-SERVICE DEPLOYED SUCCESSFULLY"
   else
@@ -237,8 +238,8 @@ deploy_custom_controller() {
 
   # wait to get ready
   echo "Wait for pods to initialize..."
-  sleep 60
-  $KUBECTL get pod -n isecl -l app=isecl-controller | grep Running
+  POD_NAME=`$KUBECTL get pod -l app=isecl-controller -n isecl -o name`
+  $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
   if [ $? == 0 ]; then
     echo "K8S-CONTROLLER DEPLOYED SUCCESSFULLY"
   else
@@ -282,7 +283,7 @@ deploy_ihub() {
   cp $K8S_API_SERVER_CERT secrets/apiserver.crt
 
   #update configMap & secrets
-	sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=${BEARER_TOKEN}/g" secrets.txt
+  sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=${BEARER_TOKEN}/g" secrets.txt
   sed -i "s/CMS_TLS_CERT_SHA384:.*/CMS_TLS_CERT_SHA384: $CMS_TLS_CERT_SHA384/g" configMap.yml
   sed -i "s/TLS_SAN_LIST:.*/TLS_SAN_LIST: $IH_CERT_SAN_LIST/g" configMap.yml
   sed -i "s/KUBERNETES_TOKEN:.*/KUBERNETES_TOKEN: $kubernetes_token/g" configMap.yml
@@ -301,8 +302,8 @@ deploy_ihub() {
 
   # wait to get ready
   echo "Wait for pods to initialize..."
-  sleep 30
-  $KUBECTL get pod -n isecl -l app=ihub | grep Running
+  POD_NAME=`$KUBECTL get pod -l app=ihub -n isecl -o name`
+  $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
   if [ $? == 0 ]; then
     echo "INTEGRATION-HUB DEPLOYED SUCCESSFULLY"
   else
@@ -329,6 +330,8 @@ deploy_extended_scheduler() {
 
   echo "Installing Pre-requisites"
 
+  sed -i "s#{HVS_IHUB_PUBLIC_KEY_PATH_VALUE}#\"/opt/isecl-k8s-extensions/hvs_ihub_public_key.pem\"#g" isecl-scheduler.yml
+  sed -i "s#{SGX_IHUB_PUBLIC_KEY_PATH_VALUE}#\"\"#g" isecl-scheduler.yml
   # create certs
   chmod +x scripts/create_k8s_extsched_certs.sh
   cd scripts && echo ./create_k8s_extsched_certs.sh -n "K8S Extended Scheduler" -s "$K8S_MASTER_IP","$K8S_MASTER_HOSTNAME" -c "$K8S_CA_CERT" -k "$K8S_CA_KEY"
@@ -344,9 +347,9 @@ deploy_extended_scheduler() {
   cp scripts/server.crt secrets/
 
   if [ "$K8S_DISTRIBUTION" == "microk8s" ]; then
-    cp /etc/ihub/ihub_public_key.pem secrets/sgx_ihub_public_key.pem
+    cp /etc/ihub/ihub_public_key.pem secrets/hvs_ihub_public_key.pem
   elif [ "$K8S_DISTRIBUTION" == "kubeadm" ]; then
-    cp $IHUB_PUB_KEY_PATH secrets/sgx_ihub_public_key.pem
+    cp $IHUB_PUB_KEY_PATH secrets/hvs_ihub_public_key.pem
   else
     echo "K8s Distribution" $K8S_DISTRIBUTION "not supported"
     exit 1
@@ -380,7 +383,7 @@ deploy_kbs() {
   sed -i "s/CMS_TLS_CERT_SHA384:.*/CMS_TLS_CERT_SHA384: $CMS_TLS_CERT_SHA384/g" configMap.yml
   sed -i "s/TLS_SAN_LIST:.*/TLS_SAN_LIST: $KBS_CERT_SAN_LIST/g" configMap.yml
   sed -i "s#ENDPOINT_URL:.*#ENDPOINT_URL: $ENDPOINT_URL#g" configMap.yml
-  
+
   $KUBECTL create secret generic kbs-secret --from-file=secrets.txt --namespace=isecl
 
   # deploy
@@ -388,8 +391,8 @@ deploy_kbs() {
 
   # wait to get ready
   echo "Wait for pods to initialize..."
-  sleep 60
-  $KUBECTL get pod -n isecl -l app=kbs | grep Running
+  POD_NAME=`$KUBECTL get pod -l app=kbs -n isecl -o name`
+  $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
   if [ $? == 0 ]; then
     echo "KBS DEPLOYED SUCCESSFULLY"
   else
@@ -431,8 +434,8 @@ deploy_wls() {
 
     # wait to get ready
     echo "Wait for pods to initialize..."
-    sleep 60
-    $KUBECTL get pod -n isecl -l app=wls | grep Running
+    POD_NAME=`$KUBECTL get pod -l app=wls -n isecl -o name`
+    $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
     if [ $? == 0 ]; then
         echo "WORKLOAD-SERVICE DEPLOYED SUCCESSFULLY"
     else
@@ -464,25 +467,23 @@ deploy_tagent() {
 
     $KUBECTL kustomize . | $KUBECTL apply -f -
     # wait to get ready
-    echo "Wait for daemonset to initialize..."
-    sleep 20
-    $KUBECTL get pod -n isecl -l app=ta-txt | grep Running
+    echo "Wait for ta daemonset txt to initialize..."
+    POD_NAME=`$KUBECTL get pod -l app=ta-txt -n isecl -o name`
+    $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
     if [ $? == 0 ]; then
         echo "TA DAEMONSET-TXT DEPLOYED SUCCESSFULLY"
     else
         echo "Error: Deploying TA DAEMONSET-TXT "
-        echo "Exiting with error..."
-        exit 1
     fi
 
     $KUBECTL apply -f daemonset-suefi.yml
-    $KUBECTL get pod -n isecl -l app=ta-suefi | grep Running
+    echo "Wait for ta daemonset suefi to initialize..."
+    POD_NAME=`$KUBECTL get pod -l app=ta-suefi -n isecl -o name`
+    $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
     if [ $? == 0 ]; then
         echo "TA DAEMONSET-SUEFI DEPLOYED SUCCESSFULLY"
     else
         echo "Error: Deploying TA DAEMONSET-SUEFI"
-        echo "Exiting with error..."
-        exit 1
     fi
     cd $HOME_DIR
 

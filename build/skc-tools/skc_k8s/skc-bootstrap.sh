@@ -469,6 +469,9 @@ deploy_extended_scheduler(){
 
     echo "Installing Pre-requisites"
 
+    sed -i "s#{SGX_IHUB_PUBLIC_KEY_PATH_VALUE}#\"/opt/isecl-k8s-extensions/sgx_ihub_public_key.pem\"#g" isecl-scheduler.yml
+    sed -i "s#{HVS_IHUB_PUBLIC_KEY_PATH_VALUE}#\"\"#g" isecl-scheduler.yml
+
     # create certs
     chmod +x scripts/create_k8s_extsched_certs.sh
     cd scripts && echo ./create_k8s_extsched_certs.sh -n "K8S Extended Scheduler" -s "$K8S_MASTER_IP","$K8S_MASTER_HOSTNAME" -c "$K8S_CA_CERT" -k "$K8S_CA_KEY"

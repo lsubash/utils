@@ -69,7 +69,9 @@ spec:
             - name: PORT
               value: "8888"
             - name: SGX_IHUB_PUBLIC_KEY_PATH
-              value: "/opt/isecl-k8s-extensions/sgx_ihub_public_key.pem"
+              value: {SGX_IHUB_PUBLIC_KEY_PATH_VALUE}
+            - name: HVS_IHUB_PUBLIC_KEY_PATH
+              value: {HVS_IHUB_PUBLIC_KEY_PATH_VALUE}
             - name: TLS_CERT_PATH
               value: "/opt/isecl-k8s-extensions/server.crt"
             - name: TLS_KEY_PATH
