@@ -389,6 +389,10 @@ deploy_kbs() {
   sed -i "s/CMS_TLS_CERT_SHA384:.*/CMS_TLS_CERT_SHA384: $CMS_TLS_CERT_SHA384/g" configMap.yml
   sed -i "s/TLS_SAN_LIST:.*/TLS_SAN_LIST: $KBS_CERT_SAN_LIST/g" configMap.yml
   sed -i "s#ENDPOINT_URL:.*#ENDPOINT_URL: $ENDPOINT_URL#g" configMap.yml
+  sed -i "s/SKC_CHALLENGE_TYPE:.*//g" configMap.yml
+  sed -i "s/SQVS_URL:.*//g" configMap.yml
+  sed -i "s/SESSION_EXPIRY_TIME:.*//g" configMap.yml
+
 
   $KUBECTL create secret generic kbs-secret --from-file=secrets.txt --namespace=isecl
 
@@ -475,7 +479,7 @@ deploy_tagent() {
     # wait to get ready
     echo "Wait for ta daemonset txt to initialize..."
     POD_NAME=`$KUBECTL get pod -l app=ta-txt -n isecl -o name`
-    $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
+    $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=80s
     if [ $? == 0 ]; then
         echo "TA DAEMONSET-TXT DEPLOYED SUCCESSFULLY"
     else
@@ -485,7 +489,7 @@ deploy_tagent() {
     $KUBECTL apply -f daemonset-suefi.yml
     echo "Wait for ta daemonset suefi to initialize..."
     POD_NAME=`$KUBECTL get pod -l app=ta-suefi -n isecl -o name`
-    $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
+    $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=80s
     if [ $? == 0 ]; then
         echo "TA DAEMONSET-SUEFI DEPLOYED SUCCESSFULLY"
     else
@@ -551,7 +555,8 @@ cleanup_wls() {
 cleanup_tagent(){
   $KUBECTL delete configmap ta-config  --namespace isecl
   $KUBECTL delete secret ta-secret  --namespace isecl
-  $KUBECTL delete daemonset ta-daemonset --namespace isecl
+  $KUBECTL delete daemonset ta-daemonset-txt --namespace isecl
+  $KUBECTL delete daemonset ta-daemonset-suefi --namespace isecl
 }
 
 cleanup_wlagent(){
@@ -940,3 +945,4 @@ fi
 
 # run commands
 dispatch_works $*
+
