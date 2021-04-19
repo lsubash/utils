@@ -20,7 +20,7 @@ Environment="HTTPS_PROXY=${HTTPS_PROXY}"
 EOF
 
 cp secure-docker-plugin /usr/bin/
-cp artifact/* /lib/systemd/system/
+cp -r artifact/* /lib/systemd/system/
 
 systemctl daemon-reload
 systemctl enable secure-docker-plugin.service 2>/dev/null
