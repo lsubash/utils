@@ -4,6 +4,7 @@ all: clean download-eca $(TARGETS) skc-all
 	mkdir -p binaries
 	cp intel-secl/deployments/installer/*.bin binaries/
 	cp intel-secl/deployments/installer/*.sh binaries/
+	cp intel-secl/tools/aas-manager/populate-users.env binaries/env
 	cp workload-service/out/*.bin binaries/
 	cp trust-agent/out/*.bin binaries/
 	cp workload-agent/out/*.bin binaries/
