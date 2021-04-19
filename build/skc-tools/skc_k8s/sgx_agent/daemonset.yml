@@ -39,17 +39,6 @@ spec:
           envFrom:
             - configMapRef:
                 name: sagent-config
-          env:
-            - name: CSP_ADMIN_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: sagent-llt-credentials
-                  key: CSP_ADMIN_USERNAME
-            - name: CSP_ADMIN_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: sagent-llt-credentials
-                  key: CSP_ADMIN_PASSWORD
           volumeMounts:
             - name: sagent-config-volume
               mountPath: /etc/sgx_agent/
@@ -63,6 +52,9 @@ spec:
               mountPath: /dev/sgx/
             - name: sagent-pck-data
               mountPath: /opt/pckData
+            - mountPath: /etc/secret-volume/
+              name: sagent-credentials
+              readOnly: true
       volumes:
         - name: sagent-logs-volume
           hostPath:
@@ -88,4 +80,6 @@ spec:
           hostPath:
             path: /opt/pckData
             type: FileOrCreate
-
+        - name: sagent-credentials
+          secret:
+              secretName: sagent-secret

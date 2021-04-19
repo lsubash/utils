@@ -52,17 +52,6 @@ spec:
           envFrom:
             - configMapRef:
                 name: kbs-config
-          env:
-            - name: KBS_SERVICE_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: kbs-service-credentials
-                  key: KBS_SERVICE_USERNAME
-            - name: KBS_SERVICE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: kbs-service-credentials
-                  key: KBS_SERVICE_PASSWORD
           volumeMounts:
             - name: kbs-config-volume
               mountPath: /etc/kbs
@@ -70,6 +59,9 @@ spec:
               mountPath: /var/log/kbs
             - name: kbs-opt-volume
               mountPath: /opt/kbs
+            - mountPath: /etc/secret-volume/
+              name: kbs-credentials
+              readOnly: true              
       volumes:
         - name: kbs-logs-volume
           hostPath:
@@ -83,5 +75,6 @@ spec:
           hostPath:
             path: /opt/kbs
             type: DirectoryOrCreate
-
-
+        - name: kbs-credentials
+          secret:
+              secretName: kbs-secret

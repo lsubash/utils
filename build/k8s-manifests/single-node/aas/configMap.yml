@@ -16,5 +16,4 @@ data:
   AAS_DB_NAME: aasdb
   AAS_DB_SSLMODE: verify-full
   AAS_DB_SSLCERT: /etc/postgresql/server.crt
-  BEARER_TOKEN:
 

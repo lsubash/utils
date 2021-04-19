@@ -19,4 +19,3 @@ data:
   KUBERNETES_CRD: custom-isecl
   KUBERNETES_CERT_FILE: /etc/ihub/apiserver.crt
   KUBERNETES_TOKEN:
-  BEARER_TOKEN:

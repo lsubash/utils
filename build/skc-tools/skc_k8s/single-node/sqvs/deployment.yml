@@ -54,6 +54,9 @@ spec:
               mountPath: /etc/sqvs/
             - name: sqvs-logs-volume
               mountPath: /var/log/sqvs/
+            - mountPath: /etc/secret-volume/
+              name: sqvs-credentials
+              readOnly: true            
       volumes:
         - name: sqvs-logs-volume
           hostPath:
@@ -63,3 +66,6 @@ spec:
           hostPath:
             path: /etc/sqvs/
             type: DirectoryOrCreate
+        - name: sqvs-credentials
+          secret:
+              secretName: sqvs-secret            

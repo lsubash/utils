@@ -97,7 +97,7 @@ deploy_authservice() {
   cd aas/
 
   # update configMap and secrets
-  sed -i "s/BEARER_TOKEN:.*/BEARER_TOKEN: $AAS_BOOTSTRAP_TOKEN/g" configMap.yml
+  sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=$AAS_BOOTSTRAP_TOKEN/g" secrets.txt
   sed -i "s/CMS_TLS_CERT_SHA384:.*/CMS_TLS_CERT_SHA384: $CMS_TLS_CERT_SHA384/g" configMap.yml
   sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: $CMS_BASE_URL#g" configMap.yml
   sed -i "s/SAN_LIST:.*/SAN_LIST: $AAS_SAN_LIST/g" configMap.yml
@@ -106,8 +106,12 @@ deploy_authservice() {
   sed -i "s/AAS_DB_PORT:.*/AAS_DB_PORT: \"$AAS_DB_PORT\"/g" configMap.yml
   sed -i "s/AAS_DB_SSLMODE:.*/AAS_DB_SSLMODE: $AAS_DB_SSLMODE/g" configMap.yml
   sed -i "s#AAS_DB_SSLCERT:.*#AAS_DB_SSLCERT: $AAS_DB_SSLCERT#g" configMap.yml
-  sed -i "s/AAS_ADMIN_USERNAME:.*/AAS_ADMIN_USERNAME: $AAS_ADMIN_USERNAME/g" secrets.yml
-  sed -i "s/AAS_ADMIN_PASSWORD:.*/AAS_ADMIN_PASSWORD: $AAS_ADMIN_PASSWORD/g" secrets.yml
+  sed -i "s/AAS_DB_USERNAME=.*/AAS_DB_USERNAME=$AAS_DB_USERNAME/g" secrets.txt
+  sed -i "s/AAS_DB_PASSWORD=.*/AAS_DB_PASSWORD=$AAS_DB_PASSWORD/g" secrets.txt
+  sed -i "s/AAS_ADMIN_USERNAME=.*/AAS_ADMIN_USERNAME=$AAS_ADMIN_USERNAME/g" secrets.txt
+  sed -i "s/AAS_ADMIN_PASSWORD=.*/AAS_ADMIN_PASSWORD=$AAS_ADMIN_PASSWORD/g" secrets.txt
+
+  $KUBECTL create secret generic aas-secret --from-file=secrets.txt --namespace=isecl
 
   # deploy
   $KUBECTL kustomize . | $KUBECTL apply -f -
@@ -278,17 +282,19 @@ deploy_ihub() {
   cp $K8S_API_SERVER_CERT secrets/apiserver.crt
 
   #update configMap & secrets
-  sed -i "s/BEARER_TOKEN:.*/BEARER_TOKEN: $BEARER_TOKEN/g" configMap.yml
+	sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=${BEARER_TOKEN}/g" secrets.txt
   sed -i "s/CMS_TLS_CERT_SHA384:.*/CMS_TLS_CERT_SHA384: $CMS_TLS_CERT_SHA384/g" configMap.yml
   sed -i "s/TLS_SAN_LIST:.*/TLS_SAN_LIST: $IH_CERT_SAN_LIST/g" configMap.yml
   sed -i "s/KUBERNETES_TOKEN:.*/KUBERNETES_TOKEN: $kubernetes_token/g" configMap.yml
   sed -i "s/KUBERNETES_URL:.*/KUBERNETES_URL: https:\/\/$K8S_MASTER_IP:$API_SERVER_PORT\//g" configMap.yml
-  sed -i "s/IHUB_SERVICE_USERNAME:.*/IHUB_SERVICE_USERNAME: $IHUB_SERVICE_USERNAME/g" secrets.yml
-  sed -i "s/IHUB_SERVICE_PASSWORD:.*/IHUB_SERVICE_PASSWORD: $IHUB_SERVICE_PASSWORD/g" secrets.yml
+  sed -i "s/IHUB_SERVICE_USERNAME=.*/IHUB_SERVICE_USERNAME=$IHUB_SERVICE_USERNAME/g" secrets.txt
+  sed -i "s/IHUB_SERVICE_PASSWORD=.*/IHUB_SERVICE_PASSWORD=$IHUB_SERVICE_PASSWORD/g" secrets.txt
   sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: ${CMS_BASE_URL}#g" configMap.yml
   sed -i "s#AAS_API_URL:.*#AAS_API_URL: ${AAS_API_URL}#g" configMap.yml
   sed -i "s#ATTESTATION_SERVICE_URL:.*#ATTESTATION_SERVICE_URL: ${ATTESTATION_SERVICE_URL}#g" configMap.yml
   sed -i "s#ATTESTATION_TYPE:.*#ATTESTATION_TYPE: ${ATTESTATION_TYPE}#g" configMap.yml
+
+  $KUBECTL create secret generic ihub-secret --from-file=secrets.txt --namespace=isecl
 
   # deploy
   $KUBECTL kustomize . | $KUBECTL apply -f -
@@ -370,10 +376,12 @@ deploy_kbs() {
   cd kbs/
 
   #update configMap
-  sed -i "s/BEARER_TOKEN:.*/BEARER_TOKEN: $BEARER_TOKEN/g" configMap.yml
+  sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=${BEARER_TOKEN}/g" secrets.txt
   sed -i "s/CMS_TLS_CERT_SHA384:.*/CMS_TLS_CERT_SHA384: $CMS_TLS_CERT_SHA384/g" configMap.yml
   sed -i "s/TLS_SAN_LIST:.*/TLS_SAN_LIST: $KBS_CERT_SAN_LIST/g" configMap.yml
   sed -i "s#ENDPOINT_URL:.*#ENDPOINT_URL: $ENDPOINT_URL#g" configMap.yml
+  
+  $KUBECTL create secret generic kbs-secret --from-file=secrets.txt --namespace=isecl
 
   # deploy
   $KUBECTL kustomize . | $KUBECTL apply -f -
@@ -549,7 +557,7 @@ cleanup_kbs() {
 
   echo "Cleaning up KBS..."
 
-  $KUBECTL delete secret kbs-service-credentials --namespace isecl
+  $KUBECTL delete secret kbs-secret --namespace isecl
   $KUBECTL delete configmap kbs-config --namespace isecl
   $KUBECTL delete deploy kbs-deployment --namespace isecl
   $KUBECTL delete svc kbs-svc --namespace isecl
@@ -568,7 +576,7 @@ cleanup_ihub() {
 
   echo "Cleaning up INTEGRATION-HUB..."
 
-  $KUBECTL delete secret ihub-service-credentials --namespace isecl
+  $KUBECTL delete secret ihub-secret --namespace isecl
   $KUBECTL delete configmap ihub-config --namespace isecl
   $KUBECTL delete deploy ihub-deployment --namespace isecl
 
@@ -626,7 +634,7 @@ cleanup_authservice() {
 
   echo "Cleaning up AUTHENTICATION-AUTHORIZATION-SERVICE..."
 
-  $KUBECTL delete secret aas-service-credentials --namespace isecl
+  $KUBECTL delete secret aas-secret --namespace isecl
   $KUBECTL delete configmap aas-config --namespace isecl
   $KUBECTL delete deploy aas-deployment --namespace isecl
   $KUBECTL delete svc aas-svc --namespace isecl

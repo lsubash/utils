@@ -50,27 +50,6 @@ spec:
           envFrom:
             - configMapRef:
                 name: shvs-config
-          env:
-            - name: SHVS_ADMIN_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: shvs-service-credentials
-                  key: SHVS_ADMIN_USERNAME
-            - name: SHVS_ADMIN_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: shvs-service-credentials
-                  key: SHVS_ADMIN_PASSWORD
-            - name: SHVS_DB_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: shvs-db-credentials
-                  key: SHVS_DB_USERNAME
-            - name: SHVS_DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: shvs-db-credentials
-                  key: SHVS_DB_PASSWORD
           volumeMounts:
             - name: shvs-config-volume
               mountPath: /etc/shvs/
@@ -78,6 +57,9 @@ spec:
               mountPath: /var/log/shvs/
             - name: shvs-db-certs
               mountPath: /etc/postgresql/
+            - mountPath: /etc/secret-volume/
+              name: shvs-credentials
+              readOnly: true
       volumes:
         - name: shvs-logs-volume
           hostPath:
@@ -91,3 +73,6 @@ spec:
           secret:
             secretName: shvs-db-certs
             defaultMode: 0640
+        - name: shvs-credentials
+          secret:
+              secretName: shvs-secret            
