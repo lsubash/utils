@@ -10,7 +10,7 @@ verify_checksum()
 	tar -xf skc_library.tar
 	echo "skc_library untar completed."
 	echo "Please update create_roles.conf and then run ./skc_library_create_roles.sh. Copy the generated token printed on the console."
-	echo "Please update skc_library.conf with the token obtained from previous step and other details and then run ./skc_library_create_roles.sh"
+	echo "Please update skc_library.conf with the token obtained from previous step and other details and then run ./deploy_skc_library.sh"
 }
 
 verify_checksum
