@@ -61,7 +61,7 @@ spec:
               name: tpmrm
             - mountPath: /sys/firmware/efi
               name: efi
-            - mountPath:
+            - mountPath: /etc/hostname
               name: ta-hostname-path
               readOnly: true
             - mountPath: /etc/hosts
