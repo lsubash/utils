@@ -3,6 +3,12 @@
 SECURE_DOCKER_DAMEON=/opt/secure-docker-daemon
 mkdir -p $SECURE_DOCKER_DAMEON
 
+# Check OS
+OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
+temp="${OS%\"}"
+temp="${temp#\"}"
+OS="$temp"
+
 install_secure_docker_plugin(){
 
 source secure-docker-plugin.env
@@ -39,8 +45,14 @@ is_docker_installed
 
 which cryptsetup 2>/dev/null
 if [ $? -ne 0 ]; then
-  yum install -y cryptsetup
+  if [ "$OS" == "rhel" ]; then
+     yum install -y cryptsetup
+  fi
+  if [ "$OS" == "ubuntu" ]; then
+     apt install -y cryptsetup
+  fi
   CRYPTSETUP_RESULT=$?
+
   if [ $CRYPTSETUP_RESULT -ne 0 ]; then
     echo_failure "Error: Secure Docker Daemon requires cryptsetup - Install failed. Exiting."
     exit $CRYPTSETUP_RESULT
