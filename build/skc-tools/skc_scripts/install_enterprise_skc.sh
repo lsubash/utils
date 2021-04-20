@@ -230,6 +230,30 @@ SQVS_URL=https://$SYSTEM_IP:$SQVS_PORT/svs/v1
 sed -i "s@^\(SQVS_URL\s*=\s*\).*\$@\1$SQVS_URL@" ~/kbs.env
 ENDPOINT_URL=https://$SYSTEM_IP:$KBS_PORT/v1
 sed -i "s@^\(ENDPOINT_URL\s*=\s*\).*\$@\1$ENDPOINT_URL@" ~/kbs.env
+
+sed -i "s@^\(KEY_MANAGER\s*=\s*\).*\$@\1$KEY_MANAGER@" ~/kbs.env
+
+if [ $KEY_MANAGER == "KMIP" ]; then
+  echo "Updating KMIP Server conf...."
+  sed -i "s@^\(KMIP_SERVER_IP\s*=\s*\).*\$@\1$KMIP_SERVER_IP@" ~/kbs.env
+  sed -i "s@^\(KMIP_SERVER_PORT\s*=\s*\).*\$@\1$KMIP_SERVER_PORT@" ~/kbs.env
+  sed -i "s@^\(KMIP_CLIENT_CERT_PATH\s*=\s*\).*\$@\1$KMIP_CLIENT_CERT_PATH@" ~/kbs.env
+  sed -i "s@^\(KMIP_CLIENT_KEY_PATH\s*=\s*\).*\$@\1$KMIP_CLIENT_KEY_PATH@" ~/kbs.env
+  sed -i "s@^\(KMIP_ROOT_CERT_PATH\s*=\s*\).*\$@\1$KMIP_ROOT_CERT_PATH@" ~/kbs.env
+
+  sed -i "s@^\(hostname\s*=\s*\).*\$@\1$KMIP_SERVER_IP@" kbs_script/server.conf
+  sed -i "s@^\(port\s*=\s*\).*\$@\1$KMIP_SERVER_PORT@" kbs_script/server.conf
+  sed -i "s@^\(certificate_path\s*=\s*\).*\$@\1$KMIP_CLIENT_CERT_PATH@" kbs_script/server.conf
+  sed -i "s@^\(key_path\s*=\s*\).*\$@\1$KMIP_CLIENT_KEY_PATH@" kbs_script/server.conf
+  sed -i "s@^\(ca_path\s*=\s*\).*\$@\1$KMIP_ROOT_CERT_PATH@" kbs_script/server.conf
+
+  sed -i "s@^\(HOSTNAME_IP\s*=\s*\).*\$@\1'$KMIP_SERVER_IP'@" kbs_script/rsa_create.py
+  sed -i "s@^\(SERVER_PORT\s*=\s*\).*\$@\1'$KMIP_SERVER_PORT'@" kbs_script/rsa_create.py
+  sed -i "s@^\(CERT_PATH\s*=\s*\).*\$@\1'$KMIP_CLIENT_CERT_PATH'@" kbs_script/rsa_create.py
+  sed -i "s@^\(KEY_PATH\s*=\s*\).*\$@\1'$KMIP_CLIENT_KEY_PATH'@" kbs_script/rsa_create.py
+  sed -i "s@^\(CA_PATH\s*=\s*\).*\$@\1'$KMIP_ROOT_CERT_PATH'@" kbs_script/rsa_create.py
+fi
+
 echo "Installing Key Broker Service...."
 ./kbs-*.bin
 kbs status > /dev/null
