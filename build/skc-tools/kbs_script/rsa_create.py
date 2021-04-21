@@ -2,6 +2,8 @@ import ssl
 import os
 import sys
 import shutil
+import os.path
+from os import path
 from kmip.pie.client import ProxyKmipClient, enums
 from kmip.pie import objects
 from kmip.pie import client
@@ -9,9 +11,9 @@ from kmip import enums
 from subprocess import call
 
 HOSTNAME_IP = 
-CERT_PATH = 
-KEY_PATH = 
-CA_PATH = 
+CERT_PATH = '/etc/pykmip/client_certificate.pem'
+KEY_PATH = '/etc/pykmip/client_key.pem'
+CA_PATH = '/etc/pykmip/root_certificate.pem'
 
 TEMP_DIRECTORY = 'temp'
 CA_CONF_PATH='ca.cnf'
@@ -20,6 +22,7 @@ SERVER_CERT='server.crt'
 SERVER_KEY= TEMP_DIRECTORY + '/' + 'server.pem'
 CSR= TEMP_DIRECTORY + '/' +'server.csr'
 RSA_DER = TEMP_DIRECTORY + '/' + 'rsa-key.der'
+RAND_FILE = '/root/.rnd'
 
 def CreateCertificate():
     
@@ -27,8 +30,11 @@ def CreateCertificate():
     call(['xxd','-r','-ps',KEY_HEX_OUTPUT,RSA_DER])
     call( [ 'openssl' , 'pkey' , '-in' , RSA_DER ,'-inform' ,'der' , '-out' , SERVER_KEY , '-outform' , 'pem'] )
 
+    if not path.isfile(RAND_FILE):
+        call(['openssl', 'rand', '-out', RAND_FILE, '-hex', '256'])
+
     # Generate the csr
-    call( [ 'openssl' , 'req' , '-new' , '-config' , CA_CONF_PATH, '-key', SERVER_KEY , '-out' , CSR ])
+    call( [ 'openssl' , 'req' ,'-new' , '-config' , CA_CONF_PATH, '-key', SERVER_KEY , '-out' , CSR ])
 
     # Generate the server certificate
     call( [ 'openssl' ,  'x509' , '-signkey' , SERVER_KEY, '-in' , CSR , '-req' , '-days', '365' , '-out' , SERVER_CERT ])
