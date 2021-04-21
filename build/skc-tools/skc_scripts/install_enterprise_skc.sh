@@ -154,8 +154,13 @@ sed -i "s/^\(INSTALL_ADMIN_PASSWORD\s*=\s*\).*\$/\1$INSTALL_ADMIN_PASSWORD/" ~/p
 sed -i "/GLOBAL_ADMIN_USERNAME/d" ~/populate-users.env
 sed -i "/GLOBAL_ADMIN_PASSWORD/d" ~/populate-users.env
 
-sed -i "/CSP_ADMIN_USERNAME/d" ~/populate-users.env
-sed -i "/CSP_ADMIN_PASSWORD/d" ~/populate-users.env
+if [ $ENTERPRISE_ADMIN_USERNAME != "" ] && [ $ENTERPRISE_ADMIN_PASSWORD != "" ]; then
+  sed -i "s/^\(CSP_ADMIN_USERNAME\s*=\s*\).*\$/\1$ENTERPRISE_ADMIN_USERNAME/" ~/populate-users.env
+  sed -i "s/^\(CSP_ADMIN_PASSWORD\s*=\s*\).*\$/\1$ENTERPRISE_ADMIN_PASSWORD/" ~/populate-users.env
+else
+  sed -i "/CSP_ADMIN_USERNAME/d" ~/populate-users.env
+  sed -i "/CSP_ADMIN_PASSWORD/d" ~/populate-users.env
+fi
 
 echo "Invoking populate users script...."
 pushd $PWD
