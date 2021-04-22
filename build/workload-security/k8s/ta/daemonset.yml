@@ -39,17 +39,6 @@ spec:
           envFrom:
             - configMapRef:
                 name: ta-config
-          env:
-            - name: BEARER_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: ta-secret
-                  key: BEARER_TOKEN
-            - name: TPM_OWNER_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: ta-secret
-                  key: TPM_OWNER_SECRET
           volumeMounts:
             - name: ta-logs-volume
               mountPath: /var/log/trustagent/
@@ -69,6 +58,9 @@ spec:
               readOnly: true
             - name: wla-config-volume
               mountPath: /etc/workload-agent/
+            - mountPath: /etc/secret-volume/
+              name: ta-credentials
+              readOnly: true
       volumes:
         - name: ta-logs-volume
           hostPath:
@@ -100,3 +92,6 @@ spec:
           hostPath:
             path: /etc/workload-agent
             type: DirectoryOrCreate
+        - name: ta-credentials
+          secret:
+              secretName: ta-secret 

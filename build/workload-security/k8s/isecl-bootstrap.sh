@@ -200,19 +200,23 @@ deploy_hvs() {
   check_mandatory_variables $SHVS $required_variables
 
   # update hvs configMap & secrets
-  sed -i "s/HVS_SERVICE_USERNAME:.*/HVS_SERVICE_USERNAME: ${HVS_SERVICE_USERNAME}/g" secrets.yml
-  sed -i "s/HVS_SERVICE_PASSWORD:.*/HVS_SERVICE_PASSWORD: ${HVS_SERVICE_PASSWORD}/g" secrets.yml
+  sed -i "s/HVS_SERVICE_USERNAME=.*/HVS_SERVICE_USERNAME=${HVS_SERVICE_USERNAME}/g" secrets.txt
+  sed -i "s/HVS_SERVICE_PASSWORD=.*/HVS_SERVICE_PASSWORD=${HVS_SERVICE_PASSWORD}/g" secrets.txt
+  sed -i "s/HVS_DB_USERNAME=.*/HVS_DB_USERNAME=${HVS_DB_USERNAME}/g" secrets.txt
+  sed -i "s/HVS_DB_PASSWORD=.*/HVS_DB_PASSWORD=${HVS_DB_PASSWORD}/g" secrets.txt
 
   sed -i "s/SAN_LIST:.*/SAN_LIST: ${HVS_CERT_SAN_LIST}/g" configMap.yml
   sed -i "s/HVS_DB_HOSTNAME:.*/HVS_DB_HOSTNAME: ${HVS_DB_HOSTNAME}/g" configMap.yml
   sed -i "s/HVS_DB_NAME:.*/HVS_DB_NAME: ${HVS_DB_NAME}/g" configMap.yml
   sed -i "s/HVS_DB_PORT:.*/HVS_DB_PORT: \"$HVS_DB_PORT\"/g" configMap.yml
-  sed -i "s/BEARER_TOKEN:.*/BEARER_TOKEN: ${BEARER_TOKEN}/g" secrets.yml
+  sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=${BEARER_TOKEN}/g" secrets.txt
   sed -i "s/CMS_TLS_CERT_SHA384:.*/CMS_TLS_CERT_SHA384: ${CMS_TLS_CERT_SHA384}/g" configMap.yml
   sed -i "s#AAS_API_URL:.*#AAS_API_URL: ${AAS_API_URL}#g" configMap.yml
   sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: ${CMS_BASE_URL}#g" configMap.yml
   sed -i "s/HVS_DB_HOSTNAME:.*/HVS_DB_HOSTNAME: ${HVS_DB_HOSTNAME}/g" configMap.yml
   sed -i "s#HVS_DB_SSLCERTSRC:.*#HVS_DB_SSLCERTSRC: ${HVS_DB_SSLCERTSRC}#g" configMap.yml
+
+  $KUBECTL create secret generic hvs-secret --from-file=secrets.txt --namespace=isecl
 
   # deploy
   $KUBECTL kustomize . | $KUBECTL apply -f -
@@ -432,14 +436,18 @@ deploy_wls() {
     get_cms_tls_cert_sha384
 
     # update wls configMap & secrets
-    sed -i "s/BEARER_TOKEN:.*/BEARER_TOKEN: ${BEARER_TOKEN}/g" secrets.yml
+    sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=${BEARER_TOKEN}/g" secrets.txt
     sed -i "s/CMS_TLS_CERT_SHA384:.*/CMS_TLS_CERT_SHA384: ${CMS_TLS_CERT_SHA384}/g" configMap.yml
     sed -i "s#AAS_API_URL:.*#AAS_API_URL: $AAS_API_URL#g" configMap.yml
     sed -i "s#HVS_URL:.*#HVS_URL: $HVS_URL#g" configMap.yml
     sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: $CMS_BASE_URL#g" configMap.yml
     sed -i "s/SAN_LIST:.*/SAN_LIST: $WLS_CERT_SAN_LIST/g" configMap.yml
-    sed -i "s/WLS_SERVICE_USERNAME:.*/WLS_SERVICE_USERNAME: ${WLS_SERVICE_USERNAME}/g" secrets.yml
-    sed -i "s/WLS_SERVICE_PASSWORD:.*/WLS_SERVICE_PASSWORD: ${WLS_SERVICE_PASSWORD}/g" secrets.yml
+    sed -i "s/WLS_SERVICE_USERNAME=.*/WLS_SERVICE_USERNAME=${WLS_SERVICE_USERNAME}/g" secrets.txt
+    sed -i "s/WLS_SERVICE_PASSWORD=.*/WLS_SERVICE_PASSWORD=${WLS_SERVICE_PASSWORD}/g" secrets.txt
+    sed -i "s/WLS_DB_USERNAME=.*/WLS_DB_USERNAME=${WLS_DB_USERNAME}/g" secrets.txt
+    sed -i "s/WLS_DB_PASSWORD=.*/WLS_DB_PASSWORD=${WLS_DB_PASSWORD}/g" secrets.txt
+
+    $KUBECTL create secret generic wls-secret --from-file=secrets.txt --namespace=isecl
 
     # deploy
     $KUBECTL kustomize . | $KUBECTL apply -f -
@@ -474,8 +482,10 @@ deploy_tagent() {
     sed -i "s#HVS_URL:.*#HVS_URL: $HVS_URL#g" configMap.yml
     sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: $CMS_BASE_URL#g" configMap.yml
     sed -i "s#CMS_TLS_CERT_SHA384:.*#CMS_TLS_CERT_SHA384: $CMS_TLS_CERT_SHA384#g" configMap.yml
-    sed -i "s/BEARER_TOKEN:.*/BEARER_TOKEN: $BEARER_TOKEN/g" secrets.yml
-    sed -i "s/TPM_OWNER_SECRET:.*/TPM_OWNER_SECRET: $TPM_OWNER_SECRET/g" secrets.yml
+    sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=$BEARER_TOKEN/g" secrets.txt
+    sed -i "s/TPM_OWNER_SECRET:.*/TPM_OWNER_SECRET: $TPM_OWNER_SECRET/g" secrets.txt
+
+    $KUBECTL create secret generic ta-secret --from-file=secrets.txt --namespace=isecl
 
     $KUBECTL kustomize . | $KUBECTL apply -f -
     # wait to get ready
@@ -511,13 +521,15 @@ deploy_wlagent(){
     check_mandatory_variables $WLAGENT $required_variables
     cd wla/
     # #update trustagent.env
-    sed -i "s/BEARER_TOKEN:.*/BEARER_TOKEN: $BEARER_TOKEN/g" secrets.yml
+    sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=$BEARER_TOKEN/g" secrets.txt
     sed -i "s#AAS_API_URL:.*#AAS_API_URL: $AAS_API_URL#g" configMap.yml
     sed -i "s#HVS_URL:.*#HVS_URL: $HVS_URL#g" configMap.yml
     sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: $CMS_BASE_URL#g" configMap.yml
     sed -i "s/CMS_TLS_CERT_SHA384:.*/CMS_TLS_CERT_SHA384: $CMS_TLS_CERT_SHA384/g" configMap.yml
-    sed -i "s/WLA_SERVICE_USERNAME:.*/WLA_SERVICE_USERNAME: $WLA_SERVICE_USERNAME/g" secrets.yml
-    sed -i "s/WLA_SERVICE_PASSWORD:.*/WLA_SERVICE_PASSWORD: $WLA_SERVICE_PASSWORD/g" secrets.yml
+    sed -i "s/WLA_SERVICE_USERNAME=.*/WLA_SERVICE_USERNAME=$WLA_SERVICE_USERNAME/g" secrets.yml
+    sed -i "s/WLA_SERVICE_PASSWORD=.*/WLA_SERVICE_PASSWORD=$WLA_SERVICE_PASSWORD/g" secrets.yml
+
+    $KUBECTL create secret generic wla-secret --from-file=secrets.txt --namespace=isecl
 
     $KUBECTL kustomize . | $KUBECTL apply -f -
     # wait to get ready
@@ -540,7 +552,7 @@ cleanup_wls() {
     echo "Cleaning up WORKLOAD-SERVICE..."
 
 
-    $KUBECTL delete secret wls-service-credentials --namespace isecl
+    $KUBECTL delete secret wls-secret --namespace isecl
     $KUBECTL delete configmap wls-config  --namespace isecl
     $KUBECTL delete deploy wls-deployment --namespace isecl
 
@@ -563,7 +575,7 @@ cleanup_tagent(){
 
 cleanup_wlagent(){
   $KUBECTL delete configmap wla-config  --namespace isecl
-  $KUBECTL delete secret wla-credentials  --namespace isecl
+  $KUBECTL delete secret wla-secret  --namespace isecl
   $KUBECTL delete daemonset wla-daemonset --namespace isecl
 }
 

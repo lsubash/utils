@@ -9,5 +9,4 @@ namespace: isecl
 
 resources:
 - configMap.yml
-- secrets.yml
 - daemonset.yml

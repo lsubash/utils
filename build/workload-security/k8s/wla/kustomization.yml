@@ -8,6 +8,5 @@ kind: Kustomization
 namespace: isecl
 
 resources:
-- configMap.yml
-- secrets.yml
+- configMap.ymls
 - daemonset.yml

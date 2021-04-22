@@ -49,32 +49,6 @@ spec:
           envFrom:
             - configMapRef:
                 name: hvs-config
-          env:
-            - name: HVS_SERVICE_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: hvs-service-credentials
-                  key: HVS_SERVICE_USERNAME
-            - name: HVS_SERVICE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: hvs-service-credentials
-                  key: HVS_SERVICE_PASSWORD
-            - name: BEARER_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: hvs-service-credentials
-                  key: BEARER_TOKEN
-            - name: HVS_DB_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: hvs-db-credentials
-                  key: HVS_DB_USERNAME
-            - name: HVS_DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: hvs-db-credentials
-                  key: HVS_DB_PASSWORD
           volumeMounts:
             - name: hvs-config-volume
               mountPath: /etc/hvs/
@@ -82,6 +56,9 @@ spec:
               mountPath: /var/log/hvs/
             - name: hvs-db-certs
               mountPath: /etc/postgresql/
+            - mountPath: /etc/secret-volume/
+              name: hvs-credentials
+              readOnly: true
       volumes:
         - name: hvs-logs-volume
           hostPath:
@@ -95,3 +72,6 @@ spec:
           secret:
             secretName: hvs-db-certs
             defaultMode: 0640
+        - name: hvs-credentials
+          secret:
+              secretName: hvs-secret 

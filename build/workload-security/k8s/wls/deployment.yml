@@ -47,32 +47,6 @@ spec:
           envFrom:
             - configMapRef:
                 name: wls-config
-          env:
-            - name: WLS_SERVICE_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: wls-service-credentials
-                  key: WLS_SERVICE_USERNAME
-            - name: WLS_SERVICE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: wls-service-credentials
-                  key: WLS_SERVICE_PASSWORD
-            - name: WLS_DB_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: wls-db-credentials
-                  key: WLS_DB_USERNAME
-            - name: WLS_DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: wls-db-credentials
-                  key: WLS_DB_PASSWORD
-            - name: BEARER_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: wls-service-credentials
-                  key: BEARER_TOKEN
           ports:
             - containerPort: 5000
           volumeMounts:
@@ -82,6 +56,9 @@ spec:
               mountPath: /etc/workload-service
             - name: wls-db-certs
               mountPath: /etc/postgresql/
+            - mountPath: /etc/secret-volume/
+              name: wls-credentials
+              readOnly: true
       volumes:
         - name: wls-logs-volume
           hostPath:
@@ -95,3 +72,6 @@ spec:
           secret:
             secretName: wls-db-certs
             defaultMode: 0640
+        - name: wls-credentials
+          secret:
+              secretName: wls-secret            
