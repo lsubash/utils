@@ -51,6 +51,7 @@ intel-secl:
 
 clean: $(patsubst %, %-clean, $(TARGETS))
 	rm -rf binaries/
+	rm -rf k8s
 
 $(TARGETS):
 	cd $@ && make installer

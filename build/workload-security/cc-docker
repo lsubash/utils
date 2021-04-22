@@ -85,6 +85,7 @@ secure_docker_plugin:
 
 clean: $(patsubst %, %-clean, $(TARGETS))
 	rm -rf binaries/
+	rm -rf k8s
 
 download-eca:
 	cd intel-secl && make download-eca && cd -
