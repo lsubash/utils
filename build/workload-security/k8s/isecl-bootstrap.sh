@@ -173,8 +173,8 @@ get_bearer_token() {
   sed -i "s/GLOBAL_ADMIN_USERNAME=.*/GLOBAL_ADMIN_USERNAME=$GLOBAL_ADMIN_USERNAME/g" $aas_scripts_dir/populate-users.env
   sed -i "s/GLOBAL_ADMIN_PASSWORD=.*/GLOBAL_ADMIN_PASSWORD=$GLOBAL_ADMIN_PASSWORD/g" $aas_scripts_dir/populate-users.env
 
-  sed -i "s/CSP_ADMIN_USERNAME=.*//g" $aas_scripts_dir/populate-users.env
-  sed -i "s/CSP_ADMIN_PASSWORD=.*//g" $aas_scripts_dir/populate-users.env
+  sed -i "s/CCC_ADMIN_USERNAME=.*//g" $aas_scripts_dir/populate-users.env
+  sed -i "s/CCC_ADMIN_PASSWORD=.*//g" $aas_scripts_dir/populate-users.env
 
   # TODO: need to check if this can be fetched from builds instead of bundling the script here
   chmod +x $aas_scripts_dir/populate-users
