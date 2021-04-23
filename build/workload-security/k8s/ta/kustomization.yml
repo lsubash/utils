@@ -10,3 +10,4 @@ namespace: isecl
 resources:
 - configMap.yml
 - daemonset.yml
+- daemonset-suefi.yml

@@ -70,6 +70,8 @@ deploy_cms() {
         echo "Exiting with error..."
         exit 1
     fi
+    echo "Waiting for CMS to bootstrap itself..."
+    sleep 20
     cd ../
 }
 

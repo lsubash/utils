@@ -489,24 +489,8 @@ deploy_tagent() {
 
     $KUBECTL kustomize . | $KUBECTL apply -f -
     # wait to get ready
-    echo "Wait for ta daemonset txt to initialize..."
-    POD_NAME=`$KUBECTL get pod -l app=ta-txt -n isecl -o name`
-    $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=80s
-    if [ $? == 0 ]; then
-        echo "TA DAEMONSET-TXT DEPLOYED SUCCESSFULLY"
-    else
-        echo "Error: Deploying TA DAEMONSET-TXT "
-    fi
-
-    $KUBECTL apply -f daemonset-suefi.yml
-    echo "Wait for ta daemonset suefi to initialize..."
-    POD_NAME=`$KUBECTL get pod -l app=ta-suefi -n isecl -o name`
-    $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=80s
-    if [ $? == 0 ]; then
-        echo "TA DAEMONSET-SUEFI DEPLOYED SUCCESSFULLY"
-    else
-        echo "Error: Deploying TA DAEMONSET-SUEFI"
-    fi
+    echo "Wait for ta daemonsets to initialize..."
+    sleep 120
     cd $HOME_DIR
 
 }

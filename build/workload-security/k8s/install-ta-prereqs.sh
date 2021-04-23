@@ -55,19 +55,44 @@ is_uefi_boot() {
   fi
 }
 
+# Check OS
+OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
+temp="${OS%\"}"
+temp="${temp#\"}"
+OS="$temp"
+
 TBOOT_DEPENDENCY="tboot-1.9.*"
 GRUB_FILE=${GRUB_FILE:-"/boot/grub2/grub.cfg"}
 echo "Starting trustagent pre-requisites installation from " $USER_PWD
+
+# Install msr-tools
+if [ "$OS" == "rhel" ]; then
+  yum install -y msr-tools
+fi
+if [ "$OS" == "ubuntu" ]; then
+  apt-get update -y
+  apt install -y msr-tools
+fi
 
 if [[ $EUID -ne 0 ]]; then
     echo_failure "This script must be run as root"
     exit 1
 fi
 
+install_tboot() {
+  if [ "$OS" == "rhel" ]; then
+    yum install -y tboot-1.9.10
+  fi
+  if [ "$OS" == "ubuntu" ]; then
+    wget http://archive.ubuntu.com/ubuntu/pool/universe/t/tboot/tboot_1.9.7-0ubuntu2_amd64.deb
+    dpkg -i tboot_1.9.*-*
+  fi
+
+}
 # Check for legacy mode and install tboot
 if ! is_uefi_boot; then
   SUEFI_ENABLED="false"
-  yum install -y tboot-1.9.10
+  install_tboot
   if [ $? -ne 0 ]; then
     echo_failure "failed to install tboot"
     exit 1
@@ -80,7 +105,7 @@ bootctl status 2> /dev/null | grep 'Secure Boot: disabled' > /dev/null
 if [ $? -eq 0 ]; then
     SUEFI_ENABLED="false"
 
-    yum install -y tboot-1.9.10
+    install_tboot
     if [ $? -ne 0 ]; then
       echo_failure "failed to install tboot"
       exit 1
@@ -124,8 +149,15 @@ define_grub_file() {
       DEFAULT_GRUB_FILE="/boot/efi/EFI/redhat/grub.cfg"
     fi
   else
-    if [ -f "/boot/grub2/grub.cfg" ]; then
-      DEFAULT_GRUB_FILE="/boot/grub2/grub.cfg"
+    if [ "$OS" == "rhel" ]; then
+       if [ -f "/boot/grub2/grub.cfg" ]; then
+         DEFAULT_GRUB_FILE="/boot/grub2/grub.cfg"
+       fi
+    fi
+    if [ "$OS" == "ubuntu" ]; then
+       if [ -f "/boot/grub/grub.cfg" ]; then
+         DEFAULT_GRUB_FILE="/boot/grub/grub.cfg"
+       fi
     fi
   fi
   GRUB_FILE=${GRUB_FILE:-$DEFAULT_GRUB_FILE}
@@ -210,15 +242,28 @@ fi
 echo_success "Installation succeeded"
 
 configure_tboot_grub_menu(){
-  TBOOT_VERSION=$(rpm -qa | grep tboot | cut -d'-' -f2)
-  MENUENTRY="tboot ${TBOOT_VERSION}"
-  sed -i "s#GRUB_DEFAULT=.*#GRUB_DEFAULT=\'${MENUENTRY}\'#g" /etc/default/grub
   define_grub_file
-  grub2-mkconfig -o $GRUB_FILE
+  if [ "$OS" == "rhel" ]; then
+    TBOOT_VERSION=$(rpm -qa | grep tboot | cut -d'-' -f2)
+    MENUENTRY="tboot ${TBOOT_VERSION}"
+    sed -i "s#GRUB_DEFAULT=.*#GRUB_DEFAULT=\'${MENUENTRY}\'#g" /etc/default/grub
+    grub2-mkconfig -o $GRUB_FILE
+  fi
+  if [ "$OS" == "ubuntu" ]; then
+    TBOOT_VERSION=$(apt-cache show tboot | grep Version | head -1 |  cut -d ':' -f 2 | cut -d '-' -f 1)
+    MENUENTRY="tboot ${TBOOT_VERSION}"
+    sed -i "s#GRUB_DEFAULT=.*#GRUB_DEFAULT=\'${MENUENTRY}\'#g" /etc/default/grub
+    grub-mkconfig -o $GRUB_FILE
+  fi
+
 }
 
 if [[ $rebootRequired -eq 0 ]] && [[ $SUEFI_ENABLED == "false" ]]; then
     configure_tboot_grub_menu
+    if [ $? -ne 0 ]; then
+      echo_failure "error while configuring grub menu"
+    fi
+
     echo
     echo "Reboot is required."
     echo
