@@ -2,7 +2,7 @@
 
 SECURE_DOCKER_DAMEON=/opt/secure-docker-daemon
 mkdir -p $SECURE_DOCKER_DAMEON
-
+DOCKER_DAEMON_PATH=/etc/docker/daemon.json
 # Check OS
 OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
 temp="${OS%\"}"
@@ -41,6 +41,32 @@ is_docker_installed(){
   fi
 }
 
+configure_daemon_json_file(){
+  sed -i -r '/^\s*$/d' $DOCKER_DAEMON_PATH
+  sed -i '1d;$d' $DOCKER_DAEMON_PATH
+  sed -i -r '/^\s*$/d' $DOCKER_DAEMON_PATH
+  no_lines=$(wc -l < $DOCKER_DAEMON_PATH)
+  if [ "$no_lines" == 1 ]; then
+    echo -n "," >> $DOCKER_DAEMON_PATH
+  fi
+  authz_plugins=$(grep authorization-plugins $DOCKER_DAEMON_PATH  |   cut -d ":" -f 2 | cut -d "[" -f 2 | cut -d "]" -f 1)
+  sed -i "s/\"storage-driver\":.*//g" $DOCKER_DAEMON_PATH
+  sed -i "s/\"authorization-plugins\":.*//g" $DOCKER_DAEMON_PATH
+  if [ ! -z $authz_plugins ]; then
+     authz_plugins="[$authz_plugins,\"secure-docker-plugin\"],"
+  else
+     authz_plugins="\"authorization-plugins\": [\"secure-docker-plugin\"],"
+  fi
+  storage_driver="\"storage-driver\": \"secureoverlay2\""
+  echo $authz_plugins >> $DOCKER_DAEMON_PATH
+  echo $storage_driver >> $DOCKER_DAEMON_PATH
+
+
+  sed -i "1s/^/{ /" $DOCKER_DAEMON_PATH
+  echo "}" >> $DOCKER_DAEMON_PATH
+  cat $DOCKER_DAEMON_PATH
+}
+
 is_docker_installed
 
 which cryptsetup 2>/dev/null
@@ -76,15 +102,21 @@ else
 fi
 
   # backup config files
-if [ -f "/etc/docker/daemon.json" ]; then
-  cp /etc/docker/daemon.json $SECURE_DOCKER_DAMEON/backup/
+if [ -f $DOCKER_DAEMON_PATH ]; then
+  cp $DOCKER_DAEMON_PATH $SECURE_DOCKER_DAMEON/backup/
+  configure_daemon_json_file
+else
+  cat > $DOCKER_DAEMON_PATH <<EOF
+{
+ "authorization-plugins": ["secure-docker-plugin"],
+ "storage-driver": "secureoverlay2"
+}
+EOF
 fi
 cp /lib/systemd/system/docker.service $SECURE_DOCKER_DAMEON/backup/
 
 install_secure_docker_plugin
 
 echo "Starting secure docker engine"
-mkdir -p /etc/docker
-cp daemon.json /etc/docker/
 systemctl daemon-reload
 systemctl start docker

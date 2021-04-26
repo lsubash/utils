@@ -84,7 +84,7 @@ install_tboot() {
     yum install -y tboot-1.9.10
   fi
   if [ "$OS" == "ubuntu" ]; then
-    wget http://archive.ubuntu.com/ubuntu/pool/universe/t/tboot/tboot_1.9.7-0ubuntu2_amd64.deb
+    wget http://mirrors.kernel.org/ubuntu/pool/universe/t/tboot/tboot_1.9.12+hg20200718-1_amd64.deb
     dpkg -i tboot_1.9.*-*
   fi
 
@@ -250,12 +250,11 @@ configure_tboot_grub_menu(){
     grub2-mkconfig -o $GRUB_FILE
   fi
   if [ "$OS" == "ubuntu" ]; then
-    TBOOT_VERSION=$(apt-cache show tboot | grep Version | head -1 |  cut -d ':' -f 2 | cut -d '-' -f 1)
+    TBOOT_VERSION=$(apt-cache show tboot | grep Version | head -1 |  cut -d ':' -f 2 | cut -d '+' -f 1)
     MENUENTRY="tboot ${TBOOT_VERSION}"
     sed -i "s#GRUB_DEFAULT=.*#GRUB_DEFAULT=\'${MENUENTRY}\'#g" /etc/default/grub
     grub-mkconfig -o $GRUB_FILE
   fi
-
 }
 
 if [[ $rebootRequired -eq 0 ]] && [[ $SUEFI_ENABLED == "false" ]]; then

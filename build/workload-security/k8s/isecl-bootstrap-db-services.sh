@@ -133,7 +133,7 @@ deploy_hvs_db() {
 
 cleanup_hvs_db() {
 
-  echo "Cleaning up SGX-HOST-VERIFICATION-SERVICE Database"
+  echo "Cleaning up HOST-VERIFICATION-SERVICE Database"
 
   cd hvs-db/
 
@@ -158,7 +158,7 @@ cleanup_hvs_db() {
 
 cleanup_wls_db() {
 
-  echo "Cleaning up SGX CACHING SERVICE..."
+  echo "Cleaning up WORKLOAD-SERVICE Database"
 
   cd wls-db/
 
@@ -182,7 +182,7 @@ cleanup_wls_db() {
 
 cleanup_authservice_db() {
 
-  echo "Cleaning up AUTHENTICATION-AUTHORIZATION-SERVICE..."
+  echo "Cleaning up AUTHENTICATION-AUTHORIZATION-SERVICE Database"
 
   cd aas-db/
 
