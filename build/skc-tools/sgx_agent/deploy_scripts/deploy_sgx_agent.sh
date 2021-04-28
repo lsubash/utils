@@ -1,6 +1,5 @@
 #!/bin/bash
 SGX_DRIVER_VERSION=1.41
-KDIR=/lib/modules/$(uname -r)/build
 SGX_INSTALL_DIR=/opt/intel
 MP_RPM_VER=1.10.100.4-1
 SGX_AGENT_BIN=bin
@@ -9,8 +8,12 @@ red=`tput setaf 1`
 green=`tput setaf 2`
 reset=`tput sgr0`
 
+KDIR=/lib/modules/$(uname -r)/build
 cat $KDIR/.config | grep 'CONFIG_INTEL_SGX=y\|CONFIG_X86_SGX=y' > /dev/null
 INKERNEL_SGX=$?
+DRIVER_VERSION=`modinfo intel_sgx | grep -w 'version:' | awk '{print $2}'`
+modprobe -n intel_sgx 2>/dev/null`
+DRIVER_LOADED=$?
 
 # Check OS and VERSION
 OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
@@ -31,12 +34,8 @@ uninstall_sgx_agent()
 	rm -rf /usr/sbin/libdcap_quoteprov.so.1 /usr/sbin/pck_id_retrieval_tool_enclave.signed.so /usr/sbin/PCKIDRetrievalTool
 	
 	if [[ "$INKERNEL_SGX" -eq 1 ]]; then
-		DRIVER_VERSION=`modinfo intel_sgx | grep -w 'version:' | awk '{print $2}'`
-		if [ "$DRIVER_VERSION" == "" ]; then
+		if [[ "$DRIVER_LOADED" -ne 0 ]]; then
 			echo "SGX DCAP driver not installed"
-			echo "Uninstalling existing SGX Agent Installation...."
-			sgx_agent uninstall --purge
-			return
 		fi
 		if [ "$DRIVER_VERSION" != "$SGX_DRIVER_VERSION" ]; then
 			echo "uninstalling sgx dcap driver"
@@ -70,13 +69,13 @@ install_dcap_driver()
 {
 	chmod u+x $SGX_AGENT_BIN/sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin
 	if [[ "$INKERNEL_SGX" -eq 1 ]]; then
-                DRIVER_VERSION=`modinfo intel_sgx | grep -w 'version:' | awk '{print $2}'`
-                if [ "$DRIVER_VERSION" == "" ] || [ "$DRIVER_VERSION" != "$SGX_DRIVER_VERSION" ]; then
+                if [[ "$DRIVER_VERSION" == ""  || "$DRIVER_VERSION" != "$SGX_DRIVER_VERSION" ]]; then
                         echo "Installing sgx dcap driver...."
                         ./$SGX_AGENT_BIN/sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin -prefix=$SGX_INSTALL_DIR || exit 1
-                        echo "sgx dcap driver installed successfully"
-                else
-                        echo "sgx dcap driver with same version $DRIVER_VERSION already installed, skipping installation..."
+                        echo "${green} sgx dcap driver installed successfully ${reset}"
+		elif [ "$DRIVER_VERSION" != "$SGX_DRIVER_VERSION" ]; then
+			echo "${red} incompatible sgx dcap driver loaded, uninstall the existing driver before proceeding ${reset}"
+			exit 1
                 fi
         else
                 echo "found inbuilt sgx driver, skipping dcap driver installation"
