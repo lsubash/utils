@@ -12,7 +12,7 @@ KDIR=/lib/modules/$(uname -r)/build
 cat $KDIR/.config | grep 'CONFIG_INTEL_SGX=y\|CONFIG_X86_SGX=y' > /dev/null
 INKERNEL_SGX=$?
 DRIVER_VERSION=`modinfo intel_sgx | grep -w 'version:' | awk '{print $2}'`
-modprobe -n intel_sgx 2>/dev/null`
+modprobe -n intel_sgx 2>/dev/null
 DRIVER_LOADED=$?
 
 # Check OS and VERSION
