@@ -17,9 +17,14 @@ fi
 
  # backup config files
 if [ -f $SECURE_DOCKER_DAMEON/backup/daemon.json ]; then
-  cp -f $SECURE_DOCKER_DAMEON/backup/daemon.json $DOCKER_DAEMON_PATH
+  yes | cp -f $SECURE_DOCKER_DAMEON/backup/daemon.json $DOCKER_DAEMON_PATH
+else
+  rm -f $DOCKER_DAEMON_PATH
 fi
 
 echo "Starting docker engine"
 systemctl daemon-reload
 systemctl start docker
+if [ $? -eq 0 ]; then
+  rm -rf $SECURE_DOCKER_DAMEON
+fi
