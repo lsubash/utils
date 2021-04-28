@@ -15,3 +15,6 @@ yes | cp -f $CRIO_BAKCUP_DIR/crio $CRIO_PATH
 sed -i "s#ExecStart=$CRIO_PATH --decryption-secl-parameters secl:enabled #ExecStart=$CRIO_PATH #g" /usr/lib/systemd/system/crio.service
 systemctl daemon-reload
 systemctl start crio
+if [ $? -eq 0 ]; then
+  rm -rf $CRIO_BAKCUP_DIR
+fi

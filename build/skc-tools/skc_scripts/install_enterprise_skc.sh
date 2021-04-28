@@ -243,9 +243,6 @@ if [ $KEY_MANAGER == "KMIP" ]; then
 
   sed -i "s@^\(hostname\s*=\s*\).*\$@\1$KMIP_SERVER_IP@" kbs_script/server.conf
   sed -i "s@^\(port\s*=\s*\).*\$@\1$KMIP_SERVER_PORT@" kbs_script/server.conf
-  sed -i "s@^\(certificate_path\s*=\s*\).*\$@\1$KMIP_CLIENT_CERT_PATH@" kbs_script/server.conf
-  sed -i "s@^\(key_path\s*=\s*\).*\$@\1$KMIP_CLIENT_KEY_PATH@" kbs_script/server.conf
-  sed -i "s@^\(ca_path\s*=\s*\).*\$@\1$KMIP_ROOT_CERT_PATH@" kbs_script/server.conf
 
   sed -i "s@^\(HOSTNAME_IP\s*=\s*\).*\$@\1'$KMIP_SERVER_IP'@" kbs_script/rsa_create.py
   sed -i "s@^\(SERVER_PORT\s*=\s*\).*\$@\1'$KMIP_SERVER_PORT'@" kbs_script/rsa_create.py
