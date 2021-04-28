@@ -52,7 +52,6 @@ uninstall_skc()
 	if [[ "$INKERNEL_SGX" -eq 1 ]]; then
                 if [[ "$DRIVER_LOADED" -ne 0 ]]; then
                         echo "SGX DCAP driver not installed"
-                fi
                 elif [ "$DRIVER_VERSION" != "$SGX_DRIVER_VERSION" ]; then
                         echo "uninstalling sgx dcap driver"
                         sh $SGX_INSTALL_DIR/sgxdriver/uninstall.sh
