@@ -15,3 +15,4 @@ data:
   HVS_URL: https://hvs-svc.isecl.svc.cluster.local:8443/mtwilson/v2
   PROVISION_ATTESTATION: "y"
   TRUSTAGENT_PORT: "1443"
+  TA_ENABLE_CONSOLE_LOG: "true"

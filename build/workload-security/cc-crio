@@ -46,6 +46,7 @@ k8s_common: clean $(INTEL_SECL_K8S) wls_k8s k8s-extensions tagent_k8s wlagent_k8
 	cp -r utils/build/workload-security/k8s/isecl-bootstrap-db-services.sh k8s/manifests/isecl-bootstrap-db-services.sh
 	cp utils/build/workload-security/k8s/isecl-k8s.env k8s/manifests/isecl-k8s.env
 	cp utils/build/workload-security/k8s/install-prereqs-crio.sh k8s/container-runtime/
+	cp utils/build/workload-security/k8s/uninstall-crio.sh k8s/container-runtime/
 	cp cri-o/bin/crio k8s/container-runtime/
 	cp -r utils/build/k8s-manifests/k8s-extensions-controller k8s/manifests/
 	cp -r utils/build/k8s-manifests/k8s-extensions-scheduler k8s/manifests/

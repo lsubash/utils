@@ -6,8 +6,6 @@ https://download.docker.com/linux/centos/docker-ce.repo
 declare -a PRE_REQ_PACKAGES
 PRE_REQ_PACKAGES=(
 https://download-ib01.fedoraproject.org/pub/epel/8/Everything/x86_64/Packages/m/makeself-2.4.2-1.el8.noarch.rpm
-http://mirror.centos.org/centos/8/PowerTools/x86_64/os/Packages/tpm2-abrmd-devel-2.1.1-3.el8.x86_64.rpm 
-http://mirror.centos.org/centos/8/PowerTools/x86_64/os/Packages/trousers-devel-0.3.14-4.el8.x86_64.rpm
 https://www.cabextract.org.uk/cabextract-1.9.1-1.i386.rpm
 glib2-devel 
 glibc-devel 

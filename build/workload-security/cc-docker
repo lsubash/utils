@@ -55,6 +55,7 @@ k8s_common: clean $(INTEL_SECL_K8S) wls_k8s k8s-extensions tagent_k8s wlagent_k8
 	cp -r secure-docker-daemon/out/* k8s/container-runtime/
 	cp utils/build/workload-security/k8s/install-prereqs-docker.sh k8s/container-runtime/
 	cp utils/build/workload-security/k8s/secure-docker-plugin.env k8s/container-runtime/
+	cp utils/build/workload-security/k8s/uninstall-secure-docker-daemon.sh k8s/container-runtime/
 	cp -r secure-docker-plugin/secure-docker-plugin k8s/container-runtime/
 	cp -r secure-docker-plugin/artifact k8s/container-runtime/artifact
 	cp workload-service/out/*.tar k8s/container-images/
