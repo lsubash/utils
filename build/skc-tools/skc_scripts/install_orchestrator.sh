@@ -50,7 +50,7 @@ pushd $PWD
 cd /usr/local/pgsql
 sudo -u postgres dropdb $SHVS_DB_NAME
 echo "Uninstalling Integration HUB...."
-ihub uninstall --purge
+ihub uninstall --purge --exec
 popd
 
 pushd $PWD
@@ -77,7 +77,7 @@ popd
 AAS_URL=https://$SYSTEM_IP:$AAS_PORT/aas/v1
 CMS_URL=https://$SYSTEM_IP:$CMS_PORT/cms/v1/
 echo "Updating Populate users env ...."
-ISECL_INSTALL_COMPONENTS=SHVS,SIH
+ISECL_INSTALL_COMPONENTS=SHVS,SIH,IHUB
 sed -i "s@^\(ISECL_INSTALL_COMPONENTS\s*=\s*\).*\$@\1$ISECL_INSTALL_COMPONENTS@" ~/populate-users.env
 sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/populate-users.env
 
@@ -152,7 +152,7 @@ sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/ihub.env
 sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@" ~/ihub.env
 SHVS_URL=https://$SYSTEM_IP:$SHVS_PORT/sgx-hvs/v2
 K8S_URL=https://$K8S_IP:$K8S_PORT/
-sed -i "s@^\(ATTESTATION_SERVICE_URL\s*=\s*\).*\$@\1$SHVS_URL@" ~/ihub.env
+sed -i "s@^\(SHVS_BASE_URL\s*=\s*\).*\$@\1$SHVS_URL@" ~/ihub.env
 sed -i "s@^\(KUBERNETES_URL\s*=\s*\).*\$@\1$K8S_URL@" ~/ihub.env
 if [[ "$OS" != "ubuntu" ]]; then
 OPENSTACK_AUTH_URL=http://$OPENSTACK_IP:$OPENSTACK_AUTH_PORT/
