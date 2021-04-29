@@ -211,6 +211,15 @@ kbs_admin_password: kbsAdminPass
 # To install pykmip server. By default pykmip will not be installed and KEY_MANAGER is set to 'Directory'
 backend_pykmip: "no"
 
+# The Key Broker Service script folder
+kbs_script_folder_name: kbs_script
+
+# The Key Broker Service script folder source
+kbs_script_folder_src: "{{binaries_path}}/{{kbs_script_folder_name}}"
+
+# The port for running the pyKmip server
+kmip_port: 5696
+
 # ---------------------------------------- SKOPEO -----------------------------------------------------#
 
 # The binary installer file source for Skopeo

@@ -96,4 +96,10 @@
     name: sgx_agent
     state: started
   listen: start sgx_agent
+
+- name: KMIP KBS | Start PYKMIP
+  service:
+    name: pykmip
+    state: started
+  listen: start pykmip
  
