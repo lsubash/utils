@@ -484,7 +484,7 @@ deploy_tagent() {
     sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: $CMS_BASE_URL#g" configMap.yml
     sed -i "s#CMS_TLS_CERT_SHA384:.*#CMS_TLS_CERT_SHA384: $CMS_TLS_CERT_SHA384#g" configMap.yml
     sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=$BEARER_TOKEN/g" secrets.txt
-    sed -i "s/TPM_OWNER_SECRET:.*/TPM_OWNER_SECRET: $TPM_OWNER_SECRET/g" secrets.txt
+    sed -i "s/TPM_OWNER_SECRET=.*/TPM_OWNER_SECRET: $TPM_OWNER_SECRET/g" secrets.txt
 
     $KUBECTL create secret generic ta-secret --from-file=secrets.txt --namespace=isecl
 
