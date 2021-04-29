@@ -269,7 +269,7 @@ deploy_ihub() {
   echo "|             DEPLOY:INTEGRATION-HUB               |"
   echo "----------------------------------------------------"
 
-  required_variables="IHUB_SERVICE_USERNAME,IHUB_SERVICE_PASSWORD,K8S_API_SERVER_CERT,ATTESTATION_TYPE,ATTESTATION_SERVICE_URL"
+  required_variables="IHUB_SERVICE_USERNAME,IHUB_SERVICE_PASSWORD,K8S_API_SERVER_CERT,HVS_BASE_URL"
   check_mandatory_variables $IHUB $required_variables
 
   cd ihub/
@@ -304,8 +304,9 @@ deploy_ihub() {
   sed -i "s/IHUB_SERVICE_PASSWORD=.*/IHUB_SERVICE_PASSWORD=$IHUB_SERVICE_PASSWORD/g" secrets.txt
   sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: ${CMS_BASE_URL}#g" configMap.yml
   sed -i "s#AAS_API_URL:.*#AAS_API_URL: ${AAS_API_URL}#g" configMap.yml
-  sed -i "s#ATTESTATION_SERVICE_URL:.*#ATTESTATION_SERVICE_URL: ${ATTESTATION_SERVICE_URL}#g" configMap.yml
-  sed -i "s#ATTESTATION_TYPE:.*#ATTESTATION_TYPE: ${ATTESTATION_TYPE}#g" configMap.yml
+  sed -i "s#HVS_BASE_URL:.*#HVS_BASE_URL: ${HVS_BASE_URL}#g" configMap.yml
+  sed -i "s/SHVS_BASE_URL:.*//g" configMap.yml
+  
 
   $KUBECTL create secret generic ihub-secret --from-file=secrets.txt --namespace=isecl
 
