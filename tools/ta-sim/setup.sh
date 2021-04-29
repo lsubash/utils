@@ -81,8 +81,8 @@ if [ -z "$HVS_IP" ]; then
   HVS_IP=$AAS_IP
 fi
 
-sed -i "s/^\(HvsApiUrl\s*:\s*\).*\$/\1https:\/\/$HVS_IP:$HVS_PORT\/hvs\//" configuration/config.yml
-sed -i "s/^\(AasApiUrl\s*:\s*\).*\$/\1https:\/\/$AAS_IP:$AAS_PORT\/aas\//" configuration/config.yml
+sed -i "s/^\(HvsApiUrl\s*:\s*\).*\$/\1https:\/\/$HVS_IP:$HVS_PORT\/hvs\/v2\//" configuration/config.yml
+sed -i "s/^\(AasApiUrl\s*:\s*\).*\$/\1https:\/\/$AAS_IP:$AAS_PORT\/aas\/v1\//" configuration/config.yml
 sed -i "s/^\(CmsApiUrl\s*:\s*\).*\$/\1https:\/\/$CMS_IP:$CMS_PORT\/cms\/v1\//" configuration/config.yml
 
 [ -z "$AAS_USERNAME" ] && read -p "Enter the AAS Admin username (Also, has access to all TA and VS APIs):" AAS_USERNAME

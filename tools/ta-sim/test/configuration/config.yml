@@ -5,8 +5,8 @@ QuoteDelayMs : 500
 RequestVolume : 50
 RequestVolumeDelayMs : 1000
 TrustedHostsPercentage : 100
-AasApiUrl : https://1.2.3.4:8444/aas/
-HvsApiUrl : https://1.2.3.5:8443/hvs/
+AasApiUrl : https://1.2.3.4:8444/aas/v1/
+HvsApiUrl : https://1.2.3.5:8443/hvs/v2/
 CmsApiUrl : https://1.2.3.6:8445/cms/v1/
 ApiUserName : <global_admin_user>
 ApiUserPassword : <global_admin_password>

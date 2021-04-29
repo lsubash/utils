@@ -460,7 +460,7 @@ func sendCreateHostRequest(hvsUrl, authtoken, ip, hw_uuid string, port int, clie
 		"connection_string": fmt.Sprintf("https://%s:%d", ip, port),
 	})
 
-	req, err := http.NewRequest("POST", hvsUrl+"v2/hosts", bytes.NewBuffer(reqBody))
+	req, err := http.NewRequest("POST", hvsUrl+"hosts", bytes.NewBuffer(reqBody))
 	if err != nil {
 		log.Error("could not create new request for creating host error : ", err)
 		return
@@ -496,7 +496,7 @@ func sendCreateFlavorRequest(flavorParts []string, hvsUrl, authtoken, ip string,
 		"partial_flavor_types": flavorParts,
 	})
 
-	req, err := http.NewRequest("POST", hvsUrl+"v2/flavors", bytes.NewBuffer(reqBody))
+	req, err := http.NewRequest("POST", hvsUrl+"flavors", bytes.NewBuffer(reqBody))
 	if err != nil {
 		log.Error("could not create new request for creating flavors - error : ", err)
 		return
