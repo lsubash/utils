@@ -624,7 +624,7 @@ cleanup_hvs() {
 
   echo "Cleaning up HOST-VERIFICATION-SERVICE..."
 
-  $KUBECTL delete secret hvs-service-credentials --namespace isecl
+  $KUBECTL delete secret hvs-secret --namespace isecl
 
   $KUBECTL delete configmap hvs-config --namespace isecl
   $KUBECTL delete deploy hvs-deployment --namespace isecl
