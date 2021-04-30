@@ -160,20 +160,22 @@ ihub_installer_file_name: ihub-v3.5.0.bin
 # The binary installer file source for Integration Hub
 ihub_installer_file_src: "{{binaries_path}}/{{ihub_installer_file_name}}"
 
-# The http port for running the Integration hub
+# The http port for running the Integration Hub
 ihub_http_port: 19082
 
-# The https port for running the Integration hub
+# The https port for running the Integration Hub
 ihub_https_port: 19445
 
-# The service account username name for Integration hub
+# The service account username name for Integration Hub
 ihub_service_username: admin@hub
 
-# The service account password for Integration hub
+# The service account password for Integration Hub
 ihub_service_password: hubAdminPass
 
+# The Instance name of Integration Hub
+ihub_instance_name: ihub
 
-# ---------------------------------------- WORKLOAD SERVICE ----------------------------------------- #
+# ---------------------------------------- WORKLOAD SERVICE ------------------------------------------ #
 
 # The name of the binary installer as per release tag for Workload Service
 wls_installer_file_name: wls-v3.5.0.bin
