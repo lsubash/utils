@@ -424,7 +424,7 @@ deploy_ihub(){
     cp $K8S_API_SERVER_CERT secrets/apiserver.crt
 
     #update configMap & secrets
-	sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=${BEARER_TOKEN}/g" secrets.txt
+    sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=${BEARER_TOKEN}/g" secrets.txt
     sed -i "s/CMS_TLS_CERT_SHA384:.*/CMS_TLS_CERT_SHA384: $CMS_TLS_CERT_SHA384/g" configMap.yml
     sed -i "s/TLS_SAN_LIST:.*/TLS_SAN_LIST: $IH_CERT_SAN_LIST/g" configMap.yml
     sed -i "s/KUBERNETES_TOKEN:.*/KUBERNETES_TOKEN: $kubernetes_token/g" configMap.yml
@@ -432,7 +432,7 @@ deploy_ihub(){
     sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: ${CMS_BASE_URL}#g" configMap.yml
     sed -i "s#AAS_API_URL:.*#AAS_API_URL: ${AAS_API_URL}#g" configMap.yml
     sed -i "s#SHVS_BASE_URL:.*#SHVS_BASE_URL: ${SHVS_BASE_URL}#g" configMap.yml
-    sed -i "s/HVS_BASE_URL:.*//g" configMap.yml
+    sed -i "s/\bHVS_BASE_URL\b:.*//g" configMap.yml
     sed -i "s/IHUB_SERVICE_USERNAME=.*/IHUB_SERVICE_USERNAME=$IHUB_SERVICE_USERNAME/g" secrets.txt
     sed -i "s/IHUB_SERVICE_PASSWORD=.*/IHUB_SERVICE_PASSWORD=$IHUB_SERVICE_PASSWORD/g" secrets.txt
 
