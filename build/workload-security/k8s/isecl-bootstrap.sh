@@ -473,12 +473,11 @@ deploy_tagent() {
     get_bearer_token
     get_cms_tls_cert_sha384
 
-    required_variables="GRUB_FILE,TPM_OWNER_SECRET,TA_CERT_SAN_LIST,AAS_API_URL,HVS_URL,CMS_BASE_URL"
+    required_variables="TPM_OWNER_SECRET,TA_CERT_SAN_LIST,AAS_API_URL,HVS_URL,CMS_BASE_URL"
     check_mandatory_variables $TAGENT $required_variables
 
     cd ta/
     # #update trustagent.env
-    sed -i "s#GRUB_FILE:.*#GRUB_FILE: $GRUB_FILE#g" configMap.yml
     sed -i "s#AAS_API_URL:.*#AAS_API_URL: $AAS_API_URL#g" configMap.yml
     sed -i "s#HVS_URL:.*#HVS_URL: $HVS_URL#g" configMap.yml
     sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: $CMS_BASE_URL#g" configMap.yml
