@@ -160,7 +160,7 @@ define_grub_file() {
        fi
     fi
   fi
-  GRUB_FILE=${GRUB_FILE:-$DEFAULT_GRUB_FILE}
+  GRUB_FILE=${DEFAULT_GRUB_FILE}
 }
 
 is_tpm_driver_loaded() {
@@ -251,7 +251,7 @@ configure_tboot_grub_menu(){
   fi
   if [ "$OS" == "ubuntu" ]; then
     TBOOT_VERSION=$(apt-cache show tboot | grep Version | head -1 |  cut -d ':' -f 2 | cut -d '+' -f 1)
-    MENUENTRY="tboot ${TBOOT_VERSION}"
+    MENUENTRY="tboot${TBOOT_VERSION}"
     sed -i "s#GRUB_DEFAULT=.*#GRUB_DEFAULT=\'${MENUENTRY}\'#g" /etc/default/grub
     grub-mkconfig -o $GRUB_FILE
   fi
