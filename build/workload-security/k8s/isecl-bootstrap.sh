@@ -772,7 +772,7 @@ print_help() {
   echo "    Available Options for up/down command:"
   echo "        agent      Can be one of tagent, wlagent"
   echo "        service    Can be one of cms, authservice, hvs, ihub, wls, kbs, isecl-controller, isecl-scheduler"
-  echo "        usecase    Can be one of foundation-security, workload-security, isecl-orchestration-k8s"
+  echo "        usecase    Can be one of foundation-security, workload-security, isecl-orchestration-k8s, csp, enterprise"
 }
 
 deploy_common_components() {
