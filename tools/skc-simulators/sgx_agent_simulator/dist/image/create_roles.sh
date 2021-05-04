@@ -7,10 +7,10 @@ ACCEPT="Accept: application/jwt"
 mkdir -p /tmp/sgx_agent
 tmpdir=$(mktemp -d -p /tmp/sgx_agent)
 
-#Get the CSP Admin JWT Token
-ADMIN_TOKEN=`curl $CURL_OPTS -H "$CONTENT_TYPE" -H "$ACCEPT" -X POST $AAS_BASE_URL/token -d \{\"username\":\"$CSP_ADMIN_USERNAME\",\"password\":\"$CSP_ADMIN_PASSWORD\"\}`
+#Get the Custom Claims Creator Admin JWT Token
+ADMIN_TOKEN=`curl $CURL_OPTS -H "$CONTENT_TYPE" -H "$ACCEPT" -X POST $AAS_BASE_URL/token -d \{\"username\":\"$CCC_ADMIN_USERNAME\",\"password\":\"$CCC_ADMIN_PASSWORD\"\}`
 if [ $? -ne 0 ]; then
-        echo "failed to get csp admin token"
+        echo "failed to get custom claims creator admin token"
         exit 1
 fi
 

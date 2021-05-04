@@ -6,15 +6,16 @@ package config
 
 import (
 	"errors"
-	errorLog "github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
-	commLog "intel/isecl/lib/common/v3/log"
-	"intel/isecl/lib/common/v3/setup"
-	"intel/isecl/sgx_agent/v3/constants"
 	"net/url"
 	"os"
 	"path"
 	"strconv"
+
+	errorLog "github.com/pkg/errors"
+	commLog "intel/isecl/lib/common/v3/log"
+	"intel/isecl/lib/common/v3/setup"
+	"intel/isecl/sgx_agent/v3/constants"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -36,7 +37,7 @@ type Configuration struct {
 
 	BearerToken        string
 	NumberOfHosts      int
-	HostStartId        int
+        HostStartId        int
 	WaitTime           int
 	RetryCount         int
 	SHVSUpdateInterval int
@@ -84,17 +85,17 @@ func (conf *Configuration) SaveConfiguration(taskName string, c setup.Context) e
 	}
 
 	numberOfHosts, err := c.GetenvString("HOST_COUNT", "Number of  Hosts")
-	if err == nil && numberOfHosts != "" {
-		conf.NumberOfHosts, err = strconv.Atoi(numberOfHosts)
-	} else if conf.NumberOfHosts == 0 {
-		conf.NumberOfHosts = constants.NumberOfHosts
-	}
-	hostStartId, err := c.GetenvString("HOST_START_ID", "Hosts Starts from")
-	if err == nil && hostStartId != "" {
-		conf.HostStartId, err = strconv.Atoi(hostStartId)
-	} else if conf.HostStartId == 0 {
-		conf.HostStartId = constants.DefaultHostStartId
-	}
+        if err == nil && numberOfHosts != "" {
+                conf.NumberOfHosts, err = strconv.Atoi(numberOfHosts)
+        } else if conf.NumberOfHosts == 0 {
+                conf.NumberOfHosts = constants.NumberOfHosts
+        }
+        hostStartId, err := c.GetenvString("HOST_START_ID", "Hosts Starts from")
+        if err == nil && hostStartId != "" {
+                conf.HostStartId, err = strconv.Atoi(hostStartId)
+        } else if conf.HostStartId == 0 {
+                conf.HostStartId = constants.DefaultHostStartId
+        }
 	return conf.Save()
 }
 

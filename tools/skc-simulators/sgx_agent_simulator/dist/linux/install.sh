@@ -26,10 +26,18 @@ else
 fi
 
 SERVICE_USERNAME=sgx_agent
+COMPONENT_NAME=sgx_agent
 
 if [[ $EUID -ne 0 ]]; then
     echo "This installer must be run as root"
     exit 1
+fi
+
+# Upgrade if component is already installed
+if command -v $COMPONENT_NAME &>/dev/null; then
+  echo "$COMPONENT_NAME is installed, proceeding with the upgrade"
+  ./${COMPONENT_NAME}_upgrade.sh
+  exit $?
 fi
 
 echo "Setting up SGX Agent Service Linux User..."
@@ -37,7 +45,6 @@ id -u $SERVICE_USERNAME 2> /dev/null || useradd --shell /bin/false $SERVICE_USER
 
 echo "Installing SGX Agent Service..."
 
-COMPONENT_NAME=sgx_agent
 PRODUCT_HOME=/opt/$COMPONENT_NAME
 BIN_PATH=$PRODUCT_HOME/bin
 LOG_PATH=/var/log/$COMPONENT_NAME/

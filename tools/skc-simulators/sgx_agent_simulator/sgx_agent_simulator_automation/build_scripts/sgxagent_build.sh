@@ -73,14 +73,4 @@ then
         exit
 fi
 
-if [ "$OS" == "rhel" ]
-then
-	source build_sgx_agent_docker.sh
-	if [ $? -ne 0 ]
-	then
-		echo "sgx agent docker build failed"
-		exit
-	fi
-fi
-
 create_sgx_agent_tar

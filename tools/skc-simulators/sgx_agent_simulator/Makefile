@@ -4,6 +4,9 @@ VERSION := $(or ${GITTAG}, v0.0.0)
 BUILDDATE := $(shell TZ=UTC date +%Y-%m-%dT%H:%M:%S%z)
 PROXY_EXISTS := $(shell if [[ "${https_proxy}" || "${http_proxy}" ]]; then echo 1; else echo 0; fi)
 DOCKER_PROXY_FLAGS := ""
+MONOREPO_GITURL := "ssh://git@gitlab.devtools.intel.com:29418/sst/isecl/intel-secl.git"
+MONOREPO_GITBRANCH := "v3.6/develop"
+
 ifeq ($(PROXY_EXISTS),1)
 	DOCKER_PROXY_FLAGS = --build-arg http_proxy=${http_proxy} --build-arg https_proxy=${https_proxy}
 endif
@@ -17,6 +20,14 @@ installer: sgx_agent
 	cp dist/linux/sgx_agent.service out/installer/sgx_agent.service
 	cp dist/linux/install.sh out/installer/install.sh && chmod +x out/installer/install.sh
 	cp out/sgx_agent out/installer/sgx_agent
+
+	git archive --remote=$(MONOREPO_GITURL) $(MONOREPO_GITBRANCH) pkg/lib/common/upgrades/ | tar xvf -
+	cp -a pkg/lib/common/upgrades/* out/installer
+	rm -rf pkg/
+	cp -a upgrades/* out/installer
+	mv out/installer/build/* out/installer
+	chmod +x out/installer/*.sh
+
 	makeself out/installer out/sgx_agent-$(VERSION).bin "SGX Agent $(VERSION)" ./install.sh
 
 sgx_agent:

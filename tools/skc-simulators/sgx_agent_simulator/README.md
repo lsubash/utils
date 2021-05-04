@@ -1,5 +1,5 @@
 SGX Agent Simulator
-===================
+=========
 
 `SGX Agent Simulator` is primarily involved in SGX technology discovery and
 collection of SGX attributes on a SGX enabled platform (Single
@@ -8,12 +8,13 @@ Socket/Multi socket).
 Key features
 ------------
 
+-   SGX agent required for SGX Discovery and Provisioning
 -   SGX agent simulator required for registering dummy host as per
     host count in env file.
 -   Collects the SGX platform-specific values, explicitly Encrypted
-    PPID, CPU SVN, ISV SVN, PCE ID, Manifest and QEID.
--   SGX Agent simulator provides dummy platform SGX-related information 
-    to the SGX Host Verification Service.
+    PPID, CPU SVN, ISV SVN, PCE ID, Manifest and QEID
+-   SGX Agent Simulator provides dummy platform SGX-related information to the SGX Host
+    Verification Service
 
 System Requirements
 -------------------
@@ -28,6 +29,7 @@ Software requirements
 
 -   git
 -   makeself
+-   docker
 -   Go 1.14.1 or newer
 
 Step By Step Build Instructions
@@ -39,7 +41,7 @@ Install required shell commands
 ### Install tools from `dnf`
 
 ``` {.shell}
-sudo dnf install -y git wget makeself
+sudo dnf install -y git wget makeself docker
 ```
 
 ### Install `go 1.14.1` or newer
@@ -60,21 +62,20 @@ export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 ```
 
 Build SGX Agent Simulator
--------------------------
+---------------
 
--   Git clone the SGX Agent simulator and generate binary
+-   Git clone the SGX Agent Simulator and generate binary
+-   Run scripts to build the SGX Agent
 
 ``` {.shell}
 git clone https://github.com/intel-secl/utils.git && cd utils
-git checkout v3.5/develop
+git checkout v3.6/develop
 cd tools/skc-simulators/sgx_agent_simulator/sgx_agent_simulator_automation/build_scripts/
-```
--   Run scripts to build the SGX Agent Simulator
 
-``` {.shell}
+- To build SGX Agent Simulator,
 #./sgxagent_build.sh
-- This script will generate a tarball(sgx_agent.tar) and checksum file(sgx_agent.sha2).
-- Copy sgx_agent.tar, sgx_agent.sha2 and agent_untar.sh(from sgx_agent directory) to a directory in the deployment machine.
+- This script will generate a tarball(sgx_agent.tar) and checksum file(sgx_agent.sha2)
+- Copy sgx_agent.tar, sgx_agent.sha2 and agent_untar.sh(from sgx_agent directory) to a directory in the deployment machine
 - run agent_untar.sh to untar sgx_agent.tar
 #./agent_untar.sh
 - update HOST_COUNT in env file.
@@ -84,6 +85,7 @@ HOST_START_ID=<start id of agent greater than zero>
 HOST_COUNT=<number of host to register in agent>
 - To deploy SGX Agent Simulator
 #./deploy_sgx_agent.sh.
+
 ```
 
 ### Manage service
