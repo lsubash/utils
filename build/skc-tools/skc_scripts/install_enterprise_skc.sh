@@ -6,6 +6,22 @@ red=`tput setaf 1`
 green=`tput setaf 2`
 reset=`tput sgr0`
 
+# Check OS and VERSION
+OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
+temp="${OS%\"}"
+temp="${temp#\"}"
+OS="$temp"
+VER=$(cat /etc/os-release | grep ^VERSION_ID | tr -d 'VERSION_ID="')
+
+if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
+	dnf install -qy curl || exit 1
+elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
+	apt install -y curl || exit 1
+else
+	echo "${red} Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04 ${reset}"
+	exit 1
+fi
+
 # Copy env files to Home directory
 \cp -pf $SKC_BINARY_DIR/env/cms.env $HOME_DIR
 \cp -pf $SKC_BINARY_DIR/env/authservice.env $HOME_DIR
