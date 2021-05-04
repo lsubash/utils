@@ -60,7 +60,7 @@ deploy_cms() {
 
   # wait to get ready
   echo "Wait for pods to initialize..."
-  POD_NAME=`$KUBECTL get pod -l app=cms -n isecl -o name`
+  POD_NAME=$($KUBECTL get pod -l app=cms -n isecl -o name)
   $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
   if [ $? == 0 ]; then
     echo "CERTIFICATE-MANAGEMENT-SERVICE DEPLOYED SUCCESSFULLY"
@@ -118,7 +118,7 @@ deploy_authservice() {
 
   # wait to get ready
   echo "Wait for pods to initialize..."
-  POD_NAME=`$KUBECTL get pod -l app=aas -n isecl -o name`
+  POD_NAME=$($KUBECTL get pod -l app=aas -n isecl -o name)
   $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
   if [ $? == 0 ]; then
     echo "AUTHENTICATION-AUTHORIZATION-SERVICE DEPLOYED SUCCESSFULLY"
@@ -169,7 +169,7 @@ get_bearer_token() {
 
   sed -i "s/INSTALL_ADMIN_USERNAME=.*/INSTALL_ADMIN_USERNAME=$INSTALL_ADMIN_USERNAME/g" $aas_scripts_dir/populate-users.env
   sed -i "s/INSTALL_ADMIN_PASSWORD=.*/INSTALL_ADMIN_PASSWORD=$INSTALL_ADMIN_PASSWORD/g" $aas_scripts_dir/populate-users.env
- 
+
   sed -i "s/GLOBAL_ADMIN_USERNAME=.*/GLOBAL_ADMIN_USERNAME=$GLOBAL_ADMIN_USERNAME/g" $aas_scripts_dir/populate-users.env
   sed -i "s/GLOBAL_ADMIN_PASSWORD=.*/GLOBAL_ADMIN_PASSWORD=$GLOBAL_ADMIN_PASSWORD/g" $aas_scripts_dir/populate-users.env
 
@@ -223,7 +223,7 @@ deploy_hvs() {
 
   # wait to get ready
   echo "Wait for pods to initialize..."
-  POD_NAME=`$KUBECTL get pod -l app=hvs -n isecl -o name`
+  POD_NAME=$($KUBECTL get pod -l app=hvs -n isecl -o name)
   $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
   if [ $? == 0 ]; then
     echo "HOST-VERIFICATION-SERVICE DEPLOYED SUCCESSFULLY"
@@ -250,7 +250,7 @@ deploy_custom_controller() {
 
   # wait to get ready
   echo "Wait for pods to initialize..."
-  POD_NAME=`$KUBECTL get pod -l app=isecl-controller -n isecl -o name`
+  POD_NAME=$($KUBECTL get pod -l app=isecl-controller -n isecl -o name)
   $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
   if [ $? == 0 ]; then
     echo "K8S-CONTROLLER DEPLOYED SUCCESSFULLY"
@@ -306,7 +306,6 @@ deploy_ihub() {
   sed -i "s#AAS_API_URL:.*#AAS_API_URL: ${AAS_API_URL}#g" configMap.yml
   sed -i "s#HVS_BASE_URL:.*#HVS_BASE_URL: ${HVS_BASE_URL}#g" configMap.yml
   sed -i "s/SHVS_BASE_URL:.*//g" configMap.yml
-  
 
   $KUBECTL create secret generic ihub-secret --from-file=secrets.txt --namespace=isecl
 
@@ -315,7 +314,7 @@ deploy_ihub() {
 
   # wait to get ready
   echo "Wait for pods to initialize..."
-  POD_NAME=`$KUBECTL get pod -l app=ihub -n isecl -o name`
+  POD_NAME=$($KUBECTL get pod -l app=ihub -n isecl -o name)
   $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
   if [ $? == 0 ]; then
     echo "INTEGRATION-HUB DEPLOYED SUCCESSFULLY"
@@ -400,7 +399,6 @@ deploy_kbs() {
   sed -i "s/SQVS_URL:.*//g" configMap.yml
   sed -i "s/SESSION_EXPIRY_TIME:.*//g" configMap.yml
 
-
   $KUBECTL create secret generic kbs-secret --from-file=secrets.txt --namespace=isecl
 
   # deploy
@@ -408,7 +406,7 @@ deploy_kbs() {
 
   # wait to get ready
   echo "Wait for pods to initialize..."
-  POD_NAME=`$KUBECTL get pod -l app=kbs -n isecl -o name`
+  POD_NAME=$($KUBECTL get pod -l app=kbs -n isecl -o name)
   $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
   if [ $? == 0 ]; then
     echo "KBS DEPLOYED SUCCESSFULLY"
@@ -422,144 +420,143 @@ deploy_kbs() {
 }
 
 deploy_wls() {
-    #WLS
-    echo "----------------------------------------------------"
-    echo "|            DEPLOY:WORKLOAD-SERVICE           |"
-    echo "----------------------------------------------------"
+  #WLS
+  echo "----------------------------------------------------"
+  echo "|            DEPLOY:WORKLOAD-SERVICE           |"
+  echo "----------------------------------------------------"
 
-    cd wls/
+  cd wls/
 
-    required_variables="WLS_SERVICE_USERNAME,WLS_SERVICE_PASSWORD,WLS_CERT_SAN_LIST,AAS_API_URL,HVS_URL,CMS_BASE_URL"
-    check_mandatory_variables $WLS $required_variables
+  required_variables="WLS_SERVICE_USERNAME,WLS_SERVICE_PASSWORD,WLS_CERT_SAN_LIST,AAS_API_URL,HVS_URL,CMS_BASE_URL"
+  check_mandatory_variables $WLS $required_variables
 
-    # The variables bearer_token and cms_tls_digest get loaded with below functions, this required if we want to deploy individual wls service
-    get_bearer_token
-    get_cms_tls_cert_sha384
+  # The variables bearer_token and cms_tls_digest get loaded with below functions, this required if we want to deploy individual wls service
+  get_bearer_token
+  get_cms_tls_cert_sha384
 
-    # update wls configMap & secrets
-    sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=${BEARER_TOKEN}/g" secrets.txt
-    sed -i "s/CMS_TLS_CERT_SHA384:.*/CMS_TLS_CERT_SHA384: ${CMS_TLS_CERT_SHA384}/g" configMap.yml
-    sed -i "s#AAS_API_URL:.*#AAS_API_URL: $AAS_API_URL#g" configMap.yml
-    sed -i "s#HVS_URL:.*#HVS_URL: $HVS_URL#g" configMap.yml
-    sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: $CMS_BASE_URL#g" configMap.yml
-    sed -i "s/SAN_LIST:.*/SAN_LIST: $WLS_CERT_SAN_LIST/g" configMap.yml
-    sed -i "s/WLS_SERVICE_USERNAME=.*/WLS_SERVICE_USERNAME=${WLS_SERVICE_USERNAME}/g" secrets.txt
-    sed -i "s/WLS_SERVICE_PASSWORD=.*/WLS_SERVICE_PASSWORD=${WLS_SERVICE_PASSWORD}/g" secrets.txt
-    sed -i "s/WLS_DB_USERNAME=.*/WLS_DB_USERNAME=${WLS_DB_USERNAME}/g" secrets.txt
-    sed -i "s/WLS_DB_PASSWORD=.*/WLS_DB_PASSWORD=${WLS_DB_PASSWORD}/g" secrets.txt
+  # update wls configMap & secrets
+  sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=${BEARER_TOKEN}/g" secrets.txt
+  sed -i "s/CMS_TLS_CERT_SHA384:.*/CMS_TLS_CERT_SHA384: ${CMS_TLS_CERT_SHA384}/g" configMap.yml
+  sed -i "s#AAS_API_URL:.*#AAS_API_URL: $AAS_API_URL#g" configMap.yml
+  sed -i "s#HVS_URL:.*#HVS_URL: $HVS_URL#g" configMap.yml
+  sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: $CMS_BASE_URL#g" configMap.yml
+  sed -i "s/SAN_LIST:.*/SAN_LIST: $WLS_CERT_SAN_LIST/g" configMap.yml
+  sed -i "s/WLS_SERVICE_USERNAME=.*/WLS_SERVICE_USERNAME=${WLS_SERVICE_USERNAME}/g" secrets.txt
+  sed -i "s/WLS_SERVICE_PASSWORD=.*/WLS_SERVICE_PASSWORD=${WLS_SERVICE_PASSWORD}/g" secrets.txt
+  sed -i "s/WLS_DB_USERNAME=.*/WLS_DB_USERNAME=${WLS_DB_USERNAME}/g" secrets.txt
+  sed -i "s/WLS_DB_PASSWORD=.*/WLS_DB_PASSWORD=${WLS_DB_PASSWORD}/g" secrets.txt
 
-    $KUBECTL create secret generic wls-secret --from-file=secrets.txt --namespace=isecl
+  $KUBECTL create secret generic wls-secret --from-file=secrets.txt --namespace=isecl
 
-    # deploy
-    $KUBECTL kustomize . | $KUBECTL apply -f -
+  # deploy
+  $KUBECTL kustomize . | $KUBECTL apply -f -
 
-    # wait to get ready
-    echo "Wait for pods to initialize..."
-    POD_NAME=`$KUBECTL get pod -l app=wls -n isecl -o name`
-    $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
-    if [ $? == 0 ]; then
-        echo "WORKLOAD-SERVICE DEPLOYED SUCCESSFULLY"
-    else
-        echo "Error: Deploying WLS"
-        echo "Exiting with error..."
-        exit 1
-    fi
-    cd $HOME_DIR
+  # wait to get ready
+  echo "Wait for pods to initialize..."
+  POD_NAME=$($KUBECTL get pod -l app=wls -n isecl -o name)
+  $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
+  if [ $? == 0 ]; then
+    echo "WORKLOAD-SERVICE DEPLOYED SUCCESSFULLY"
+  else
+    echo "Error: Deploying WLS"
+    echo "Exiting with error..."
+    exit 1
+  fi
+  cd $HOME_DIR
 }
 
 deploy_tagent() {
 
-    # get latest bearer_token and cms tls cert digest
-    get_bearer_token
-    get_cms_tls_cert_sha384
+  # get latest bearer_token and cms tls cert digest
+  get_bearer_token
+  get_cms_tls_cert_sha384
 
-    required_variables="TPM_OWNER_SECRET,TA_CERT_SAN_LIST,AAS_API_URL,HVS_URL,CMS_BASE_URL"
-    check_mandatory_variables $TAGENT $required_variables
+  required_variables="TPM_OWNER_SECRET,TA_CERT_SAN_LIST,AAS_API_URL,HVS_URL,CMS_BASE_URL"
+  check_mandatory_variables $TAGENT $required_variables
 
-    cd ta/
-    # #update trustagent.env
-    sed -i "s#AAS_API_URL:.*#AAS_API_URL: $AAS_API_URL#g" configMap.yml
-    sed -i "s#HVS_URL:.*#HVS_URL: $HVS_URL#g" configMap.yml
-    sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: $CMS_BASE_URL#g" configMap.yml
-    sed -i "s#CMS_TLS_CERT_SHA384:.*#CMS_TLS_CERT_SHA384: $CMS_TLS_CERT_SHA384#g" configMap.yml
-    sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=$BEARER_TOKEN/g" secrets.txt
-    sed -i "s/TPM_OWNER_SECRET=.*/TPM_OWNER_SECRET=$TPM_OWNER_SECRET/g" secrets.txt
+  cd ta/
+  # #update trustagent.env
+  sed -i "s#AAS_API_URL:.*#AAS_API_URL: $AAS_API_URL#g" configMap.yml
+  sed -i "s#HVS_URL:.*#HVS_URL: $HVS_URL#g" configMap.yml
+  sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: $CMS_BASE_URL#g" configMap.yml
+  sed -i "s#CMS_TLS_CERT_SHA384:.*#CMS_TLS_CERT_SHA384: $CMS_TLS_CERT_SHA384#g" configMap.yml
+  sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=$BEARER_TOKEN/g" secrets.txt
+  sed -i "s/TPM_OWNER_SECRET=.*/TPM_OWNER_SECRET=$TPM_OWNER_SECRET/g" secrets.txt
 
-    $KUBECTL create secret generic ta-secret --from-file=secrets.txt --namespace=isecl
+  $KUBECTL create secret generic ta-secret --from-file=secrets.txt --namespace=isecl
 
-    $KUBECTL kustomize . | $KUBECTL apply -f -
-    # wait to get ready
-    echo "Wait for ta daemonsets to initialize..."
-    sleep 120
-    cd $HOME_DIR
+  $KUBECTL kustomize . | $KUBECTL apply -f -
+  # wait to get ready
+  echo "Wait for ta daemonsets to initialize..."
+  sleep 120
+  cd $HOME_DIR
 
 }
 
-deploy_wlagent(){
+deploy_wlagent() {
 
-    # get latest bearer_token and cms tls cert digest
-    get_bearer_token
-    get_cms_tls_cert_sha384
+  # get latest bearer_token and cms tls cert digest
+  get_bearer_token
+  get_cms_tls_cert_sha384
 
-    required_variables="WLA_SERVICE_USERNAME,WLA_SERVICE_PASSWORD,AAS_API_URL,HVS_URL,CMS_BASE_URL"
-    check_mandatory_variables $WLAGENT $required_variables
-    cd wla/
-    # #update trustagent.env
-    sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=$BEARER_TOKEN/g" secrets.txt
-    sed -i "s#AAS_API_URL:.*#AAS_API_URL: $AAS_API_URL#g" configMap.yml
-    sed -i "s#HVS_URL:.*#HVS_URL: $HVS_URL#g" configMap.yml
-    sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: $CMS_BASE_URL#g" configMap.yml
-    sed -i "s/CMS_TLS_CERT_SHA384:.*/CMS_TLS_CERT_SHA384: $CMS_TLS_CERT_SHA384/g" configMap.yml
-    sed -i "s/WLA_SERVICE_USERNAME=.*/WLA_SERVICE_USERNAME=$WLA_SERVICE_USERNAME/g" secrets.txt
-    sed -i "s/WLA_SERVICE_PASSWORD=.*/WLA_SERVICE_PASSWORD=$WLA_SERVICE_PASSWORD/g" secrets.txt
+  required_variables="WLA_SERVICE_USERNAME,WLA_SERVICE_PASSWORD,AAS_API_URL,HVS_URL,CMS_BASE_URL"
+  check_mandatory_variables $WLAGENT $required_variables
+  cd wla/
+  # #update trustagent.env
+  sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=$BEARER_TOKEN/g" secrets.txt
+  sed -i "s#AAS_API_URL:.*#AAS_API_URL: $AAS_API_URL#g" configMap.yml
+  sed -i "s#HVS_URL:.*#HVS_URL: $HVS_URL#g" configMap.yml
+  sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: $CMS_BASE_URL#g" configMap.yml
+  sed -i "s/CMS_TLS_CERT_SHA384:.*/CMS_TLS_CERT_SHA384: $CMS_TLS_CERT_SHA384/g" configMap.yml
+  sed -i "s/WLA_SERVICE_USERNAME=.*/WLA_SERVICE_USERNAME=$WLA_SERVICE_USERNAME/g" secrets.txt
+  sed -i "s/WLA_SERVICE_PASSWORD=.*/WLA_SERVICE_PASSWORD=$WLA_SERVICE_PASSWORD/g" secrets.txt
 
-    $KUBECTL create secret generic wla-secret --from-file=secrets.txt --namespace=isecl
+  $KUBECTL create secret generic wla-secret --from-file=secrets.txt --namespace=isecl
 
-    $KUBECTL kustomize . | $KUBECTL apply -f -
-    # wait to get ready
-    echo "Wait for daemonset to initialize..."
-    sleep 20
-    $KUBECTL get pod -n isecl -l app=wla | grep Running
-    if [ $? == 0 ]; then
-        echo "WLA DAEMONSET DEPLOYED SUCCESSFULLY"
-    else
-        echo "Error: Deploying WLA"
-        echo "Exiting with error..."
-        exit 1
-    fi
-    cd $HOME_DIR
+  $KUBECTL kustomize . | $KUBECTL apply -f -
+  # wait to get ready
+  echo "Wait for daemonset to initialize..."
+  sleep 20
+  $KUBECTL get pod -n isecl -l app=wla | grep Running
+  if [ $? == 0 ]; then
+    echo "WLA DAEMONSET DEPLOYED SUCCESSFULLY"
+  else
+    echo "Error: Deploying WLA"
+    echo "Exiting with error..."
+    exit 1
+  fi
+  cd $HOME_DIR
 
 }
 
 cleanup_wls() {
 
-    echo "Cleaning up WORKLOAD-SERVICE..."
+  echo "Cleaning up WORKLOAD-SERVICE..."
 
+  $KUBECTL delete secret wls-secret --namespace isecl
+  $KUBECTL delete configmap wls-config --namespace isecl
+  $KUBECTL delete deploy wls-deployment --namespace isecl
 
-    $KUBECTL delete secret wls-secret --namespace isecl
-    $KUBECTL delete configmap wls-config  --namespace isecl
-    $KUBECTL delete deploy wls-deployment --namespace isecl
+  if [ "$K8S_DISTRIBUTION" == "kubeadm" ]; then
+    $KUBECTL delete pvc wls-config-pvc --namespace isecl
+    $KUBECTL delete pvc wls-logs-pvc --namespace isecl
+    $KUBECTL delete pv wls-config-pv --namespace isecl
+    $KUBECTL delete pv wls-logs-pv --namespace isecl
 
-    if [ "$K8S_DISTRIBUTION" == "kubeadm" ]; then
-      $KUBECTL delete pvc wls-config-pvc --namespace isecl
-      $KUBECTL delete pvc wls-logs-pvc --namespace isecl
-      $KUBECTL delete pv wls-config-pv --namespace isecl
-      $KUBECTL delete pv wls-logs-pv --namespace isecl
-
-    fi
+  fi
 
 }
 
-cleanup_tagent(){
-  $KUBECTL delete configmap ta-config  --namespace isecl
-  $KUBECTL delete secret ta-secret  --namespace isecl
+cleanup_tagent() {
+  $KUBECTL delete configmap ta-config --namespace isecl
+  $KUBECTL delete secret ta-secret --namespace isecl
   $KUBECTL delete daemonset ta-daemonset-txt --namespace isecl
   $KUBECTL delete daemonset ta-daemonset-suefi --namespace isecl
 }
 
-cleanup_wlagent(){
-  $KUBECTL delete configmap wla-config  --namespace isecl
-  $KUBECTL delete secret wla-secret  --namespace isecl
+cleanup_wlagent() {
+  $KUBECTL delete configmap wla-config --namespace isecl
+  $KUBECTL delete secret wla-secret --namespace isecl
   $KUBECTL delete daemonset wla-daemonset --namespace isecl
 }
 
@@ -829,7 +826,7 @@ dispatch_works() {
     "wlagent")
       deploy_wlagent
       ;;
-    "foundational_security")
+    "foundational-security")
       deploy_common_components
       ;;
     "workload-security")
@@ -845,6 +842,21 @@ dispatch_works() {
       if [ "$K8S_DISTRIBUTION" == "microk8s" ]; then
         deploy_extended_scheduler
       fi
+      ;;
+    "csp")
+      deploy_common_components
+      deploy_custom_controller
+      deploy_ihub
+      if [ "$K8S_DISTRIBUTION" == "microk8s" ]; then
+        deploy_extended_scheduler
+      fi
+      deploy_wls
+      deploy_wlagent
+      ;;
+    "enterprise")
+      deploy_cms
+      deploy_authservice
+      deploy_kbs
       ;;
     "all")
       bootstrap
@@ -883,15 +895,15 @@ dispatch_works() {
     "tagent")
       cleanup_tagent
       ;;
-     "kbs")
+    "kbs")
       cleanup_kbs
       ;;
     "wlagent")
       cleanup_wlagent
       ;;
-    "foundational_security")
+    "foundational-security")
       cleanup_common_components
-       ;;
+      ;;
     "isecl-orchestration-k8s")
       cleanup_common_components
       cleanup_ihub
@@ -903,6 +915,21 @@ dispatch_works() {
       cleanup_kbs
       cleanup_wlagent
       cleanup_wls
+      ;;
+    "csp")
+      cleanup_common_components
+      cleanup_isecl_controller
+      cleanup_ihub
+      if [ "$K8S_DISTRIBUTION" == "microk8s" ]; then
+        cleanup_isecl_scheduler
+      fi
+      cleanup_wls
+      cleanup_wlagent
+      ;;
+    "enterprise")
+      cleanup_cms
+      cleanup_authservice
+      cleanup_kbs
       ;;
     "all")
       cleanup
@@ -943,4 +970,3 @@ fi
 
 # run commands
 dispatch_works $*
-
