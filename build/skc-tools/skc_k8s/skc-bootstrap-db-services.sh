@@ -46,7 +46,7 @@ deploy_authservice_db() {
 
   # wait to get ready
   echo "Wait for pods to initialize..."
-  POD_NAME=`$KUBECTL get pod -l app=aasdb -n isecl -o name`
+  POD_NAME=$($KUBECTL get pod -l app=aasdb -n isecl -o name)
   $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
   if [ $? == 0 ]; then
     echo "AUTHENTICATION-AUTHORIZATION-SERVICE DATABASE DEPLOYED SUCCESSFULLY"
@@ -84,7 +84,7 @@ deploy_scs_db() {
 
   # wait to get ready
   echo "Wait for pods to initialize..."
-  POD_NAME=`$KUBECTL get pod -l app=scsdb -n isecl -o name`
+  POD_NAME=$($KUBECTL get pod -l app=scsdb -n isecl -o name)
   $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
   if [ $? == 0 ]; then
     echo "SGX CACHING SERVICE DATABASE DEPLOYED SUCCESSFULLY"
@@ -119,7 +119,7 @@ deploy_shvs_db() {
 
   # wait to get ready
   echo "Wait for pods to initialize..."
-  POD_NAME=`$KUBECTL get pod -l app=shvsdb -n isecl -o name`
+  POD_NAME=$($KUBECTL get pod -l app=shvsdb -n isecl -o name)
   $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
   if [ $? == 0 ]; then
     echo "SGX-HOST-VERIFICATION-SERVICE DATABASE DEPLOYED SUCCESSFULLY"
@@ -208,7 +208,7 @@ bootstrap() {
   echo "Kubenertes-> "
   check_k8s_distribution
 
-   if [ "$K8S_DISTRIBUTION" == "microk8s" ]; then
+  if [ "$K8S_DISTRIBUTION" == "microk8s" ]; then
     $KUBECTL version --short
     if [ $? != 0 ]; then
       echo "microk8s not installed. Cannot bootstrap ISecL Services"
@@ -263,9 +263,9 @@ cleanup() {
     sleep 30
   fi
 
-   if [ "$K8S_DISTRIBUTION" == "microk8s" ]; then
-      purge
-   fi
+  if [ "$K8S_DISTRIBUTION" == "microk8s" ]; then
+    purge
+  fi
 
 }
 

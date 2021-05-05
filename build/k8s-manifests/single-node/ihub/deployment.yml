@@ -39,7 +39,7 @@ spec:
               mountPath: /var/log/ihub
       containers:
         - name: ihub
-          image: <image-name>:<tag>
+          image: <image-name>:<image-tag>
           imagePullPolicy: Always
           securityContext:
             runAsUser: 1001

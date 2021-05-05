@@ -32,7 +32,7 @@ spec:
         fsGroup: 1001
       containers:
         - name: sagent
-          image: <image-name>:<tag>
+          image: <image-name>:<image-tag>
           imagePullPolicy: Always
           securityContext:
             privileged: true

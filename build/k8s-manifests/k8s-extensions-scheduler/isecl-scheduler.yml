@@ -56,7 +56,7 @@ spec:
                   operator: Exists
       containers:
         - name: isecl-scheduler
-          image: <image_name>:<tag>
+          image: <image-name>:<image-tag>
           imagePullPolicy: Always
           securityContext:
             runAsUser: 1001

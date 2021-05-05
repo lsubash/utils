@@ -38,7 +38,7 @@ spec:
             - name: aas-logs-volume
               mountPath: /var/log/authservice
       containers:
-        - image: <image-name>:<tag>
+        - image: <image-name>:<image-tag>
           name: aas
           imagePullPolicy: Always
           securityContext:

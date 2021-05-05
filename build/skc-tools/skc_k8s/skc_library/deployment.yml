@@ -31,7 +31,7 @@ spec:
                       - "SGX-ENABLED"
       containers:
         - name: skc-lib
-          image: <image-name>:<tag>
+          image: <image-name>:<image-tag>
           imagePullPolicy: Always
           ports:
            - containerPort: 8080

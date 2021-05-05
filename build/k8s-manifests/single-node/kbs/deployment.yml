@@ -42,7 +42,7 @@ spec:
               mountPath: /opt/kbs
       containers:
         - name: kbs
-          image: <image-name>:<port>
+          image: <image-name>:<image-tag>
           imagePullPolicy: Always
           securityContext:
             runAsUser: 1001
