@@ -36,9 +36,12 @@ then
 fi
 
 pykmip_cleanup() {
-   echo "Stop pykmip service and remove pykmip files"
+   echo "Stop pykmip service"
    systemctl disable $COMPONENT_NAME.service > /dev/null 2>&1
    systemctl stop $COMPONENT_NAME.service > /dev/null 2>&1
+   echo "Kill pykmip process"
+   ps -ef | grep run_server.py | grep -v grep | awk '{print $2}' | xargs kill > /dev/null 2>&1
+   echo "Remove pykmip files"
    rm -rf $PRODUCT_HOME $PYKMIP_PATH $LOG_PATH
 }
 
