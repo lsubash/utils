@@ -11,7 +11,6 @@ OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
 temp="${OS%\"}"
 temp="${temp#\"}"
 OS="$temp"
-VER=$(cat /etc/os-release | grep ^VERSION_ID | tr -d 'VERSION_ID="')
 
 red=`tput setaf 1`
 green=`tput setaf 2`
@@ -106,21 +105,18 @@ install_cryptoapitoolkit()
 	echo "${green} crypto api toolkit installed ${reset}"
 }
 
-install_skc_library_bin()
-{
-	$SKCLIB_BIN/skc_library_v*.bin
-	if [ $? -ne 0 ]; then
-		echo "${red} skc_library installation failed ${reset}"
-		exit 1
-	fi
-	echo "${green} skc_library modules installed ${reset}"
-}
-
 exit_on_error() {
   if [ $? != 0 ]; then
     echo "$1"
     exit 1
   fi
+}
+
+install_skc_library_bin()
+{
+	$SKCLIB_BIN/skc_library_v*.bin
+	exit_on_error "${red} skc_library installation failed ${reset}"
+	echo "${green} skc_library modules installed ${reset}"
 }
 
 BACKUP_DIR=/tmp/skc_library_backup/
