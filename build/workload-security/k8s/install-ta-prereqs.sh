@@ -65,13 +65,15 @@ TBOOT_DEPENDENCY="tboot-1.9.*"
 GRUB_FILE=${GRUB_FILE:-"/boot/grub2/grub.cfg"}
 echo "Starting trustagent pre-requisites installation from " $USER_PWD
 
-# Install msr-tools
+# Install msr-tools, libssl1.1 and libtspi1
 if [ "$OS" == "rhel" ]; then
   yum install -y msr-tools
 fi
 if [ "$OS" == "ubuntu" ]; then
   apt-get update -y
   apt install -y msr-tools
+  apt install -y libssl1.1
+  apt install -y libtspi1
 fi
 
 if [[ $EUID -ne 0 ]]; then
