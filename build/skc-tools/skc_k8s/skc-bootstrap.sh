@@ -296,6 +296,8 @@ deploy_SKC_library() {
   $KUBECTL create configmap sgx-qcnl-config --from-file=resources/sgx_default_qcnl.conf --namespace=isecl
   $KUBECTL create configmap openssl-config --from-file=resources/openssl.cnf --namespace=isecl
   $KUBECTL create configmap pkcs11-config --from-file=resources/pkcs11-apimodule.ini --namespace=isecl
+  $KUBECTL create configmap kms-npm-config --from-file=resources/kms_npm.ini --namespace=isecl
+  $KUBECTL create configmap sgx-stm-config --from-file=resources/sgx_stm.ini --namespace=isecl
   $KUBECTL create secret generic kbs-cert-secret --from-file=resources/$KBS_PUBLIC_CERTIFICATE --namespace=isecl
   $KUBECTL create configmap haproxy-hosts-config --from-file=resources/hosts --namespace=isecl
   $KUBECTL kustomize . | $KUBECTL apply -f -
@@ -637,7 +639,7 @@ cleanup_SKC_library() {
   echo "Cleaning up skc LIBRARY..."
   cd skc_library
   $KUBECTL delete secret kbs-cert-secret --namespace isecl
-  $KUBECTL delete configmap skc-lib-config nginx-config kbs-key-config sgx-qcnl-config openssl-config pkcs11-config haproxy-hosts-config --namespace isecl
+  $KUBECTL delete configmap skc-lib-config nginx-config kbs-key-config sgx-qcnl-config openssl-config pkcs11-config sgx-stm-config kms-npm-config haproxy-hosts-config --namespace isecl
   $KUBECTL delete deploy skclib-deployment --namespace isecl
   $KUBECTL delete svc skclib-svc --namespace isecl
   cd ../
