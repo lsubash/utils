@@ -120,6 +120,7 @@ install_skc_library_bin()
 }
 
 BACKUP_DIR=/tmp/skc_library_backup/
+SGX_CONFIG=/etc/sgx_default_qcnl.conf
 
 echo "Starting with the SKC library upgrade"
 
@@ -127,9 +128,17 @@ echo "Creating backup directory $BACKUP_DIR"
 mkdir -p $BACKUP_DIR
 exit_on_error "Failed to create backup directory"
 
+echo "Creating config backup directory $BACKUP_DIR/config"
+mkdir -p $BACKUP_DIR/config
+exit_on_error "Failed to create config backup directory"
+
 echo "Backing up SKC library to $BACKUP_DIR"
-cp -a $SKCLIB_INSTALL_DIR/* $BACKUP_DIR
+\cp -a $SKCLIB_INSTALL_DIR/* $BACKUP_DIR
 exit_on_error "Failed to backup skc library"
+
+echo "Backing up SKC library config to $BACKUP_DIR/config"
+\cp -a $SGX_CONFIG $BACKUP_DIR/config/ 
+exit_on_error "Failed to backup skc library config"
 
 uninstall_skc
 exit_on_error "Failed to uninstall existing SKC library"
@@ -165,5 +174,9 @@ echo "Restoring $SKCLIB_INSTALL_DIR/tmp"
 mkdir -p $SKCLIB_INSTALL_DIR/tmp/
 \cp -arf $BACKUP_DIR/tmp/* $SKCLIB_INSTALL_DIR/tmp/
 exit_on_error "Failed to restore $SKCLIB_INSTALL_DIR/tmp/"
+
+echo "Restoring $SGX_CONFIG"
+\cp -a $BACKUP_DIR/config/sgx_default_qcnl.conf $SGX_CONFIG
+exit_on_error "Failed to restore $SGX_CONFIG"
 
 echo "Completed SKC library upgrade"
