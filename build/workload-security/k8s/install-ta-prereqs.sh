@@ -61,7 +61,7 @@ temp="${OS%\"}"
 temp="${temp#\"}"
 OS="$temp"
 
-TBOOT_DEPENDENCY="tboot-1.9.*"
+TBOOT_DEPENDENCY="tboot"
 GRUB_FILE=${GRUB_FILE:-"/boot/grub2/grub.cfg"}
 echo "Starting trustagent pre-requisites installation from " $USER_PWD
 
@@ -118,7 +118,12 @@ fi
 # exit with error when such scenario is detected
 bootctl status 2> /dev/null | grep 'Secure Boot: enabled' > /dev/null
 if [ $? -eq 0 ]; then
-  rpm -qa | grep ${TBOOT_DEPENDENCY} >/dev/null
+  if [ "$OS" == "rhel" ]; then
+    rpm -qa | grep ${TBOOT_DEPENDENCY} >/dev/null
+  fi
+  if [ "$OS" == "ubuntu" ]; then
+    apt list --installed | grep ${TBOOT_DEPENDENCY} >/dev/null
+  fi
   if [ $? -eq 0 ]; then
     echo_failure "tagent cannot be installed on a system with both tboot and secure-boot enabled"
     exit 1
