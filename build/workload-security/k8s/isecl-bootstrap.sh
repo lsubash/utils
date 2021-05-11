@@ -383,7 +383,7 @@ deploy_kbs() {
   echo "|            DEPLOY:KBS                            |"
   echo "----------------------------------------------------"
 
-  required_variables="ENDPOINT_URL,KBS_CERT_SAN_LIST"
+  required_variables="ENDPOINT_URL,KBS_CERT_SAN_LIST,KMIP_SERVER_IP,KMIP_SERVER_PORT,KMIP_CLIENT_CERT_NAME,KMIP_CLIENT_KEY_NAME,KMIP_ROOT_CERT_NAME"
   check_mandatory_variables $KBS $required_variables
 
   get_bearer_token
@@ -398,6 +398,22 @@ deploy_kbs() {
   sed -i "s/SKC_CHALLENGE_TYPE:.*//g" configMap.yml
   sed -i "s/SQVS_URL:.*//g" configMap.yml
   sed -i "s/SESSION_EXPIRY_TIME:.*//g" configMap.yml
+
+  # Create kubernetes secrets kmip-certs for kbs kmip certificates.
+  sed -i "s/KMIP_SERVER_PORT:.*/KMIP_SERVER_PORT: \"$KMIP_SERVER_PORT\"/g" configMap.yml
+  sed -i "s/KMIP_SERVER_IP:.*/KMIP_SERVER_IP: $KMIP_SERVER_IP/g" configMap.yml
+  KMIP_CLIENT_CERT_PATH=/etc/kmip/$KMIP_CLIENT_CERT_NAME
+  KMIP_CLIENT_KEY_PATH=/etc/kmip/$KMIP_CLIENT_KEY_NAME
+  KMIP_ROOT_CERT_PATH=/etc/kmip/$KMIP_ROOT_CERT_NAME
+  cd kmip-secrets
+  if [ ! -f "$KMIP_CLIENT_CERT_NAME" ] && [ ! -f "$KMIP_CLIENT_KEY_NAME" ] && [ ! -f "$KMIP_ROOT_CERT_NAME" ]; then
+    echo "One or more Kmip related certificates are empty"
+  fi
+  cd ..
+  sed -i "s#KMIP_CLIENT_CERT_PATH:.*#KMIP_CLIENT_CERT_PATH: $KMIP_CLIENT_CERT_PATH#g" configMap.yml
+  sed -i "s#KMIP_CLIENT_KEY_PATH:.*#KMIP_CLIENT_KEY_PATH: $KMIP_CLIENT_KEY_PATH#g" configMap.yml
+  sed -i "s#KMIP_ROOT_CERT_PATH:.*#KMIP_ROOT_CERT_PATH: $KMIP_ROOT_CERT_PATH#g" configMap.yml
+  $KUBECTL create secret generic kmip-certs --namespace isecl --from-file=kmip-secrets
 
   $KUBECTL create secret generic kbs-secret --from-file=secrets.txt --namespace=isecl
 
@@ -568,6 +584,7 @@ cleanup_kbs() {
   $KUBECTL delete configmap kbs-config --namespace isecl
   $KUBECTL delete deploy kbs-deployment --namespace isecl
   $KUBECTL delete svc kbs-svc --namespace isecl
+  $KUBECTL delete secret kmip-certs --namespace isecl
 
   if [ "$K8S_DISTRIBUTION" == "kubeadm" ]; then
     $KUBECTL delete pvc kbs-config-pvc --namespace isecl

@@ -59,6 +59,8 @@ spec:
               mountPath: /var/log/kbs
             - name: kbs-opt-volume
               mountPath: /opt/kbs
+            - name: kbs-kmip-volume
+              mountPath: /etc/kmip
             - mountPath: /etc/secret-volume/
               name: kbs-credentials
               readOnly: true              
@@ -78,3 +80,6 @@ spec:
         - name: kbs-credentials
           secret:
               secretName: kbs-secret
+        - name: kbs-kmip-volume
+          secret:
+            secretName: kmip-certs
