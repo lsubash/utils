@@ -1,8 +1,8 @@
 {
 	"info": {
-		"_postman_id": "d1e3ed75-798b-4388-8580-be427817fde5",
+		"_postman_id": "55a1d1fe-e2d3-4079-af58-fa5e42b96a82",
 		"name": "Application Integrity",
-		"description": "Application Integrity allows any files and folders on a Linux host system to be included in the Chain of Trust integrity measurements.  These measurements are attested by the Verification Service along with the other platform measurements, and are included in determining the host’s overall Trust status.  The measurements are performed by a measurement agent called tbootXM, which is built into initrd during Trust Agent installation.  Because initrd is included in other Trusted Computing measurements, this allows Intel® SecL-DC to carry the Chain of Trust all the way to the Linux filesystem.",
+		"description": "> **Note**: This use case is not applicable for Containerized deployment with Kubernetes for Foundational Security\n\nApplication Integrity allows any files and folders on a Linux host system to be included in the Chain of Trust integrity measurements.  These measurements are attested by the Verification Service along with the other platform measurements, and are included in determining the host’s overall Trust status.  The measurements are performed by a measurement agent called tbootXM, which is built into initrd during Trust Agent installation.  Because initrd is included in other Trusted Computing measurements, this allows Intel® SecL-DC to carry the Chain of Trust all the way to the Linux filesystem.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -15,7 +15,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "aabd8f54-98ba-4e37-8721-0cb813b322b5",
 								"exec": [
 									"pm.environment.set(\"bearerToken\", pm.response.text());"
 								],
@@ -43,10 +42,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\": \"{{globalAdminUser}}\",\n    \"password\": \"{{globalAdminPass}}\"\n}",
-							"options": {
-								"raw": {}
-							}
+							"raw": "{\n    \"username\": \"{{globalAdminUser}}\",\n    \"password\": \"{{globalAdminPass}}\"\n}"
 						},
 						"url": {
 							"raw": "https://{{aas}}:{{aasPort}}/aas/v1/token",
@@ -121,8 +117,7 @@
 					]
 				}
 			],
-			"description": "To make an API request to an Intel® SecL-DC service, an authentication\r\ntoken is now required. API requests must now include an Authorization\r\nheader with an appropriate token:\r\n\r\n```\r\nAuthorization: Bearer <token>\r\n```\r\n\r\nThe token is issued by the AAS and will expire after a set amount of time.\r\nThis token may be used with any Intel® SecL-DC service, and will carry the\r\nappropriate permissions for the role(s) assigned to the account the token was\r\ngenerated for.",
-			"protocolProfileBehavior": {}
+			"description": "To make an API request to an Intel® SecL-DC service, an authentication\r\ntoken is now required. API requests must now include an Authorization\r\nheader with an appropriate token:\r\n\r\n```\r\nAuthorization: Bearer <token>\r\n```\r\n\r\nThe token is issued by the AAS and will expire after a set amount of time.\r\nThis token may be used with any Intel® SecL-DC service, and will carry the\r\nappropriate permissions for the role(s) assigned to the account the token was\r\ngenerated for."
 		},
 		{
 			"name": "Verify that hosts are registered and Trusted",
@@ -133,7 +128,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "31f94f6b-b5f0-43aa-bef9-d22c9a993dca",
 								"exec": [
 									"var report=pm.response.json()\r",
 									"pm.environment.set(\"hostId\", report.reports[0].host_id)"
@@ -144,7 +138,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "07051214-7c9c-448a-94b4-81c032102a48",
 								"exec": [
 									""
 								],
@@ -360,7 +353,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "fa4fdf70-1ccd-4251-bdab-55846b38df98",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -370,15 +362,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "bbf5e850-9a28-44d9-a772-1ccb2e4e771b",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Create a New SOFTWARE Flavor",
@@ -389,7 +379,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "a1cfe44c-09ba-43db-ba45-db44cba215ab",
 								"exec": [
 									"var flavorResponseBody=pm.response.json()\r",
 									"pm.environment.set(\"flavorId\",flavorResponseBody.meta.id)"
@@ -516,8 +505,7 @@
 					]
 				}
 			],
-			"description": "Creating a new SOFTWARE Flavor requires specifying a sample host where the application, files or folders that will be measured are currently present.  The measurements specified in the manifest will be captures when this call is executed, and the Verification Service will communicate with the Trust Agent and create a SOFTWARE Flavor based on the file measurements. \nThe software manifest below includes files related to the Trust Agent, but these can be defined for any application on a bare-metal server by specifying the static files and folders that comprise that application. \n\n> **NOTE:** Ensure the label is uniquely named when creating Flavor from App Manifest for each physical server",
-			"protocolProfileBehavior": {}
+			"description": "Creating a new SOFTWARE Flavor requires specifying a sample host where the application, files or folders that will be measured are currently present.  The measurements specified in the manifest will be captures when this call is executed, and the Verification Service will communicate with the Trust Agent and create a SOFTWARE Flavor based on the file measurements. \nThe software manifest below includes files related to the Trust Agent, but these can be defined for any application on a bare-metal server by specifying the static files and folders that comprise that application. \n\n> **NOTE:** Ensure the label is uniquely named when creating Flavor from App Manifest for each physical server"
 		},
 		{
 			"name": "Deploy the Application Manifest ",
@@ -543,10 +531,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"flavor_id\": \"{{flavorId}}\",\n    \"host_id\": \"{{hostId}}\"\n}",
-							"options": {
-								"raw": {}
-							}
+							"raw": "{\n    \"flavor_id\": \"{{flavorId}}\",\n    \"host_id\": \"{{hostId}}\"\n}"
 						},
 						"url": {
 							"raw": "https://{{hvs}}:{{hvsPort}}/hvs/v2/rpc/deploy-software-manifest",
@@ -631,7 +616,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "01ce958e-b13a-477e-9e36-30939300c002",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -641,15 +625,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "719a8f0c-3855-4ba1-90f3-b27962cda951",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Create new Attestation Reports for each host",
@@ -898,7 +880,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "5888ed05-b2fd-44bc-8c1d-a524855732ed",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -908,22 +889,19 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "e5272655-c847-4430-9487-537d92b1bdf2",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		}
 	],
 	"event": [
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "feeceb46-eb25-4e61-84fe-52c8d664b39d",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -933,13 +911,11 @@
 		{
 			"listen": "test",
 			"script": {
-				"id": "c77c39e9-0469-45fb-895f-a0c46e320f54",
 				"type": "text/javascript",
 				"exec": [
 					""
 				]
 			}
 		}
-	],
-	"protocolProfileBehavior": {}
+	]
 }

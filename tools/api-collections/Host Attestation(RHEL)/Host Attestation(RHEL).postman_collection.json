@@ -1400,7 +1400,7 @@
 					]
 				}
 			],
-			"description": "The SOFTWARE Flavor is required for Linux servers. By default, a\r\nmanifest for the Trust Agent components is pushed to the Trust Agent during\r\ninstallation; after rebooting to the TCB boot mode, this Flavor can now be\r\nimported. Importantly, this Flavor part should only be imported once – the \r\ndefault SOFTWARE Flavor has a unique label for each version, and requests to\r\nimport the SOFTWARE Flavor for a version of the Trust Agent that already\r\nexists will throw an error. For example, if you have 3 Trust Agent servers, you\r\nmay import the PLATFORM, OS, and HOST_UNIQUE Flavors from each of them,\r\nbut the SOFTWARE Flavor should only be imported once.",
+			"description": "> **Note**: SOFTWARE flavor is not applicable for Containerized deployment with Kubernetes for Foundational Security\n\nThe SOFTWARE Flavor is required for Linux servers. By default, a\nmanifest for the Trust Agent components is pushed to the Trust Agent during\ninstallation; after rebooting to the TCB boot mode, this Flavor can now be\nimported. Importantly, this Flavor part should only be imported once – the \ndefault SOFTWARE Flavor has a unique label for each version, and requests to\nimport the SOFTWARE Flavor for a version of the Trust Agent that already\nexists will throw an error. For example, if you have 3 Trust Agent servers, you\nmay import the PLATFORM, OS, and HOST_UNIQUE Flavors from each of them,\nbut the SOFTWARE Flavor should only be imported once.",
 			"event": [
 				{
 					"listen": "prerequest",
