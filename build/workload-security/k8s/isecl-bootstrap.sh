@@ -186,6 +186,10 @@ get_bearer_token() {
 
 deploy_hvs() {
 
+  if [ "$OUTBOUND_MODE" == "TRUE" ]; then
+    deploy_nats
+  fi
+
   echo "-------------------------------------------------------------"
   echo "|            DEPLOY: HOST VERIFICATION SERVICE            |"
   echo "-------------------------------------------------------------"
@@ -531,10 +535,38 @@ deploy_wlagent(){
 
 }
 
+deploy_nats(){
+
+    # get latest bearer_token and cms tls cert digest
+    get_bearer_token
+    get_cms_tls_cert_sha384
+
+    cd nats/
+    # #update trustagent.env
+    sed -i "s/operator:.*/operator=$NATS_OPERATOR/g" configMap.yml
+    sed -i "s/resolver_preload:.*/resolver_preload: $RESOLVER_PRELOAD/g" configMap.yml
+
+    $KUBECTL create secret generic nats-certs --from-file=nats-certs --namespace=isecl
+
+    $KUBECTL kustomize . | $KUBECTL apply -f -
+    # wait to get ready
+    echo "Wait for nats to initialize..."
+    sleep 20
+    $KUBECTL get pod -n isecl -l app=nats | grep Running
+    if [ $? == 0 ]; then
+        echo "NATS STATEFULSET DEPLOYED SUCCESSFULLY"
+    else
+        echo "Error: Deploying WLA"
+        echo "Exiting with error..."
+        exit 1
+    fi
+    cd $HOME_DIR
+
+}
+
 cleanup_wls() {
 
     echo "Cleaning up WORKLOAD-SERVICE..."
-
 
     $KUBECTL delete secret wls-secret --namespace isecl
     $KUBECTL delete configmap wls-config  --namespace isecl
@@ -549,6 +581,17 @@ cleanup_wls() {
     fi
 
 }
+
+cleanup_nats() {
+
+    echo "Cleaning up NATS-SEVER..."
+
+    $KUBECTL delete secret nats-certs --namespace isecl
+    $KUBECTL delete configmap nats-config  --namespace isecl
+    $KUBECTL delete statefulset nats --namespace isecl
+
+}
+
 
 cleanup_tagent(){
   $KUBECTL delete configmap ta-config  --namespace isecl
@@ -637,6 +680,10 @@ cleanup_hvs() {
     $KUBECTL delete pv hvs-logs-pv --namespace isecl
   fi
 
+  if [ "$OUTBOUND_MODE" == "TRUE" ]; then
+    cleanup_nats
+  fi
+  
   echo $(pwd)
 }
 
