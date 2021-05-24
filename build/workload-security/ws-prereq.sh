@@ -49,6 +49,7 @@ PRE_REQ_PACKAGES_RHEL=(
   gcc-c++
   openssl-devel
   tpm2-tss-2.0.0-4.el8.x86_64
+  tpm2-tss-devel.x86_64
 )
 
 declare -a PRE_REQ_PACKAGES_UBUNTU
@@ -56,6 +57,7 @@ PRE_REQ_PACKAGES_UBUNTU=(
   gcc-8
   g++-8
   build-essential
+  skopeo
 )
 
 declare -a PRE_REQ_PACKAGES_DOCKER
@@ -124,6 +126,9 @@ install_prereqs_packages() {
     done
   fi
   if [ "$OS" == "ubuntu" ]; then
+    add-apt-repository ppa:projectatomic/ppa -y
+    apt-get update -y
+
     for package in ${!PRE_REQ_PACKAGES_UBUNTU[@]}; do
       local package_name=${PRE_REQ_PACKAGES_UBUNTU[${package}]}
       apt install -y ${package_name}
