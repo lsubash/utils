@@ -20,15 +20,15 @@ if [ -f ./kbs.conf ]; then
 fi
 
 CACERT_PATH=cmsca.pem
-curl -k --request GET https://$SYSTEM_IP:$CMS_PORT/cms/v1/ca-certificates --header 'Accept: application/x-pem-file' > $CACERT_PATH
+CONTENT_TYPE="Content-Type: application/json"
+ACCEPT="Accept: application/json"
+AAS_BASE_URL=https://$SYSTEM_IP:$AAS_PORT/aas/v1
+
+curl -s -k -H 'Accept: application/x-pem-file' https://$SYSTEM_IP:$CMS_PORT/cms/v1/ca-certificates > $CACERT_PATH
 if [ $? -ne 0 ]; then
         echo "failed to get CMS CA certificate"
         exit 1
 fi
-
-CONTENT_TYPE="Content-Type: application/json"
-ACCEPT="Accept: application/json"
-AAS_BASE_URL=https://$SYSTEM_IP:$AAS_PORT/aas/v1
 
 rm -rf output *response.* *debug.*
 
@@ -45,12 +45,12 @@ user_="\"username\":\"$ENTERPRISE_ADMIN\""
 password_="\"password\":\"$ENTERPRISE_PASSWORD\""
 curl -s -k -H "$CONTENT_TYPE" -H "Authorization: Bearer $aas_token" --data \{$user_,$password_\} $http_header $AAS_BASE_URL/users
 
-user_details=`curl -k "$CONTENT_TYPE" -H "Authorization: Bearer $aas_token" -w %{http_code}  $AAS_BASE_URL/users?name=$ENTERPRISE_ADMIN`
+user_details=`curl -k -H "$CONTENT_TYPE" -H "Authorization: Bearer $aas_token" -w %{http_code}  $AAS_BASE_URL/users?name=$ENTERPRISE_ADMIN`
 user_id=`echo $user_details| awk 'BEGIN{RS="user_id\":\""} {print $1}' | sed -n '2p' | awk 'BEGIN{FS="\",\"username\":\""} {print $1}'`
 
 # createRoles("KMS","KeyCRUD","","permissions:["*:*:*"]")
 curl -s -k -H "$CONTENT_TYPE" -H "Authorization: Bearer $aas_token" --data \{\"service\":\"KBS\",\"name\":\"KeyCRUD\",\"permissions\":[\"*:*:*\"]\} $http_header $AAS_BASE_URL/roles
-role_details=`curl -k "$CONTENT_TYPE" -H "Authorization: Bearer $aas_token" -w %{http_code} $AAS_BASE_URL/roles?service=KBS\&name=KeyCRUD`
+role_details=`curl -k -H "$CONTENT_TYPE" -H "Authorization: Bearer $aas_token" -w %{http_code} $AAS_BASE_URL/roles?service=KBS\&name=KeyCRUD`
 role_id1=`echo $role_details | cut -d '"' -f 4`
 
 # map Key CRUD roles to enterprise admin
