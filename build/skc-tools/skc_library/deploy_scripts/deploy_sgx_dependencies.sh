@@ -43,14 +43,21 @@ install_dcap_driver()
 
 install_psw_qgl()
 {
-	tar -xf $SKCLIB_BIN/sgx_rpm_local_repo.tgz || exit 1
-	yum-config-manager --add-repo file://$PWD/sgx_rpm_local_repo || exit 1
-	dnf install -qy --nogpgcheck libsgx-launch libsgx-uae-service libsgx-urts libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-ql-devel libsgx-dcap-default-qpl-devel libsgx-dcap-default-qpl || exit 1
-	rm -rf sgx_rpm_local_repo /etc/yum.repos.d/*sgx_rpm_local_repo.repo
-	echo "${green} sgx psw and qgl installed ${reset}"
-
-	sed -i "s|PCCS_URL=.*|PCCS_URL=https://$CSP_SCS_IP:9000/scs/sgx/certification/v1/|g" /etc/sgx_default_qcnl.conf
-	sed -i "s|USE_SECURE_CERT=.*|USE_SECURE_CERT=FALSE|g" /etc/sgx_default_qcnl.conf
+        if [ "$OS" == "rhel" ]; then
+                tar -xf $SKCLIB_BIN/sgx_rpm_local_repo.tgz || exit 1
+                yum-config-manager --add-repo file://$PWD/sgx_rpm_local_repo || exit 1
+                dnf install -qy --nogpgcheck libsgx-launch libsgx-uae-service libsgx-urts libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-ql-devel libsgx-dcap-default-qpl-devel libsgx-dcap-default-qpl || exit 1
+                rm -rf sgx_rpm_local_repo /etc/yum.repos.d/*sgx_rpm_local_repo.repo
+        elif [ "$OS" == "ubuntu" ]; then
+                echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu/ bionic main' | sudo tee /etc/apt/sources.list.d/intel-sgx.list
+                wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | sudo apt-key add - || exit 1
+                apt update -y || exit 1
+                apt install -y libsgx-launch libsgx-uae-service libsgx-urts || exit 1
+                apt install -y libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-ql-dev libsgx-dcap-default-qpl-dev libsgx-dcap-default-qpl || exit 1
+        fi
+        echo "${green} sgx psw and qgl libraries installed ${reset}"
+        sed -i "s|PCCS_URL=.*|PCCS_URL=https://$CSP_SCS_IP:$CSP_SCS_PORT/scs/sgx/certification/v1/|g" /etc/sgx_default_qcnl.conf
+        sed -i "s|USE_SECURE_CERT=.*|USE_SECURE_CERT=FALSE|g" /etc/sgx_default_qcnl.conf
 }
 
 install_sgxssl()
