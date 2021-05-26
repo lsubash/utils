@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"os"
 
-	"intel/isecl/tools/bkc/v3/bkc"
+	"intel/isecl/tools/bkc/v4/bkc"
 )
 
 const (

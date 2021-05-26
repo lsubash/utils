@@ -28,8 +28,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/intel-secl/intel-secl/v3/pkg/lib/common/crypt"
-	tamodel "github.com/intel-secl/intel-secl/v3/pkg/model/ta"
+	"github.com/intel-secl/intel-secl/v4/pkg/lib/common/crypt"
+	tamodel "github.com/intel-secl/intel-secl/v4/pkg/model/ta"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -633,7 +633,7 @@ func createBindingKeyCertMain(ac *AppConfig) error {
 	}
 
 	aikRSAKey, ok := aikPrivateKey.(*rsa.PrivateKey)
-	if ! ok {
+	if !ok {
 		return errors.Wrap(err, "aik Private Key is not an expected RSA key ")
 	}
 
@@ -642,7 +642,7 @@ func createBindingKeyCertMain(ac *AppConfig) error {
 		return errors.Wrap(err, "failed to load Privacy CA cer and key")
 	}
 
-	if _, ok := pcaPrivateKey.(*rsa.PrivateKey); ! ok {
+	if _, ok := pcaPrivateKey.(*rsa.PrivateKey); !ok {
 		return errors.Wrap(err, "Privacy Key is not of type RSA")
 	}
 
@@ -722,7 +722,7 @@ func main() {
 		fmt.Println("Usage")
 		fmt.Printf("\n\t %s start | create-all-flavors | create-all-hosts | create-binding-key-cert ", os.Args[0])
 		fmt.Printf("\n\n\t create-binding-key-cert Usage")
-		fmt.Printf("\n\t %s create-binding-key-cert --pca-cert=<path_to_privacy_ca_cert> --pca-key=<path_to_privacy_ca_key>", os.Args[0] )
+		fmt.Printf("\n\t %s create-binding-key-cert --pca-cert=<path_to_privacy_ca_cert> --pca-key=<path_to_privacy_ca_key>", os.Args[0])
 		fmt.Println("\n create-all-flavors and create-all-host require that start is called and process is running in background ")
 	}
 

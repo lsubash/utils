@@ -26,20 +26,20 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	asset_tag "github.com/intel-secl/intel-secl/v3/pkg/lib/asset-tag"
-	"github.com/intel-secl/intel-secl/v3/pkg/lib/flavor"
-	flavorCommon "github.com/intel-secl/intel-secl/v3/pkg/lib/flavor/common"
-	flavorModel "github.com/intel-secl/intel-secl/v3/pkg/lib/flavor/model"
-	flavorUtil "github.com/intel-secl/intel-secl/v3/pkg/lib/flavor/util"
-	hostConnType "github.com/intel-secl/intel-secl/v3/pkg/lib/host-connector/types"
-	"github.com/intel-secl/intel-secl/v3/pkg/lib/verifier"
+	asset_tag "github.com/intel-secl/intel-secl/v4/pkg/lib/asset-tag"
+	"github.com/intel-secl/intel-secl/v4/pkg/lib/flavor"
+	flavorCommon "github.com/intel-secl/intel-secl/v4/pkg/lib/flavor/common"
+	flavorModel "github.com/intel-secl/intel-secl/v4/pkg/lib/flavor/model"
+	flavorUtil "github.com/intel-secl/intel-secl/v4/pkg/lib/flavor/util"
+	hostConnType "github.com/intel-secl/intel-secl/v4/pkg/lib/host-connector/types"
+	"github.com/intel-secl/intel-secl/v4/pkg/lib/verifier"
 
-	"github.com/intel-secl/intel-secl/v3/pkg/model/hvs"
-	hvsModel "github.com/intel-secl/intel-secl/v3/pkg/model/hvs"
-	taModel "github.com/intel-secl/intel-secl/v3/pkg/model/ta"
+	"github.com/intel-secl/intel-secl/v4/pkg/model/hvs"
+	hvsModel "github.com/intel-secl/intel-secl/v4/pkg/model/hvs"
+	taModel "github.com/intel-secl/intel-secl/v4/pkg/model/ta"
 	"github.com/pkg/errors"
 
-	pInfo "intel/isecl/lib/platform-info/v3/platforminfo"
+	pInfo "intel/isecl/lib/platform-info/v4/platforminfo"
 )
 
 // use these pair of key and cert to sign and verify to make things easier

@@ -8,7 +8,7 @@ import (
 	"os"
 	"path"
 
-	commands "intel/isecl/tools/bkc/v3/bkc/internal"
+	commands "intel/isecl/tools/bkc/v4/bkc/internal"
 
 	"github.com/pkg/errors"
 )

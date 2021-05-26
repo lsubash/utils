@@ -1,7 +1,7 @@
 GITTAG := $(shell git describe --tags --abbrev=0 2> /dev/null)
 GITCOMMIT := $(shell git describe --always)
 GITCOMMITDATE := $(shell git log -1 --date=short --pretty=format:%cd)
-VERSION := $(or ${GITTAG}, v3.6.0)
+VERSION := $(or ${GITTAG}, v4.0.0)
 BUILDDATE := $(shell TZ=UTC date +%Y-%m-%dT%H:%M:%S%z)
 
 default: all
@@ -14,11 +14,11 @@ rootcacert:
 	cp *.pem out/
 
 attestingapp: rootcacert
-	cd attestingApp && GOOS=linux GOSUMDB=off GOPROXY=direct go build -ldflags "-X github.com/intel-secl/sample-sgx-attestation/v3/attestingApp/version.BuildDate=$(BUILDDATE) -X github.com/intel-secl/sample-sgx-attestation/v3/attestingApp/version.Version=$(VERSION) -X github.com/intel-secl/sample-sgx-attestation/v3/attestingApp/version.GitHash=$(GITCOMMIT)" -o ../out/sgx-attesting-app
+	cd attestingApp && GOOS=linux GOSUMDB=off GOPROXY=direct go build -ldflags "-X github.com/intel-secl/sample-sgx-attestation/v4/attestingApp/version.BuildDate=$(BUILDDATE) -X github.com/intel-secl/sample-sgx-attestation/v4/attestingApp/version.Version=$(VERSION) -X github.com/intel-secl/sample-sgx-attestation/v4/attestingApp/version.GitHash=$(GITCOMMIT)" -o ../out/sgx-attesting-app
 	cp sgx-quote-policy.txt out/
 	cp config.yml.tmpl out/config.yml
 attestedapp: attestedapplib
-	cd attestedApp && GOOS=linux GOSUMDB=off GOPROXY=direct go build -ldflags "-X github.com/intel-secl/sample-sgx-attestation/v3/attestedApp/version.BuildDate=$(BUILDDATE) -X github.com/intel-secl/sample-sgx-attestation/v3/attestedApp/version.Version=$(VERSION) -X github.com/intel-secl/sample-sgx-attestation/v3/attestedApp/version.GitHash=$(GITCOMMIT)" -o ../out/sgx-attested-app
+	cd attestedApp && GOOS=linux GOSUMDB=off GOPROXY=direct go build -ldflags "-X github.com/intel-secl/sample-sgx-attestation/v4/attestedApp/version.BuildDate=$(BUILDDATE) -X github.com/intel-secl/sample-sgx-attestation/v4/attestedApp/version.Version=$(VERSION) -X github.com/intel-secl/sample-sgx-attestation/v4/attestedApp/version.GitHash=$(GITCOMMIT)" -o ../out/sgx-attested-app
 
 attestedapp-installer: attestedapp
 	cp attestedApp/libenclave/untrusted.so out/untrusted.so

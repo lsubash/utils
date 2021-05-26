@@ -5,8 +5,8 @@
 package main
 
 import (
-	"github.com/intel-secl/sample-sgx-attestation/v3/attestingApp/controllers"
-	"github.com/intel-secl/sample-sgx-attestation/v3/common"
+	"github.com/intel-secl/sample-sgx-attestation/v4/attestingApp/controllers"
+	"github.com/intel-secl/sample-sgx-attestation/v4/common"
 	"github.com/pkg/errors"
 	"net"
 	"strconv"

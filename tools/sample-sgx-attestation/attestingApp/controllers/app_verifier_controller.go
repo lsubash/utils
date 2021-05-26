@@ -15,7 +15,7 @@ import (
 	"encoding/binary"
 	"encoding/gob"
 	"fmt"
-	"github.com/intel-secl/sample-sgx-attestation/v3/common"
+	"github.com/intel-secl/sample-sgx-attestation/v4/common"
 	"github.com/pkg/errors"
 	logger "github.com/sirupsen/logrus"
 	"io"

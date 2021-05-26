@@ -11,8 +11,8 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"intel/isecl/lib/common/v3/crypt"
-	"intel/isecl/lib/tpmprovider/v3"
+	"intel/isecl/lib/common/v4/crypt"
+	"intel/isecl/lib/tpmprovider/v4"
 
 	"github.com/pkg/errors"
 )
