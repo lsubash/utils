@@ -85,7 +85,7 @@ extern "C" {
   int destroy_Enclave();
 
   int get_Key();
-  uint8_t* get_SGX_Quote(int* x, int*y);
+  uint8_t* get_SGX_Quote(int* x, int*y, char *nonce);
   uint8_t* get_pubkey(int* x);
 
   int unwrap_SWK(uint8_t* wrappedSWK, size_t wrappedSWKSize);
