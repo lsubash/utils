@@ -1,121 +1,11 @@
 {
 	"info": {
-		"_postman_id": "2769fc46-0012-492e-9c4e-33641502f9e1",
+		"_postman_id": "16a540d3-61a9-4ad6-8b4e-aaa6d6552b26",
 		"name": "Host Attestation(RHEL)",
 		"description": "The Host Attestation use case will enable external platform integrity\nverification using TCG-standard practices. This feature is the foundation for\nother Intel® SecL – DC use cases.\n\nPlatform Attestation involves taking measurements of system components\nduring system boot and then cryptographically verifying that the actual\nmeasurements taken match a set of expected or approved values, ensuring\nthat the measured components were in an acceptable or “trusted” state at the\ntime of the last system boot.\n\nIntel® SecL – DC leverages the Trusted Compute Group specification for a\ntrusted boot process, extending measurements of platform components to\nregisters in a Trusted Platform Module (TPM) and securely generating quotes of\nthose measurements from the TPM for remote comparison to expected values\n(attestation).\n\nThe deployment will include the Verification Service and one or more Trust\nAgents. The Verification Service is typically installed on a Virtual Machine, while\nthe Trust Agent must be installed on each physical server.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
-		{
-			"name": "Authorization",
-			"item": [
-				{
-					"name": "createToken",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.environment.set(\"bearerToken\", pm.response.text());\r",
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Accept",
-								"value": "application/jwt",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"username\": \"{{globalAdminUser}}\",\n    \"password\": \"{{globalAdminPass}}\"\n}"
-						},
-						"url": {
-							"raw": "https://{{aas}}:{{aasPort}}/aas/v1/token",
-							"protocol": "https",
-							"host": [
-								"{{aas}}"
-							],
-							"port": "{{aasPort}}",
-							"path": [
-								"aas",
-								"v1",
-								"token"
-							]
-						},
-						"description": "Creates a new bearer token that can be used in the Authorization header for other API \nrequests. Bearer token Authorization is not required when requesting token for Authservice \nadmin user. Authservice admin user bearer token should be provided in Authorization header \nwhen requesting bearer token for other users.\n\n**Note:** This token is automatically set as part of this API collection"
-					},
-					"response": [
-						{
-							"name": "Success",
-							"originalRequest": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									},
-									{
-										"key": "Accept",
-										"value": "application/jwt",
-										"type": "text"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"username\": \"{{globalAdminUser}}\",\n    \"password\": \"{{globalAdminPass}}\"\n}"
-								},
-								"url": {
-									"raw": "https://{{aas}}:{{aasPort}}/aas/token",
-									"protocol": "https",
-									"host": [
-										"{{aas}}"
-									],
-									"port": "{{aasPort}}",
-									"path": [
-										"aas",
-										"token"
-									]
-								}
-							},
-							"status": "OK",
-							"code": 200,
-							"_postman_previewlanguage": "jwt",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/jwt"
-								},
-								{
-									"key": "Date",
-									"value": "Thu, 13 Aug 2020 13:12:45 GMT"
-								},
-								{
-									"key": "Content-Length",
-									"value": "1366"
-								}
-							],
-							"cookie": [],
-							"body": "eyJhbGciOiJSUzM4NCIsImtpZCI6IjljMzU4ZGY0YmIyYTE5NGRkN2IyMGM0Mjg1M2Y3MTEwODQ5ZDNlM2YiLCJ0eXAiOiJKV1QifQ.eyJyb2xlcyI6W3sic2VydmljZSI6IkFBUyIsIm5hbWUiOiJBZG1pbmlzdHJhdG9yIn0seyJzZXJ2aWNlIjoiVEEiLCJuYW1lIjoiQWRtaW5pc3RyYXRvciJ9LHsic2VydmljZSI6IkhWUyIsIm5hbWUiOiJBZG1pbmlzdHJhdG9yIn0seyJzZXJ2aWNlIjoiQUgiLCJuYW1lIjoiQWRtaW5pc3RyYXRvciJ9LHsic2VydmljZSI6IktNUyIsIm5hbWUiOiJLZXlDUlVEIn0seyJzZXJ2aWNlIjoiV0xTIiwibmFtZSI6IkFkbWluaXN0cmF0b3IifV0sInBlcm1pc3Npb25zIjpbeyJzZXJ2aWNlIjoiQUFTIiwicnVsZXMiOlsiKjoqOioiXX0seyJzZXJ2aWNlIjoiQUgiLCJydWxlcyI6WyIqOio6KiJdfSx7InNlcnZpY2UiOiJIVlMiLCJydWxlcyI6WyIqOio6KiJdfSx7InNlcnZpY2UiOiJLTVMiLCJydWxlcyI6WyIqOio6KiJdfSx7InNlcnZpY2UiOiJUQSIsInJ1bGVzIjpbIio6KjoqIl19LHsic2VydmljZSI6IldMUyIsInJ1bGVzIjpbIio6KjoqIl19XSwiZXhwIjoxNTk3NDk3MTY1LCJpYXQiOjE1OTczMjQzMzUsImlzcyI6IkFBUyBKV1QgSXNzdWVyIiwic3ViIjoiZ2xvYmFsX2FkbWluX3VzZXIifQ.LOQUfFb2QHFShXWwm2u0lMyZ-SkVRbIHj7tobQz6t45tDOdN1dNupH2fn7wmZdo8VHMaH0oGvuhWPetqjfHXIGkNuyTnepSLldD0p8sbqLmo66cJx8MThuYKr9IyzbCbQ5pO1jdTrta8QxdW8a15DdjQ3UpcrjaCkBZ6AeX0xyL_UCfZWgcI9GKPWMcMVnsRpR3crjZUdr5HQTl_TR2a1dYp3YAUB_GigA9CG_N9nd4pVlKKGqVZYuuVlTD_kHrtAJGSUxaK88aWCczxI33TkHNoDof7D8GYDvqOxSBFGT32lJImsHBpWN185FDyVvSORXrwCI5YavgMBb8K5Q8lDMiWobFp4N7AzxCnNlXe54PAWk-ifUt39k3cT6o9OIqYT9n2oXx4EjNYZViTN7QWTm0e-rJKRgPtNpEe4ElC1-759be87xd_DwM1jXpwhAdmcYLOGMzOLXAjVNYaiZjRDG8phLT8MsrjODA4adJdIJVEwZA7Co2GU3TbUYlXNw2H"
-						}
-					]
-				}
-			],
-			"description": "To make an API request to an Intel® SecL-DC service, an authentication\r\ntoken is now required. API requests must now include an Authorization\r\nheader with an appropriate token:\r\n\r\n```\r\nAuthorization: Bearer <token>\r\n```\r\n\r\nThe token is issued by the AAS and will expire after a set amount of time.\r\nThis token may be used with any Intel® SecL-DC service, and will carry the\r\nappropriate permissions for the role(s) assigned to the account the token was\r\ngenerated for."
-		},
 		{
 			"name": "Verify Services",
 			"item": [
@@ -186,7 +76,7 @@
 					]
 				},
 				{
-					"name": "aasvVersion",
+					"name": "aasVersion",
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -380,13 +270,14 @@
 							}
 						],
 						"url": {
-							"raw": "https://{{tagent}}:{{tagentPort}}/version",
+							"raw": "https://{{tagent}}:{{tagentPort}}/v2/version",
 							"protocol": "https",
 							"host": [
 								"{{tagent}}"
 							],
 							"port": "{{tagentPort}}",
 							"path": [
+								"v2",
 								"version"
 							]
 						},
@@ -405,36 +296,41 @@
 									}
 								],
 								"url": {
-									"raw": "https://{{tagent}}:{{tagentPort}}/version",
+									"raw": "https://{{tagent}}:{{tagentPort}}/v2/version",
 									"protocol": "https",
 									"host": [
 										"{{tagent}}"
 									],
 									"port": "{{tagentPort}}",
 									"path": [
+										"v2",
 										"version"
 									]
 								}
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "json",
+							"_postman_previewlanguage": "plain",
 							"header": [
 								{
 									"key": "Content-Type",
-									"value": "application/json"
+									"value": "text/plain"
+								},
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=63072000; includeSubDomains"
 								},
 								{
 									"key": "Date",
-									"value": "Sat, 12 Sep 2020 12:41:06 GMT"
+									"value": "Wed, 26 May 2021 07:31:55 GMT"
 								},
 								{
 									"key": "Content-Length",
-									"value": "157"
+									"value": "83"
 								}
 							],
 							"cookie": [],
-							"body": "{\n    \"major\": 3,\n    \"minor\": 0,\n    \"patch\": 0,\n    \"commit\": \"985cc64\",\n    \"built\": \"2020-09-03T04:41:23Z\",\n    \"version_string\": \"Trust Agent v3.0.0-985cc64\\nBuilt 2020-09-03T04:41:23Z\\n\"\n}"
+							"body": "Service Name: Trust Agent\nVersion: v3.6.0-4112149\nBuild Date: 2021-05-25T13:30:09Z\n"
 						}
 					]
 				}
@@ -460,6 +356,116 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "Authorization",
+			"item": [
+				{
+					"name": "createToken",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.environment.set(\"bearerToken\", pm.response.text());\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/jwt",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"{{globalAdminUser}}\",\n    \"password\": \"{{globalAdminPass}}\"\n}"
+						},
+						"url": {
+							"raw": "https://{{aas}}:{{aasPort}}/aas/v1/token",
+							"protocol": "https",
+							"host": [
+								"{{aas}}"
+							],
+							"port": "{{aasPort}}",
+							"path": [
+								"aas",
+								"v1",
+								"token"
+							]
+						},
+						"description": "Creates a new bearer token that can be used in the Authorization header for other API \nrequests. Bearer token Authorization is not required when requesting token for Authservice \nadmin user. Authservice admin user bearer token should be provided in Authorization header \nwhen requesting bearer token for other users.\n\n**Note:** This token is automatically set as part of this API collection"
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/jwt",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"{{globalAdminUser}}\",\n    \"password\": \"{{globalAdminPass}}\"\n}"
+								},
+								"url": {
+									"raw": "https://{{aas}}:{{aasPort}}/aas/token",
+									"protocol": "https",
+									"host": [
+										"{{aas}}"
+									],
+									"port": "{{aasPort}}",
+									"path": [
+										"aas",
+										"token"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "jwt",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/jwt"
+								},
+								{
+									"key": "Date",
+									"value": "Thu, 13 Aug 2020 13:12:45 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "1366"
+								}
+							],
+							"cookie": [],
+							"body": "eyJhbGciOiJSUzM4NCIsImtpZCI6IjljMzU4ZGY0YmIyYTE5NGRkN2IyMGM0Mjg1M2Y3MTEwODQ5ZDNlM2YiLCJ0eXAiOiJKV1QifQ.eyJyb2xlcyI6W3sic2VydmljZSI6IkFBUyIsIm5hbWUiOiJBZG1pbmlzdHJhdG9yIn0seyJzZXJ2aWNlIjoiVEEiLCJuYW1lIjoiQWRtaW5pc3RyYXRvciJ9LHsic2VydmljZSI6IkhWUyIsIm5hbWUiOiJBZG1pbmlzdHJhdG9yIn0seyJzZXJ2aWNlIjoiQUgiLCJuYW1lIjoiQWRtaW5pc3RyYXRvciJ9LHsic2VydmljZSI6IktNUyIsIm5hbWUiOiJLZXlDUlVEIn0seyJzZXJ2aWNlIjoiV0xTIiwibmFtZSI6IkFkbWluaXN0cmF0b3IifV0sInBlcm1pc3Npb25zIjpbeyJzZXJ2aWNlIjoiQUFTIiwicnVsZXMiOlsiKjoqOioiXX0seyJzZXJ2aWNlIjoiQUgiLCJydWxlcyI6WyIqOio6KiJdfSx7InNlcnZpY2UiOiJIVlMiLCJydWxlcyI6WyIqOio6KiJdfSx7InNlcnZpY2UiOiJLTVMiLCJydWxlcyI6WyIqOio6KiJdfSx7InNlcnZpY2UiOiJUQSIsInJ1bGVzIjpbIio6KjoqIl19LHsic2VydmljZSI6IldMUyIsInJ1bGVzIjpbIio6KjoqIl19XSwiZXhwIjoxNTk3NDk3MTY1LCJpYXQiOjE1OTczMjQzMzUsImlzcyI6IkFBUyBKV1QgSXNzdWVyIiwic3ViIjoiZ2xvYmFsX2FkbWluX3VzZXIifQ.LOQUfFb2QHFShXWwm2u0lMyZ-SkVRbIHj7tobQz6t45tDOdN1dNupH2fn7wmZdo8VHMaH0oGvuhWPetqjfHXIGkNuyTnepSLldD0p8sbqLmo66cJx8MThuYKr9IyzbCbQ5pO1jdTrta8QxdW8a15DdjQ3UpcrjaCkBZ6AeX0xyL_UCfZWgcI9GKPWMcMVnsRpR3crjZUdr5HQTl_TR2a1dYp3YAUB_GigA9CG_N9nd4pVlKKGqVZYuuVlTD_kHrtAJGSUxaK88aWCczxI33TkHNoDof7D8GYDvqOxSBFGT32lJImsHBpWN185FDyVvSORXrwCI5YavgMBb8K5Q8lDMiWobFp4N7AzxCnNlXe54PAWk-ifUt39k3cT6o9OIqYT9n2oXx4EjNYZViTN7QWTm0e-rJKRgPtNpEe4ElC1-759be87xd_DwM1jXpwhAdmcYLOGMzOLXAjVNYaiZjRDG8phLT8MsrjODA4adJdIJVEwZA7Co2GU3TbUYlXNw2H"
+						}
+					]
+				}
+			],
+			"description": "To make an API request to an Intel® SecL-DC service, an authentication\r\ntoken is now required. API requests must now include an Authorization\r\nheader with an appropriate token:\r\n\r\n```\r\nAuthorization: Bearer <token>\r\n```\r\n\r\nThe token is issued by the AAS and will expire after a set amount of time.\r\nThis token may be used with any Intel® SecL-DC service, and will carry the\r\nappropriate permissions for the role(s) assigned to the account the token was\r\ngenerated for."
 		},
 		{
 			"name": "Register Hosts",
