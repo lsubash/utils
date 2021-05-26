@@ -177,11 +177,12 @@ func (ca AppVerifierController) ShareSWKWrappedSecret(conn net.Conn, key []byte,
 	return nil
 }
 
-func (ca AppVerifierController) ConnectAndReceiveQuote(conn net.Conn) (bool, *common.Message) {
+func (ca AppVerifierController) ConnectAndReceiveQuote(conn net.Conn, nonce string) (bool, *common.Message) {
 	var msg common.Message
 	msg.Type = common.MsgTypeConnect
 	msg.ConnectRequest.Username = common.AppUsername
 	msg.ConnectRequest.Password = common.AppPassword
+	msg.ConnectRequest.Nonce = nonce
 
 	// Write to socket
 	gobEncoder := gob.NewEncoder(conn)
@@ -203,8 +204,8 @@ func (ca AppVerifierController) ConnectAndReceiveQuote(conn net.Conn) (bool, *co
 	return true, respMsg
 }
 
-func (ca AppVerifierController) VerifySGXQuote(sgxQuote []byte, enclavePublicKey []byte) bool {
-	err := ca.verifyQuote(sgxQuote, enclavePublicKey)
+func (ca AppVerifierController) VerifySGXQuote(sgxQuote []byte, userData []byte) bool {
+	err := ca.verifyQuote(sgxQuote, userData)
 	if err != nil {
 		log.WithError(err).Errorf("Error while verifying SGX quote")
 		return false
@@ -214,7 +215,7 @@ func (ca AppVerifierController) VerifySGXQuote(sgxQuote []byte, enclavePublicKey
 }
 
 // verifySgxQuote verifies the quote
-func (ca AppVerifierController) verifyQuote(quote []byte, publicKey []byte) error {
+func (ca AppVerifierController) verifyQuote(quote []byte, userData []byte) error {
 	var err error
 
 	// Initialize logger.
@@ -224,10 +225,10 @@ func (ca AppVerifierController) verifyQuote(quote []byte, publicKey []byte) erro
 
 	// Convert byte array to string.
 	qData := base64.StdEncoding.EncodeToString(quote)
-	key := base64.StdEncoding.EncodeToString(publicKey)
+	uData := base64.StdEncoding.EncodeToString(userData)
 
 	var responseAttributes QuoteVerifyAttributes
-	responseAttributes, err = ca.ExtVerifier.VerifyQuote(qData, key)
+	responseAttributes, err = ca.ExtVerifier.VerifyQuote(qData, uData)
 
 	if err != nil {
 		return errors.Wrap(err, "Error in quote verification!")

@@ -5,9 +5,11 @@
 package main
 
 import (
+	"crypto/rand"
 	"github.com/intel-secl/sample-sgx-attestation/v4/attestingApp/controllers"
 	"github.com/intel-secl/sample-sgx-attestation/v4/common"
 	"github.com/pkg/errors"
+	"math/big"
 	"net"
 	"strconv"
 	"strings"
@@ -38,12 +40,24 @@ func (a *App) startVerifier() error {
 	}
 	log.Info("Connected to AttestedApp.")
 
+	// Generate a Nonce
+	var nonceLimit big.Int
+	nonceLimit.Exp(big.NewInt(2), big.NewInt(common.NonceSize), nil)
+	nonce, err := rand.Int(rand.Reader, &nonceLimit)
+	if err != nil {
+		log.Error("Error generating nonce.")
+		return err
+	}
+
 	// Send a connect message and receive SGX Quote + Public key
-	status, respMsg := verifyController.ConnectAndReceiveQuote(conn)
+	status, respMsg := verifyController.ConnectAndReceiveQuote(conn, nonce.String())
 	log.Info("Received public key and SGX quote from AttestedApp.")
 
+	// User Data is Public Key + Nonce
+	userData := append(respMsg.PubkeyQuote.Pubkey, nonce.Bytes()...)
+
 	// Verify SGX Quote
-	status = verifyController.VerifySGXQuote(respMsg.PubkeyQuote.Quote, respMsg.PubkeyQuote.Pubkey)
+	status = verifyController.VerifySGXQuote(respMsg.PubkeyQuote.Quote, userData)
 	if !status {
 		err = errors.New("SGX Quote verification failed!")
 		log.Error("SGX Quote verification failed!")

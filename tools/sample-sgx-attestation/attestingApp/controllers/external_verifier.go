@@ -29,7 +29,7 @@ type QuoteData struct {
 }
 
 // VerifyQuote implements the Verifier interface
-func (ev ExternalVerifier) VerifyQuote(quote string, key string) (QuoteVerifyAttributes, error) {
+func (ev ExternalVerifier) VerifyQuote(quote string, userData string) (QuoteVerifyAttributes, error) {
 	log.Info("Verifying SGX quote with SQVS...")
 	url := ev.Config.SqvsUrl + common.VerifyQuote
 
@@ -44,7 +44,7 @@ func (ev ExternalVerifier) VerifyQuote(quote string, key string) (QuoteVerifyAtt
 	//
 	// Refer attestedApp/libenclave/Enclave.cpp - enclave_create_report function for
 	// UserData generation inside the enclave.
-	quoteData.UserData = key
+	quoteData.UserData = userData
 
 	// Encode quote to JSON
 	buffer := new(bytes.Buffer)

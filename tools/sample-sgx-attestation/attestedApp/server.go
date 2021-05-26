@@ -37,7 +37,7 @@ func (a *App) getPubkeyFromEnclave() []byte {
 	return keyBuffer
 }
 
-func (a *App) getQuoteAndPubkeyFromEnclave() ([]byte, []byte) {
+func (a *App) getQuoteAndPubkeyFromEnclave(nonce string) ([]byte, []byte) {
 	var qBytes []byte
 	var kBytes []byte
 
@@ -48,7 +48,18 @@ func (a *App) getQuoteAndPubkeyFromEnclave() ([]byte, []byte) {
 	// qPtr holds the bytes array of the quote returned from enclave
 	var qPtr *C.u_int8_t
 
-	qPtr = C.get_SGX_Quote(&qSize, &keySize)
+	nonceCStr := C.CString(nonce)
+	if nonceCStr == nil {
+		log.Error("Error marshelling nonce.")
+		return kBytes, qBytes
+	}
+
+	qPtr = C.get_SGX_Quote(&qSize, &keySize, nonceCStr)
+	if qPtr == nil {
+		log.Error("Unable to retrive quote from enclave.")
+		return kBytes, qBytes
+	}
+
 	log.Printf("Quote size : %d", qSize)
 	qBytes = C.GoBytes(unsafe.Pointer(qPtr), qSize)
 	kBytes = C.GoBytes(unsafe.Pointer(qPtr), qSize+keySize)
@@ -56,7 +67,7 @@ func (a *App) getQuoteAndPubkeyFromEnclave() ([]byte, []byte) {
 	return kBytes, qBytes
 }
 
-func (a *App) receiveConnectRequest(connection net.Conn) (error, bool) {
+func (a *App) receiveConnectRequest(connection net.Conn) (error, bool, string) {
 	authenticated := false
 
 	gobDecoder := gob.NewDecoder(connection)
@@ -64,13 +75,13 @@ func (a *App) receiveConnectRequest(connection net.Conn) (error, bool) {
 	err := gobDecoder.Decode(requestMsg)
 	if err != nil {
 		log.Error("Decoding connect message failed!")
-		return err, authenticated
+		return err, authenticated, ""
 	}
 
 	if requestMsg.Type != common.MsgTypeConnect {
 		err = errors.New("Incorrect message type!")
 		log.Error("Incorrect message type!")
-		return err, authenticated
+		return err, authenticated, ""
 	}
 
 	if requestMsg.ConnectRequest.Username == common.AppUsername &&
@@ -78,19 +89,26 @@ func (a *App) receiveConnectRequest(connection net.Conn) (error, bool) {
 		authenticated = true
 	}
 
-	return err, authenticated
+	nonce := requestMsg.ConnectRequest.Nonce
+
+	return err, authenticated, nonce
 }
 
-func (a *App) sendPubkeySGXQuote(connection net.Conn) error {
+func (a *App) sendPubkeySGXQuote(connection net.Conn, nonce string) error {
 
 	// Get the quote from Enclave
-	pubKey, sgxQuote := a.getQuoteAndPubkeyFromEnclave()
+	pubKey, sgxQuote := a.getQuoteAndPubkeyFromEnclave(nonce)
 
 	// Get public key from Enclave.
 	pubKey = a.getPubkeyFromEnclave()
 	if pubKey == nil {
-		log.Error("Fetching publick key from enclave failed!")
-		return errors.New("Fetching publick key from enclave failed!")
+		log.Error("Fetching public key from enclave failed!")
+		return errors.New("Fetching public key from enclave failed!")
+	}
+
+	if len(pubKey) == 0 || len(sgxQuote) == 0 {
+		log.Error("Fetching quote and public key from enclave failed!")
+		return errors.New("Fetching quote and public key from enclave failed!")
 	}
 
 	// Prepare response with SGX Quote and Enclave
@@ -184,7 +202,7 @@ func (a *App) handleConnection(connection net.Conn) error {
 	defer connection.Close()
 
 	// Step 1 - Receive a connect request
-	err, authenticated := a.receiveConnectRequest(connection)
+	err, authenticated, nonce := a.receiveConnectRequest(connection)
 	if err != nil {
 		log.Error("server:handleConnection : ", err)
 		return err
@@ -198,7 +216,7 @@ func (a *App) handleConnection(connection net.Conn) error {
 
 	// Step 2 - Get the quote from enclave and send it to
 	// the attesting app.
-	err = a.sendPubkeySGXQuote(connection)
+	err = a.sendPubkeySGXQuote(connection, nonce)
 	if err != nil {
 		log.Error("server:handleConnection : ", err)
 		return err
