@@ -20,7 +20,10 @@ const (
 	SgxQuotePolicyPath    = ConfigDir + "sgx-quote-policy.txt"
 	EndLine               = "\n"
 	VerifyQuote           = "/sgx_qv_verify_quote"
-	SWKSize               = 32
+	// SWK Size in bytes
+	SWKSize = 32
+	// NonceSize in bits
+	NonceSize = 128
 )
 
 // SGX Policy
@@ -43,6 +46,7 @@ const (
 type PayloadConnect struct {
 	Username string
 	Password string
+	Nonce    string
 }
 
 type PayloadPubkeyQuote struct {
