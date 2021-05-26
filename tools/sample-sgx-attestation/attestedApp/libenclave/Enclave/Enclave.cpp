@@ -96,10 +96,9 @@ sgx_status_t enclave_pubkey(ref_rsa_params_t* key) {
     return SGX_SUCCESS;
 }
 
-uint32_t enclave_create_report(const sgx_target_info_t* p_qe3_target,
+uint32_t enclave_create_report(const sgx_target_info_t* p_qe3_target, sgx_report_data_t* reportData,
 			       char *nonceStr, sgx_report_t* p_report) {
 
-     sgx_report_data_t reportData{};
      // Convert Nonce string to Bignum.
      BIGNUM *p = BN_new();
      BN_dec2bn(&p, nonceStr);
@@ -111,7 +110,7 @@ uint32_t enclave_create_report(const sgx_target_info_t* p_qe3_target,
      }
 
      unsigned char *nonce_buffer = (unsigned char *) malloc (nonce_len);
-     if (!nonce_buffer) {
+     if (nonce_buffer == NULL) {
 	  ocall_print_error_string("Nonce buffer memory allocation failed.");
 	  return SGX_ERROR_UNEXPECTED;
      }
@@ -121,7 +120,7 @@ uint32_t enclave_create_report(const sgx_target_info_t* p_qe3_target,
     const uint32_t size = REF_N_SIZE_IN_BYTES + REF_E_SIZE_IN_BYTES + nonce_len;
 
     uint8_t* pdata = (uint8_t *) malloc (REF_N_SIZE_IN_BYTES + REF_E_SIZE_IN_BYTES + nonce_len);
-    if (!pdata) {
+    if (pdata == NULL) {
         ocall_print_error_string("Userdata memory allocation failed.");
         return SGX_ERROR_UNEXPECTED;
     }
@@ -142,14 +141,12 @@ uint32_t enclave_create_report(const sgx_target_info_t* p_qe3_target,
     err = memcpy_s(pdata, REF_E_SIZE_IN_BYTES, e1, REF_E_SIZE_IN_BYTES);
     if (err != 0) {
 	 ocall_print_error_string("memcpy of exponent failed.");
-	 free(pdata);
 	 return SGX_ERROR_UNEXPECTED;
     }
 
     err = memcpy_s(pdata + REF_E_SIZE_IN_BYTES, REF_N_SIZE_IN_BYTES, m1, REF_N_SIZE_IN_BYTES);
     if (err != 0) {
 	 ocall_print_error_string("memcpy of modulus failed.");
-	 free(pdata);
 	 return SGX_ERROR_UNEXPECTED;
     }
 
@@ -157,7 +154,6 @@ uint32_t enclave_create_report(const sgx_target_info_t* p_qe3_target,
 		   nonce_buffer, nonce_len);
     if (err != 0) {
 	 ocall_print_error_string("memcpy of nonce failed.");
-	 free(pdata);
 	 return SGX_ERROR_UNEXPECTED;
     }
 
@@ -173,22 +169,14 @@ uint32_t enclave_create_report(const sgx_target_info_t* p_qe3_target,
      */
     uint8_t msg_hash[64] = {0};
     sgx_status_t status = sgx_sha256_msg(pdata, size, (sgx_sha256_hash_t *)msg_hash);
-    if (SGX_SUCCESS != status) {
-        ocall_print_error_string("Hash of userdata failed!");
-	free(pdata);
-        return status;
-    }
-
-    err = memcpy_s(reportData.d, sizeof(msg_hash), msg_hash, sizeof(msg_hash));
+    err = memcpy_s(reportData->d, sizeof(msg_hash), msg_hash, sizeof(msg_hash));
     if (err != 0) {
-	 ocall_print_error_string("memcpy of userdata hash failed.");
-	 free(pdata);
+	 ocall_print_error_string("memcpy of message hash failed.");
 	 return SGX_ERROR_UNEXPECTED;
     }
 
-    free(pdata);
     // Generate the report for the app_enclave
-    sgx_status_t  sgx_error = sgx_create_report(p_qe3_target, &reportData, p_report);
+    sgx_status_t  sgx_error = sgx_create_report(p_qe3_target, reportData, p_report);
 
     return sgx_error;
 }
@@ -297,7 +285,7 @@ sgx_status_t provision_swk_wrapped_secret(uint8_t* wrappedSecret, uint32_t wrapp
     // Plaintext Output Buffer.
     int plaintext_len = wrappedSecretSize - (SGX_AESGCM_IV_SIZE + SGX_AESGCM_MAC_SIZE);
     uint8_t *plaintext = (uint8_t *) malloc (plaintext_len);
-    if (!plaintext) {
+    if (plaintext == NULL) {
         ocall_print_error_string("Plaintext buffer memory allocation failed.");
         return SGX_ERROR_UNEXPECTED;
     }
@@ -308,7 +296,7 @@ sgx_status_t provision_swk_wrapped_secret(uint8_t* wrappedSecret, uint32_t wrapp
 
     // Copy of SWK
     aes_gcm_256bit_key_t *sk_key = (aes_gcm_256bit_key_t *)malloc (sizeof(aes_gcm_256bit_key_t));
-    if (!sk_key) {
+    if (sk_key == NULL) {
         ocall_print_error_string("SWK buffer memory allocation failed.");
         return SGX_ERROR_UNEXPECTED;
     }
@@ -337,15 +325,15 @@ sgx_status_t provision_swk_wrapped_secret(uint8_t* wrappedSecret, uint32_t wrapp
 	 return SGX_ERROR_UNEXPECTED;
     }
 
-    ret_code = aes_256gcm_decrypt(sk_key, // Key
-				  wrappedSecret + SGX_AESGCM_IV_SIZE, // Cipher text
-				  cipher_text_len, //Cipher len
-				  plaintext, // Plaintext
-				  iv, // Initialisation vector
-				  iv_length, // IV Length
-				  NULL, // AAD Buffer
-				  0, // AAD Length
-				  &mac); // MAC
+    sgx_status_t dec_ret_code = aes_256gcm_decrypt(sk_key, // Key
+						   wrappedSecret + SGX_AESGCM_IV_SIZE, // Cipher text
+						   cipher_text_len, //Cipher len
+						   plaintext, // Plaintext
+						   iv, // Initialisation vector
+						   iv_length, // IV Length
+						   NULL, // AAD Buffer
+						   0, // AAD Length
+						   &mac); // MAC
 
 
     if (SGX_SUCCESS != ret_code) {
@@ -354,7 +342,7 @@ sgx_status_t provision_swk_wrapped_secret(uint8_t* wrappedSecret, uint32_t wrapp
     }
 
     uint8_t *plaintext_printable = (uint8_t *)malloc (plaintext_len);
-    if (!plaintext_printable) {
+    if (plaintext_printable == NULL) {
 	 ocall_print_error_string("Plaintext Printable buffer memory allocation failed.");
 	 return SGX_ERROR_UNEXPECTED;
     }
@@ -560,11 +548,11 @@ sgx_status_t provision_pubkey_wrapped_swk(uint8_t* wrappedSWK, uint32_t wrappedS
 
     // Unwrap using Private Key
     // Pass NULL to calculate the length of the output buffer.
-    ret_code = rsa_priv_decrypt_sha256(priv_key,
-				       NULL, ///Pointer to the output decrypted data buffer.
-				       &swk_size,///Length of the output decrypted data buffer.
-				       wrappedSWK,///Pointer to the input data buffer to be decrypted.
-				       wrappedSWKSize);
+    ret_code != rsa_priv_decrypt_sha256(priv_key,
+					NULL, ///Pointer to the output decrypted data buffer.
+					&swk_size,///Length of the output decrypted data buffer.
+					wrappedSWK,///Pointer to the input data buffer to be decrypted.
+					wrappedSWKSize);
 
     if (SGX_SUCCESS != ret_code) {
         ocall_print_error_string("sgx_rsa_priv_decrypt_sha256 unable to calculate buffer size.");
@@ -574,7 +562,7 @@ sgx_status_t provision_pubkey_wrapped_swk(uint8_t* wrappedSWK, uint32_t wrappedS
     // Note : Somehow swk_size defaults to len (n) + len (p). We'll
     // snip the buffer when we get the right length. Bug ?
     unsigned char *decryptedBuffer = (unsigned char*)OPENSSL_malloc(swk_size);
-    if (!decryptedBuffer) {
+    if (decryptedBuffer == NULL) {
         ocall_print_error_string("malloc of decryptedBuffer failed!");
         return SGX_ERROR_UNEXPECTED;        
     }
@@ -592,7 +580,7 @@ sgx_status_t provision_pubkey_wrapped_swk(uint8_t* wrappedSWK, uint32_t wrappedS
 
     // Global copy.
     enclave_swk = (uint8_t*) malloc (swk_size);
-    if (!enclave_swk) {
+    if (enclave_swk == NULL) {
         ocall_print_error_string("Enclave SWK buffer memory allocation failed.");
         return SGX_ERROR_UNEXPECTED;
     }
