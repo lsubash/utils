@@ -96,12 +96,35 @@ sgx_status_t enclave_pubkey(ref_rsa_params_t* key) {
     return SGX_SUCCESS;
 }
 
-uint32_t enclave_create_report(const sgx_target_info_t* p_qe3_target, sgx_report_data_t* reportData, sgx_report_t* p_report) {
+uint32_t enclave_create_report(const sgx_target_info_t* p_qe3_target, sgx_report_data_t* reportData,
+			       char *nonceStr, sgx_report_t* p_report) {
 
-    const uint32_t size = REF_N_SIZE_IN_BYTES + REF_E_SIZE_IN_BYTES;
+     // Convert Nonce string to Bignum.
+     BIGNUM *p = BN_new();
+     BN_dec2bn(&p, nonceStr);
 
-    uint8_t buffer[REF_N_SIZE_IN_BYTES + REF_E_SIZE_IN_BYTES];
-    uint8_t* pdata = &buffer[0];
+     int nonce_len = BN_num_bytes (p);
+     if ( !(nonce_len > 0 && nonce_len <= NONCE_MAX_BYTES) ) {
+	  ocall_print_error_string("Nonce is not in expected range.");
+	  return SGX_ERROR_UNEXPECTED;
+     }
+
+     unsigned char *nonce_buffer = (unsigned char *) malloc (nonce_len);
+     if (nonce_buffer == NULL) {
+	  ocall_print_error_string("Nonce buffer memory allocation failed.");
+	  return SGX_ERROR_UNEXPECTED;
+     }
+
+     BN_bn2bin(p, nonce_buffer);
+
+    const uint32_t size = REF_N_SIZE_IN_BYTES + REF_E_SIZE_IN_BYTES + nonce_len;
+
+    uint8_t* pdata = (uint8_t *) malloc (REF_N_SIZE_IN_BYTES + REF_E_SIZE_IN_BYTES + nonce_len);
+    if (pdata == NULL) {
+        ocall_print_error_string("Userdata memory allocation failed.");
+        return SGX_ERROR_UNEXPECTED;
+    }
+
     ref_rsa_params_t key;
     key.e[0] = 0x10001;
 
@@ -121,11 +144,19 @@ uint32_t enclave_create_report(const sgx_target_info_t* p_qe3_target, sgx_report
 	 return SGX_ERROR_UNEXPECTED;
     }
 
-    err = memcpy_s(pdata+REF_E_SIZE_IN_BYTES, REF_N_SIZE_IN_BYTES, m1, REF_N_SIZE_IN_BYTES);
+    err = memcpy_s(pdata + REF_E_SIZE_IN_BYTES, REF_N_SIZE_IN_BYTES, m1, REF_N_SIZE_IN_BYTES);
     if (err != 0) {
 	 ocall_print_error_string("memcpy of modulus failed.");
 	 return SGX_ERROR_UNEXPECTED;
     }
+
+    err = memcpy_s(pdata + REF_E_SIZE_IN_BYTES + REF_N_SIZE_IN_BYTES, nonce_len,
+		   nonce_buffer, nonce_len);
+    if (err != 0) {
+	 ocall_print_error_string("memcpy of nonce failed.");
+	 return SGX_ERROR_UNEXPECTED;
+    }
+
 
     /* 
      * UserData in SGX Quote : The enclave can add any payload, not just the hash
