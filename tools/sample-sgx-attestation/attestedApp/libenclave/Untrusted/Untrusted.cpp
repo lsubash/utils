@@ -40,6 +40,7 @@ using namespace std;
 
 /* Global EID shared by multiple threads */
 sgx_enclave_id_t global_eid = 0;
+sgx_status_t status = SGX_SUCCESS;
 
 static ref_rsa_params_t g_rsa_key1;
 
@@ -172,7 +173,7 @@ int initialize_enclave(void)
     return 0;
 }
 
-int destroy_enclave() {
+int destroy_Enclave() {
     cout << "libenclave/Untrusted(C/C++) : Destroying enclave..." <<endl;
 
     /* Destroy the enclave */
@@ -198,23 +199,23 @@ void ocall_print_error_string(const char *str)
     printf("libenclave/Trusted(C/C++) : %s\n", str);
 }
 
-sgx_status_t retrive_public_key()
+int get_Key()
 {
-    sgx_status_t status = SGX_SUCCESS;
     printf("libenclave/Untrusted(C/C++) : Fetching public key...\n");
 
-    status = enclave_pubkey(global_eid, &status, &g_rsa_key1);
+    size_t count;
+    
+    enclave_pubkey(global_eid, &status, &g_rsa_key1);
 
     if (status != SGX_SUCCESS) {
         print_error_message(status);
-        return status;
+        return -1;
     }
     
-    return status;
+    return 0;
 }
-
 int unwrap_secret(uint8_t* wrapped_secret, size_t wrapped_secret_size) {
-    printf ("libenclave/Untrusted(C/C++) : Passing Wrapped Secret of Size %lu to trusted.\n", wrapped_secret_size);
+    printf ("libenclave/Untrusted(C/C++) : Passing Wrapped Secret of Size %d to trusted.\n", wrapped_secret_size);
     sgx_status_t status = SGX_SUCCESS;
 
     status = provision_swk_wrapped_secret(global_eid, &status,
@@ -258,16 +259,9 @@ int unwrap_SWK(uint8_t* wrappedSWK, size_t wrappedSWKsize) {
     return status;
 }
 
-uint8_t *get_public_key (int *kSize) 
+uint8_t *get_pubkey (int *kSize) 
 {
         uint8_t* key_buffer = NULL;
-        sgx_status_t status = SGX_SUCCESS;
-
-        status = retrive_public_key();
-        if (status != SGX_SUCCESS) {
-	     cout << "libenclave/Untrusted(C/C++) :  Error in getting public key" <<endl;
-	     return NULL;
-        }
 
         const char* exponent = (const char *)g_rsa_key1.e;
         const char* modulus = (const char *)g_rsa_key1.n;
@@ -299,8 +293,8 @@ uint8_t *get_public_key (int *kSize)
 
 
 
-uint8_t* get_sgx_quote(int* qSize, char *nonce) {
-        sgx_status_t status = SGX_SUCCESS;
+uint8_t* get_SGX_Quote(int* qSize, int* kSize, char *nonce) {
+        int ret = 0;
         uint32_t retval = 0;
         quote3_error_t qe3_ret = SGX_QL_SUCCESS;
         uint32_t quote_size = 0;
@@ -308,18 +302,16 @@ uint8_t* get_sgx_quote(int* qSize, char *nonce) {
         uint8_t* key_buffer = NULL;
         sgx_target_info_t qe_target_info;
         sgx_report_t app_report;
+        sgx_report_data_t reportData{};
         sgx_quote3_t *p_quote;
         sgx_ql_auth_data_t *p_auth_data;
         sgx_ql_ecdsa_sig_data_t *p_sig_data;
         sgx_ql_certification_data_t *p_cert_data;
+        FILE *fptr = NULL;
 	errno_t err;
 
         cout << "libenclave/Untrusted(C/C++) : ECALL : get public key..." << endl;
-        status = retrive_public_key();
-        if (status != SGX_SUCCESS) {
-	     cout << "libenclave/Untrusted(C/C++) :  Error in getting public key" <<endl;
-	     return NULL;
-        }
+        ret = get_Key();
 
         const char* exponent = (const char *)g_rsa_key1.e;
         const char* modulus = (const char *)g_rsa_key1.n;
@@ -337,10 +329,10 @@ uint8_t* get_sgx_quote(int* qSize, char *nonce) {
 	}
 
         err = memcpy_s(key_buffer+REF_E_SIZE_IN_BYTES, REF_N_SIZE_IN_BYTES, modulus, REF_N_SIZE_IN_BYTES);
-	if (err != 0) {
-	     printf("libenclave/Untrusted(C/C++) : Couldn't copy modulus into key_buffer\n");
+        if (ret != 0) {
+	     cout << "libenclave/Untrusted(C/C++) :  Error in getting public key" <<endl;
 	     return NULL;
-	}
+        }
 
         qe3_ret = sgx_qe_set_enclave_load_policy(SGX_QL_PERSISTENT);
         if(SGX_QL_SUCCESS != qe3_ret) {
@@ -395,10 +387,12 @@ uint8_t* get_sgx_quote(int* qSize, char *nonce) {
 	     return NULL;
         }
 
+        sgx_status_t value;
         printf("libenclave/Untrusted(C/C++) : ECALL - Fetching enclave report...\n");
         status = enclave_create_report(global_eid,
                                        &retval,
                                        &qe_target_info,
+                                       &reportData,
                                        nonce,
                                        &app_report);
 
@@ -446,9 +440,10 @@ uint8_t* get_sgx_quote(int* qSize, char *nonce) {
         printf("libenclave/Untrusted(C/C++) : SGX Quote retrived successfully.\n");
 
         *qSize = quote_size;
+        *kSize = REF_N_SIZE_IN_BYTES + REF_E_SIZE_IN_BYTES;
 
         uint8_t* challenge_final = NULL;
-        challenge_final = (uint8_t*)malloc(*qSize);
+        challenge_final = (uint8_t*)malloc((*qSize+*kSize));
         if (NULL == challenge_final) {
 	     printf("libenclave/Untrusted(C/C++) : Couldn't allocate report buffer!\n");
 	     return NULL;
@@ -457,6 +452,13 @@ uint8_t* get_sgx_quote(int* qSize, char *nonce) {
         err = memcpy_s(challenge_final, quote_size, p_quote_buffer, quote_size);
 	if (err != 0) {
 	     printf("libenclave/Untrusted(C/C++) : memcpy of quote buffer failed.\n");
+	     return NULL;
+	}
+
+        err = memcpy_s(challenge_final + quote_size, REF_N_SIZE_IN_BYTES+REF_E_SIZE_IN_BYTES, 
+		       key_buffer, REF_N_SIZE_IN_BYTES+REF_E_SIZE_IN_BYTES);
+	if (err != 0) {
+	     printf("libenclave/Untrusted(C/C++) : memcpy of key into quote buffer failed.\n");
 	     return NULL;
 	}
 
