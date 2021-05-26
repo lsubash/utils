@@ -19,12 +19,10 @@
     executable: /bin/bash
     creates: /opt/workload-policy-manager/bin/wpm
 
-
 - name: ISECL - WORKLOAD POLICY MANAGER | Verify successful installation of WPM_1
-  shell: grep 'Setup finished successfully!' /root/workload_policy_manager-install.log
+  shell: grep 'All setup tasks succeeded' /root/workload_policy_manager-install.log
   register: successful_install
-  failed_when: "'Setup finished successfully!' not in successful_install.stdout"
-  
+  failed_when: "'All setup tasks succeeded' not in successful_install.stdout"  
 
 - name: ISECL - WORKLOAD POLICY MANAGER | Verify successful installation of WPM_2
   shell: grep 'Installation completed.' /root/workload_policy_manager-install.log

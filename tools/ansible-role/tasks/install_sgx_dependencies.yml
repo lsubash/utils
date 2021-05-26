@@ -19,3 +19,4 @@
   shell: "set -o pipefail && ./deploy_sgx_dependencies.sh 2>&1 | tee /root/sgx-dependencies-installer.log"  
   args:
     chdir: /tmp/{{sgxdep_installer_file__name}}
+    executable: /bin/bash

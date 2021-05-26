@@ -15,6 +15,7 @@ k8s: k8s_common
 	mkdir -p k8s/manifests/aas/scripts
 	mv k8s/manifests/aas/populate-users k8s/manifests/aas/scripts/
 	mv k8s/manifests/aas/populate-users.env k8s/manifests/aas/scripts/
+	cp utils/build/workload-security/k8s/create-dirs-nfs.sh k8s/
 
 k8s-aio: k8s_common
 	cp -r utils/build/k8s-manifests/db-deployments/single-node/aas-db k8s/manifests/
