@@ -1,6 +1,5 @@
 #!/bin/bash
 
-source nats-tls-download.env
 NATS_CERT_COMMON_NAME=${NATS_CERT_COMMON_NAME:-"NATS TLS Certificate"}
 sed -i "s#DNS.1=.*#DNS.1=$HOSTNAME/" opensslSAN.conf
 

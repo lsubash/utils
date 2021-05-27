@@ -7,17 +7,14 @@ binaries: clean $(TARGETS) intel-secl
 	cp intel-secl/deployments/installer/*.sh binaries/
 	cp trust-agent/out/*.bin binaries/
 
-k8s: k8s_common
+k8s: k8s_common k8s_ta
 	cp -r intel-secl/deployments/k8s/* k8s/manifests/
 	cp -r utils/build/k8s-manifests/db-deployments/multi-node/aas-db k8s/manifests/
 	cp -r utils/build/k8s-manifests/db-deployments/multi-node/ws/hvs-db k8s/manifests/
 	cp -r utils/build/workload-security/k8s/isecl-bootstrap.sh k8s/manifests/isecl-bootstrap.sh
-	mkdir -p k8s/manifests/aas/scripts
-	mv k8s/manifests/aas/populate-users k8s/manifests/aas/scripts/
-	mv k8s/manifests/aas/populate-users.env k8s/manifests/aas/scripts/
 	cp utils/build/workload-security/k8s/create-dirs-nfs.sh k8s/
 
-k8s-aio: k8s_common
+k8s-aio: k8s_common k8s_ta
 	cp -r utils/build/k8s-manifests/db-deployments/single-node/aas-db k8s/manifests/
 	cp -r utils/build/k8s-manifests/db-deployments/single-node/ws/hvs-db k8s/manifests/
 	cp utils/build/workload-security/k8s/pre-requisites.sh k8s/manifests/
@@ -25,24 +22,37 @@ k8s-aio: k8s_common
 	cp -r utils/build/k8s-manifests/single-node/cms k8s/manifests/
 	cp -r utils/build/workload-security/k8s/isecl-bootstrap.sh k8s/manifests/isecl-bootstrap.sh
 	cp -r utils/build/workload-security/k8s/hvs k8s/manifests/
-	mkdir -p k8s/manifests/aas/scripts
-	cp intel-secl/deployments/k8s/aas/populate-users k8s/manifests/aas/scripts/
-	cp intel-secl/deployments/k8s/aas/populate-users.env k8s/manifests/aas/scripts/populate-users.env
 
-k8s_common: clean $(INTEL_SECL_K8S) tagent_k8s
+k8s_ta: tagent_k8s
+	mkdir -p k8s/platform-dependencies
+	cp utils/build/workload-security/k8s/install-ta-prereqs.sh k8s/platform-dependencies/
+	cp trust-agent/out/*.tar k8s/container-images/
+	cp -r utils/build/workload-security/k8s/ta k8s/manifests/ta
+
+k8s_common: clean $(INTEL_SECL_K8S)
 	mkdir -p k8s/container-images
 	mkdir -p k8s/manifests
-	mkdir -p k8s/platform-dependencies
 	cp -r utils/build/workload-security/k8s/pre-requisites.sh k8s/manifests/
 	cp -r utils/build/workload-security/k8s/isecl-bootstrap-db-services.sh k8s/manifests/isecl-bootstrap-db-services.sh
 	cp utils/build/workload-security/k8s/isecl-k8s.env k8s/manifests/isecl-k8s.env
-	cp -r trust-agent/out/k8s k8s/manifests/ta
+	cp -r utils/build/workload-security/k8s/nats k8s/manifests/nats
 	cp intel-secl/deployments/container-archive/oci/* k8s/container-images/
-	cp trust-agent/out/*.tar k8s/container-images/
-	cp utils/build/workload-security/k8s/install-ta-prereqs.sh k8s/platform-dependencies/
+	cp -r intel-secl/deployments/k8s/* k8s/manifests/
+	mkdir -p k8s/manifests/aas/scripts
+	mv k8s/manifests/aas/populate-users k8s/manifests/aas/scripts/
+	mv k8s/manifests/aas/populate-users.env k8s/manifests/aas/scripts/
 
 tagent_k8s:
 	cd trust-agent && make k8s
+
+k8s-control-plane: clean k8s_common $(TARGETS)
+	mkdir binaries
+	cp trust-agent/out/*.bin binaries/
+	cp -r intel-secl/deployments/k8s/* k8s/manifests/
+	cp -r utils/build/k8s-manifests/db-deployments/multi-node/aas-db k8s/manifests/
+	cp -r utils/build/k8s-manifests/db-deployments/multi-node/ws/hvs-db k8s/manifests/
+	cp -r utils/build/workload-security/k8s/isecl-bootstrap.sh k8s/manifests/isecl-bootstrap.sh
+	cp utils/build/workload-security/k8s/create-dirs-nfs.sh k8s/
 
 $(INTEL_SECL_K8S):
 	cd intel-secl && make $@-k8s

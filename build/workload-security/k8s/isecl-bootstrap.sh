@@ -188,18 +188,16 @@ deploy_hvs() {
 
   cd hvs/
 
-  if [[ ! -v "${NATS_SERVERS}" ]]; then
-     deploy_nats
-     sed -i "s#NATS_SERVERS=.*#NATS_SERVERS=${NATS_SERVERS}#g" configMap.yml
+  if [[ -v "${NATS_SERVERS}" ]]; then
+    deploy_nats
+    sed -i "s#NATS_SERVERS=.*#NATS_SERVERS=${NATS_SERVERS}#g" configMap.yml
   else
-     sed -i "s/NATS_SERVERS=.*//g"configMap.yml
+    sed -i "s/NATS_SERVERS=.*//g"configMap.yml
   fi
 
   echo "-------------------------------------------------------------"
   echo "|            DEPLOY: HOST VERIFICATION SERVICE            |"
   echo "-------------------------------------------------------------"
-
-
 
   # The variables BEARER_TOKEN and CMS_TLS_CERT_SHA384 get loaded with below functions, this required if we want to deploy individual hvs service
   get_bearer_token
@@ -518,38 +516,37 @@ deploy_tagent() {
 
 }
 
-deploy_nats(){
+deploy_nats() {
 
-    cd nats/
-    get_bearer_token
+  cd nats/
+  get_bearer_token
 
-    aas_pod=$(kubectl get pod -n isecl -l app=aas -o jsonpath="{.items[0].metadata.name}")
+  aas_pod=$(kubectl get pod -n isecl -l app=aas -o jsonpath="{.items[0].metadata.name}")
 
-    ./nats-download-tls-certs.sh
+  ./nats-download-tls-certs.sh
 
-      # get operator and resolver preload from aas logs
-    nats_operator=$($KUBECTL logs -n isecl $aas_pod | grep operator: | awk '{print $2}'
-    resolver_preload=$($KUBECTL logs -n isecl $aas_pod | grep resolver_preload -A 2)
+  # get operator and resolver preload from aas logs
+  nats_operator=$($KUBECTL logs -n isecl $aas_pod | grep operator: | awk '{print $2}')
+  resolver_preload=$($KUBECTL logs -n isecl $aas_pod | grep resolver_preload -A 2)
 
-    # #update trustagent.env
-    sed -i "s/operator:.*/operator=$nats_operator/g" configMap.yml
-    sed -i "s/resolver_preload:.*/resolver_preload: $resolver_preload/g" configMap.yml
+  sed -i "s#operator:.*#operator: $nats_operator#g" configMap.yml
+  sed -i "s#resolver_preload:.*#resolver_preload: $resolver_preload#g" configMap.yml
 
-    $KUBECTL create secret generic nats-certs --from-file=nats-certs --namespace=isecl
+  $KUBECTL create secret generic nats-certs --from-file=secrets --namespace=isecl
 
-    $KUBECTL kustomize . | $KUBECTL apply -f -
-    # wait to get ready
-    echo "Wait for nats to initialize..."
-    sleep 20
-    $KUBECTL get pod -n isecl -l app=nats | grep Running
-    if [ $? == 0 ]; then
-        echo "NATS STATEFULSET DEPLOYED SUCCESSFULLY"
-    else
-        echo "Error: Deploying WLA"
-        echo "Exiting with error..."
-        exit 1
-    fi
-    cd $HOME_DIR
+  $KUBECTL kustomize . | $KUBECTL apply -f -
+  # wait to get ready
+  echo "Wait for nats to initialize..."
+  sleep 20
+  $KUBECTL get pod -n isecl -l app=nats | grep Running
+  if [ $? == 0 ]; then
+    echo "NATS STATEFULSET DEPLOYED SUCCESSFULLY"
+  else
+    echo "Error: Deploying NATS"
+    echo "Exiting with error..."
+    exit 1
+  fi
+  cd $HOME_DIR
 
 }
 
@@ -589,7 +586,6 @@ deploy_wlagent() {
 
 }
 
-
 cleanup_wls() {
 
   echo "Cleaning up WORKLOAD-SERVICE..."
@@ -610,18 +606,17 @@ cleanup_wls() {
 
 cleanup_nats() {
 
-    echo "Cleaning up NATS-SEVER..."
+  echo "Cleaning up NATS..."
 
-    $KUBECTL delete secret nats-certs --namespace isecl
-    $KUBECTL delete configmap nats-config  --namespace isecl
-    $KUBECTL delete statefulset nats --namespace isecl
+  $KUBECTL delete secret nats-certs --namespace isecl
+  $KUBECTL delete configmap nats-config --namespace isecl
+  $KUBECTL delete statefulset nats --namespace isecl
 
 }
 
-
-cleanup_tagent(){
-  $KUBECTL delete configmap ta-config  --namespace isecl
-  $KUBECTL delete secret ta-secret  --namespace isecl
+cleanup_tagent() {
+  $KUBECTL delete configmap ta-config --namespace isecl
+  $KUBECTL delete secret ta-secret --namespace isecl
 
   $KUBECTL delete daemonset ta-daemonset-txt --namespace isecl
   $KUBECTL delete daemonset ta-daemonset-suefi --namespace isecl
@@ -708,10 +703,10 @@ cleanup_hvs() {
     $KUBECTL delete pv hvs-logs-pv --namespace isecl
   fi
 
-  if [ "$OUTBOUND_MODE" == "TRUE" ]; then
+  if [[ -v "${NATS_SERVERS}" ]]; then
     cleanup_nats
   fi
-  
+
   echo $(pwd)
 }
 
@@ -850,7 +845,7 @@ print_help() {
   echo "    Available Options for up/down command:"
   echo "        agent      Can be one of tagent, wlagent"
   echo "        service    Can be one of cms, authservice, hvs, ihub, wls, kbs, isecl-controller, isecl-scheduler"
-  echo "        usecase    Can be one of foundational-security, workload-security, isecl-orchestration-k8s, csp, enterprise"
+  echo "        usecase    Can be one of foundational-security, workload-security, isecl-orchestration-k8s, csp, enterprise, foundational-security-control-plane"
 }
 
 deploy_common_components() {
@@ -905,6 +900,11 @@ dispatch_works() {
       deploy_wlagent
       ;;
     "foundational-security")
+      deploy_cms
+      deploy_authservice
+      deploy_hvs
+      ;;
+    "foundational-security-control-plane")
       deploy_common_components
       ;;
     "workload-security")
@@ -981,6 +981,11 @@ dispatch_works() {
       ;;
     "foundational-security")
       cleanup_common_components
+      ;;
+    "foundational-security-control-plane")
+      cleanup_cms
+      cleanup_authservice
+      cleanup_hvs
       ;;
     "isecl-orchestration-k8s")
       cleanup_common_components

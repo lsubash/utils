@@ -46,7 +46,7 @@ deploy_authservice_db() {
 
   # wait to get ready
   echo "Wait for pods to initialize..."
-  POD_NAME=`$KUBECTL get pod -l app=aasdb -n isecl -o name`
+  POD_NAME=$($KUBECTL get pod -l app=aasdb -n isecl -o name)
   $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
   if [ $? == 0 ]; then
     echo "AUTHENTICATION-AUTHORIZATION-SERVICE DATABASE DEPLOYED SUCCESSFULLY"
@@ -84,7 +84,7 @@ deploy_wls_db() {
 
   # wait to get ready
   echo "Wait for pods to initialize..."
-  POD_NAME=`$KUBECTL get pod -l app=wlsdb -n isecl -o name`
+  POD_NAME=$($KUBECTL get pod -l app=wlsdb -n isecl -o name)
   $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
   if [ $? == 0 ]; then
     echo "WORKLOAD SERVICE DATABASE DEPLOYED SUCCESSFULLY"
@@ -119,7 +119,7 @@ deploy_hvs_db() {
 
   # wait to get ready
   echo "Wait for pods to initialize..."
-  POD_NAME=`$KUBECTL get pod -l app=hvsdb -n isecl -o name`
+  POD_NAME=$($KUBECTL get pod -l app=hvsdb -n isecl -o name)
   $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
   if [ $? == 0 ]; then
     echo "HOST-VERIFICATION-SERVICE DATABASE DEPLOYED SUCCESSFULLY"
@@ -206,7 +206,6 @@ cleanup_authservice_db() {
 bootstrap() {
 
   echo "Kubenertes-> "
-  check_k8s_distribution
 
   if [ "$K8S_DISTRIBUTION" == "microk8s" ]; then
     $KUBECTL version --short
@@ -254,7 +253,6 @@ cleanup() {
   echo "|                    CLEANUP                       |"
   echo "----------------------------------------------------"
 
-  check_k8s_distribution
   cleanup_hvs_db
   cleanup_wls_db
   cleanup_authservice_db
@@ -278,8 +276,12 @@ purge() {
 print_help() {
   echo "Usage: $0 [-help/up/purge]"
   echo "    -help          print help and exit"
-  echo "    up        Bootstrap Database Services for Authservice, Workload Service and Host verification Service"
-  echo "    purge     Delete Database Services for Authservice, Workload Service and Host verification Service"
+  echo "    up       [all/foundational-security]     Bootstrap Database Services for specified use case"
+  echo "    purge    [all/foundational-security]     Delete Database Services for specified use case"
+  echo ""
+  echo "    Available Options for up/purge command:"
+  echo "    usecase    Can be one of foundational-security, all"
+
 }
 
 #Dispatch works based on args to script
@@ -287,10 +289,22 @@ dispatch_works() {
 
   case $1 in
   "up")
-    bootstrap
+    check_k8s_distribution
+    if [[ $2 == "foundational-security" ]]; then
+      deploy_authservice_db
+      deploy_hvs_db
+    else
+      bootstrap
+    fi
     ;;
   "purge")
-    cleanup
+    check_k8s_distribution
+    if [[ $2 == "foundational-security" ]]; then
+      cleanup_authservice_db
+      cleanup_hvs_db
+    else
+      cleanup
+    fi
     ;;
   *)
     print_help
