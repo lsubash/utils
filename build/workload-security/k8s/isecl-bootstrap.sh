@@ -515,14 +515,20 @@ deploy_tagent() {
 
 deploy_nats(){
 
-    # get latest bearer_token and cms tls cert digest
-    get_bearer_token
-    get_cms_tls_cert_sha384
-
     cd nats/
+    get_bearer_token
+
+    aas_pod=$(kubectl get pod -n isecl -l app=aas -o jsonpath="{.items[0].metadata.name}")
+
+    ./nats-download-tls-certs.sh
+
+      # get operator and resolver preload from aas logs
+    nats_operator=$($KUBECTL logs -n isecl $aas_pod | grep operator: | awk '{print $2}'
+    resolver_preload=$($KUBECTL logs -n isecl $aas_pod | grep resolver_preload -A 2)
+
     # #update trustagent.env
-    sed -i "s/operator:.*/operator=$NATS_OPERATOR/g" configMap.yml
-    sed -i "s/resolver_preload:.*/resolver_preload: $RESOLVER_PRELOAD/g" configMap.yml
+    sed -i "s/operator:.*/operator=$nats_operator/g" configMap.yml
+    sed -i "s/resolver_preload:.*/resolver_preload: $resolver_preload/g" configMap.yml
 
     $KUBECTL create secret generic nats-certs --from-file=nats-certs --namespace=isecl
 
