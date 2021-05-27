@@ -16,3 +16,4 @@ data:
   HVS_DB_NAME: hvsdb
   HVS_DB_SSLCERTSRC: /etc/postgresql/server.crt
   HVS_DB_PORT: "5432"
+  NATS_SERVERS:

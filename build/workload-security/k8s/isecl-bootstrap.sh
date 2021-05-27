@@ -186,15 +186,20 @@ get_bearer_token() {
 
 deploy_hvs() {
 
-  if [ "$OUTBOUND_MODE" == "TRUE" ]; then
-    deploy_nats
+  cd hvs/
+
+  if [[ ! -v "${NATS_SERVERS}" ]]; then
+     deploy_nats
+     sed -i "s#NATS_SERVERS=.*#NATS_SERVERS=${NATS_SERVERS}#g" configMap.yml
+  else
+     sed -i "s/NATS_SERVERS=.*//g"configMap.yml
   fi
 
   echo "-------------------------------------------------------------"
   echo "|            DEPLOY: HOST VERIFICATION SERVICE            |"
   echo "-------------------------------------------------------------"
 
-  cd hvs/
+
 
   # The variables BEARER_TOKEN and CMS_TLS_CERT_SHA384 get loaded with below functions, this required if we want to deploy individual hvs service
   get_bearer_token
