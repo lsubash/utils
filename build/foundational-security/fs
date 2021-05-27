@@ -36,7 +36,7 @@ k8s_common: clean $(INTEL_SECL_K8S) tagent_k8s
 	cp -r utils/build/workload-security/k8s/pre-requisites.sh k8s/manifests/
 	cp -r utils/build/workload-security/k8s/isecl-bootstrap-db-services.sh k8s/manifests/isecl-bootstrap-db-services.sh
 	cp utils/build/workload-security/k8s/isecl-k8s.env k8s/manifests/isecl-k8s.env
-	cp -r trust-agent/out/k8s k8s/manifests/ta
+	cp -r utils/build/workload-security/k8s/ta k8s/manifests/ta
 	cp intel-secl/deployments/container-archive/oci/* k8s/container-images/
 	cp trust-agent/out/*.tar k8s/container-images/
 	cp utils/build/workload-security/k8s/install-ta-prereqs.sh k8s/platform-dependencies/
