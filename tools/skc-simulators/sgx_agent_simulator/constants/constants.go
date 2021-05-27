@@ -15,6 +15,7 @@ const (
 	HTTPLogFile               = LogDir + "http.log"
 	ConfigFile                = "config.yml"
 	NumberOfHosts             = 50
+	PCKDataFile               = "/opt/pckData"
 	TrustedCAsStoreDir        = ConfigDir + "certs/trustedca/"
 	CmsTLSCertDigestEnv       = "CMS_TLS_CERT_SHA384"
 	SGXAgentLogLevel          = "SGX_AGENT_LOGLEVEL"
@@ -26,4 +27,10 @@ const (
 	DefaultRetryCount         = 5
 	DefaultSHVSUpdateInterval = 120
 	DefaultHostStartId        = 1
+	EncPPIDKey                = "encrypted_ppid"
+	CPUSvnKey                 = "cpu_svn"
+	PceSvnKey                 = "pce_svn"
+	PceIDKey                  = "pce_id"
+	QeIDKey                   = "qe_id"
+	ManifestKey               = "manifest"
 )

@@ -1,40 +1,32 @@
 ---
-- name: KMIP KBS | Install pip3
-  dnf:
-    name: python3-pip
-    state: present
-    
-- name: KMIP KBS | Install PyKMIP
-  pip:
-    name: pykmip==0.9.1
-
-- name: KMIP KBS | Create directory for pykmip
-  file:
-    state: directory
-    path: /etc/pykmip/
-
-- name: KMIP KBS | Create directory for pykmip policies
-  file:
-    state: directory
-    path: /etc/pykmip/policies
-
-- name: KMIP KBS | Copy create_certificates.py to pykmip package folder
+- name: KMIP KBS | Copy KBS Script folder
   copy:
-    src: create_certificates.py
-    dest: /etc/pykmip
+    src: "{{kbs_script_folder_src}}"
+    dest: "/root"
+    mode: "u+x"
 
-- name: KMIP KBS | Run certificate scripts
-  shell: python3 create_certificates.py
-  args:
-    chdir: /etc/pykmip
-
-- name: KMIP KBS | Configure PyKMIP
+- name: KMIP KBS | Update Server Configuration File
   template:
-    src: kmip-server.j2
-    dest: /etc/pykmip/server.conf
-  
-- name: KMIP KBS | Copy run_server to root location
-  copy:
-    src: run_server.py
-    dest: /root/
-  
+    src: "server.conf.j2"
+    dest: "/root/{{kbs_script_folder_name}}/server.conf"
+    mode: "u+x"
+
+- name:  KMIP KBS | Run PyKmip Server Installation Script
+  shell: "set -o pipefail && ./install_pykmip.sh 2>&1 | tee pykmip-install.log"
+  args:
+    chdir: /root/{{kbs_script_folder_name}}
+    executable: /bin/bash
+  notify: start pykmip
+
+- meta: flush_handlers
+
+- name: KMIP KBS | Verify successful installation of PYKMIP
+  shell: grep 'Installation completed successfully!' /root/{{kbs_script_folder_name}}/pykmip-install.log
+  register: successful_install
+  failed_when: "'Installation completed successfully!' not in successful_install.stdout"
+
+- name: KMIP KBS | Update RSA Create Python script
+  template:
+    src: "rsa_create.py.j2"
+    dest: "/root/{{kbs_script_folder_name}}/rsa_create.py"
+    mode: "u+x"

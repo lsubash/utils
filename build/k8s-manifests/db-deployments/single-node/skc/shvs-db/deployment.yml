@@ -22,7 +22,7 @@ spec:
       securityContext:
         fsGroup: 2000
       initContainers:
-        - image: busybox:latest
+        - image: busybox:1.32
           imagePullPolicy: Always
           name: chmod-db-data
           command:

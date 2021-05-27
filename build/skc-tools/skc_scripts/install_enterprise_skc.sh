@@ -6,6 +6,22 @@ red=`tput setaf 1`
 green=`tput setaf 2`
 reset=`tput sgr0`
 
+# Check OS and VERSION
+OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
+temp="${OS%\"}"
+temp="${temp#\"}"
+OS="$temp"
+VER=$(cat /etc/os-release | grep ^VERSION_ID | tr -d 'VERSION_ID="')
+
+if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
+	dnf install -qy curl || exit 1
+elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
+	apt install -y curl || exit 1
+else
+	echo "${red} Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04 ${reset}"
+	exit 1
+fi
+
 # Copy env files to Home directory
 \cp -pf $SKC_BINARY_DIR/env/cms.env $HOME_DIR
 \cp -pf $SKC_BINARY_DIR/env/authservice.env $HOME_DIR
@@ -154,12 +170,12 @@ sed -i "s/^\(INSTALL_ADMIN_PASSWORD\s*=\s*\).*\$/\1$INSTALL_ADMIN_PASSWORD/" ~/p
 sed -i "/GLOBAL_ADMIN_USERNAME/d" ~/populate-users.env
 sed -i "/GLOBAL_ADMIN_PASSWORD/d" ~/populate-users.env
 
-if [ $ENTERPRISE_ADMIN_USERNAME != "" ] && [ $ENTERPRISE_ADMIN_PASSWORD != "" ]; then
-  sed -i "s/^\(CSP_ADMIN_USERNAME\s*=\s*\).*\$/\1$ENTERPRISE_ADMIN_USERNAME/" ~/populate-users.env
-  sed -i "s/^\(CSP_ADMIN_PASSWORD\s*=\s*\).*\$/\1$ENTERPRISE_ADMIN_PASSWORD/" ~/populate-users.env
+if [ $CCC_ADMIN_USERNAME != "" ] && [ $CCC_ADMIN_PASSWORD != "" ]; then
+  sed -i "s/^\(CCC_ADMIN_USERNAME\s*=\s*\).*\$/\1$CCC_ADMIN_USERNAME/" ~/populate-users.env
+  sed -i "s/^\(CCC_ADMIN_PASSWORD\s*=\s*\).*\$/\1$CCC_ADMIN_PASSWORD/" ~/populate-users.env
 else
-  sed -i "/CSP_ADMIN_USERNAME/d" ~/populate-users.env
-  sed -i "/CSP_ADMIN_PASSWORD/d" ~/populate-users.env
+  sed -i "/CCC_ADMIN_USERNAME/d" ~/populate-users.env
+  sed -i "/CCC_ADMIN_PASSWORD/d" ~/populate-users.env
 fi
 
 echo "Invoking populate users script...."
@@ -235,23 +251,31 @@ sed -i "s@^\(KEY_MANAGER\s*=\s*\).*\$@\1$KEY_MANAGER@" ~/kbs.env
 
 if [ $KEY_MANAGER == "KMIP" ]; then
   echo "Updating KMIP Server conf...."
-  sed -i "s@^\(KMIP_SERVER_IP\s*=\s*\).*\$@\1$KMIP_SERVER_IP@" ~/kbs.env
+  sed -i "s@^\(KMIP_SERVER_IP\s*=\s*\).*\$@\1$SYSTEM_IP@" ~/kbs.env
   sed -i "s@^\(KMIP_SERVER_PORT\s*=\s*\).*\$@\1$KMIP_SERVER_PORT@" ~/kbs.env
   sed -i "s@^\(KMIP_CLIENT_CERT_PATH\s*=\s*\).*\$@\1$KMIP_CLIENT_CERT_PATH@" ~/kbs.env
   sed -i "s@^\(KMIP_CLIENT_KEY_PATH\s*=\s*\).*\$@\1$KMIP_CLIENT_KEY_PATH@" ~/kbs.env
   sed -i "s@^\(KMIP_ROOT_CERT_PATH\s*=\s*\).*\$@\1$KMIP_ROOT_CERT_PATH@" ~/kbs.env
 
-  sed -i "s@^\(hostname\s*=\s*\).*\$@\1$KMIP_SERVER_IP@" kbs_script/server.conf
+  sed -i "s@^\(hostname\s*=\s*\).*\$@\1$SYSTEM_IP@" kbs_script/server.conf
   sed -i "s@^\(port\s*=\s*\).*\$@\1$KMIP_SERVER_PORT@" kbs_script/server.conf
-  sed -i "s@^\(certificate_path\s*=\s*\).*\$@\1$KMIP_CLIENT_CERT_PATH@" kbs_script/server.conf
-  sed -i "s@^\(key_path\s*=\s*\).*\$@\1$KMIP_CLIENT_KEY_PATH@" kbs_script/server.conf
-  sed -i "s@^\(ca_path\s*=\s*\).*\$@\1$KMIP_ROOT_CERT_PATH@" kbs_script/server.conf
 
-  sed -i "s@^\(HOSTNAME_IP\s*=\s*\).*\$@\1'$KMIP_SERVER_IP'@" kbs_script/rsa_create.py
+  sed -i "s@^\(HOSTNAME_IP\s*=\s*\).*\$@\1'$SYSTEM_IP'@" kbs_script/rsa_create.py
   sed -i "s@^\(SERVER_PORT\s*=\s*\).*\$@\1'$KMIP_SERVER_PORT'@" kbs_script/rsa_create.py
   sed -i "s@^\(CERT_PATH\s*=\s*\).*\$@\1'$KMIP_CLIENT_CERT_PATH'@" kbs_script/rsa_create.py
   sed -i "s@^\(KEY_PATH\s*=\s*\).*\$@\1'$KMIP_CLIENT_KEY_PATH'@" kbs_script/rsa_create.py
   sed -i "s@^\(CA_PATH\s*=\s*\).*\$@\1'$KMIP_ROOT_CERT_PATH'@" kbs_script/rsa_create.py
+
+  echo "Installing KMIP Server....."
+  pushd $PWD
+  cd kbs_script/
+  bash install_pykmip.sh
+  if [ $? -ne 0 ]; then
+        echo "${red} KMIP Server installation failed ${reset}"
+        exit 1
+  fi
+  popd
+  echo "KMIP Server installated successfully"
 fi
 
 echo "Installing Key Broker Service...."

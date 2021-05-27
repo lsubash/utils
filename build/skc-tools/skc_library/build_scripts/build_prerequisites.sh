@@ -18,10 +18,10 @@ install_pre_requisites()
                 wget http://archive.ubuntu.com/ubuntu/pool/main/p/p11-kit/libp11-kit0_0.23.22-1_amd64.deb || exit 1
                 wget http://archive.ubuntu.com/ubuntu/pool/main/p/p11-kit/libp11-kit-dev_0.23.22-1_amd64.deb || exit 1
 
-                apt install -f ./libtasn1-6_4.16.0-2_amd64.deb || exit 1
-                apt install -f ./libffi8ubuntu1_3.4~20200819gead65ca871-0ubuntu3_amd64.deb || exit 1
-                apt install -f ./libp11-kit0_0.23.22-1_amd64.deb || exit 1
-                apt install -f ./libp11-kit-dev_0.23.22-1_amd64.deb || exit 1
+                apt install -f -y ./libtasn1-6_4.16.0-2_amd64.deb || exit 1
+                apt install -f -y ./libffi8ubuntu1_3.4~20200819gead65ca871-0ubuntu3_amd64.deb || exit 1
+                apt install -f -y ./libp11-kit0_0.23.22-1_amd64.deb || exit 1
+                apt install -f -y ./libp11-kit-dev_0.23.22-1_amd64.deb || exit 1
 
 		rm -rf *.deb
 	else

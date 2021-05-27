@@ -31,7 +31,7 @@ spec:
                       - "SGX-ENABLED"
       containers:
         - name: skc-lib
-          image: <image-name>:<tag>
+          image: <image-name>:<image-tag>
           imagePullPolicy: Always
           ports:
            - containerPort: 8080
@@ -72,6 +72,12 @@ spec:
            - mountPath: /opt/skc/etc/pkcs11-apimodule.ini
              name: pkcs11-config-volume
              subPath: pkcs11-apimodule.ini
+           - mountPath: /opt/skc/etc/sgx_stm.ini
+             name: sgx-stm-config-volume
+             subPath: sgx_stm.ini
+           - mountPath: /opt/skc/etc/kms_npm.ini
+             name: kms-npm-config-volume
+             subPath: kms_npm.ini
            - mountPath: /etc/hosts
              name: haproxy-hosts
              subPath: hosts
@@ -105,6 +111,12 @@ spec:
         - name: pkcs11-config-volume
           configMap:
              name: pkcs11-config
+        - name: sgx-stm-config-volume
+          configMap:
+             name: sgx-stm-config
+        - name: kms-npm-config-volume
+          configMap:
+             name: kms-npm-config
         - name: haproxy-hosts
           configMap:
              name: haproxy-hosts-config

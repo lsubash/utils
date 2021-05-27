@@ -23,7 +23,7 @@ spec:
       securityContext:
         fsGroup: 2000
       initContainers:
-        - image: busybox:latest
+        - image: busybox:1.32
           imagePullPolicy: Always
           name: chmod-pg-data
           command:
@@ -39,7 +39,7 @@ spec:
               mountPath: /var/log/scs
       containers:
         - name: scs
-          image: <image-name>:<tag>
+          image: <image-name>:<image-tag>
           imagePullPolicy: Always
           securityContext:
             runAsUser: 1001

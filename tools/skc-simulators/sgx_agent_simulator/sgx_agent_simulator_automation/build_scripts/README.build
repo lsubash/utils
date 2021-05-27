@@ -7,8 +7,6 @@ RHEL8 package Requirements
 	BaseOS
 	AppStream
 	CodeReady
-- Ensure that dnf update can download and install latest software updates
-	If dnf update installs new kernel, make sure to restart the build vm for the new kernel to take effect
 - dnf install git
 - Ensure that the system date is properly setup (to PDT time)
 

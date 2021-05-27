@@ -61,17 +61,19 @@ temp="${OS%\"}"
 temp="${temp#\"}"
 OS="$temp"
 
-TBOOT_DEPENDENCY="tboot-1.9.*"
+TBOOT_DEPENDENCY="tboot"
 GRUB_FILE=${GRUB_FILE:-"/boot/grub2/grub.cfg"}
 echo "Starting trustagent pre-requisites installation from " $USER_PWD
 
-# Install msr-tools
+# Install msr-tools, libssl1.1 and libtspi1
 if [ "$OS" == "rhel" ]; then
   yum install -y msr-tools
 fi
 if [ "$OS" == "ubuntu" ]; then
   apt-get update -y
   apt install -y msr-tools
+  apt install -y libssl1.1
+  apt install -y libtspi1
 fi
 
 if [[ $EUID -ne 0 ]]; then
@@ -84,7 +86,7 @@ install_tboot() {
     yum install -y tboot-1.9.10
   fi
   if [ "$OS" == "ubuntu" ]; then
-    wget http://archive.ubuntu.com/ubuntu/pool/universe/t/tboot/tboot_1.9.7-0ubuntu2_amd64.deb
+    wget http://mirrors.kernel.org/ubuntu/pool/universe/t/tboot/tboot_1.9.12+hg20200718-1_amd64.deb
     dpkg -i tboot_1.9.*-*
   fi
 
@@ -116,7 +118,12 @@ fi
 # exit with error when such scenario is detected
 bootctl status 2> /dev/null | grep 'Secure Boot: enabled' > /dev/null
 if [ $? -eq 0 ]; then
-  rpm -qa | grep ${TBOOT_DEPENDENCY} >/dev/null
+  if [ "$OS" == "rhel" ]; then
+    rpm -qa | grep ${TBOOT_DEPENDENCY} >/dev/null
+  fi
+  if [ "$OS" == "ubuntu" ]; then
+    apt list --installed | grep ${TBOOT_DEPENDENCY} >/dev/null
+  fi
   if [ $? -eq 0 ]; then
     echo_failure "tagent cannot be installed on a system with both tboot and secure-boot enabled"
     exit 1
@@ -160,7 +167,7 @@ define_grub_file() {
        fi
     fi
   fi
-  GRUB_FILE=${GRUB_FILE:-$DEFAULT_GRUB_FILE}
+  GRUB_FILE=${DEFAULT_GRUB_FILE}
 }
 
 is_tpm_driver_loaded() {
@@ -250,12 +257,11 @@ configure_tboot_grub_menu(){
     grub2-mkconfig -o $GRUB_FILE
   fi
   if [ "$OS" == "ubuntu" ]; then
-    TBOOT_VERSION=$(apt-cache show tboot | grep Version | head -1 |  cut -d ':' -f 2 | cut -d '-' -f 1)
-    MENUENTRY="tboot ${TBOOT_VERSION}"
+    TBOOT_VERSION=$(apt-cache show tboot | grep Version | head -1 |  cut -d ':' -f 2 | cut -d '+' -f 1)
+    MENUENTRY="tboot${TBOOT_VERSION}"
     sed -i "s#GRUB_DEFAULT=.*#GRUB_DEFAULT=\'${MENUENTRY}\'#g" /etc/default/grub
     grub-mkconfig -o $GRUB_FILE
   fi
-
 }
 
 if [[ $rebootRequired -eq 0 ]] && [[ $SUEFI_ENABLED == "false" ]]; then

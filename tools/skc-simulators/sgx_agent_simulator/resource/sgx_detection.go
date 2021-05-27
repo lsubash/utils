@@ -7,17 +7,27 @@ package resource
 
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/json"
+	"fmt"
+	"github.com/klauspost/cpuid"
 	"github.com/pkg/errors"
-	"intel/isecl/lib/clients/v3"
-	clog "intel/isecl/lib/common/v3/log"
-	"intel/isecl/sgx_agent/v3/config"
-	"intel/isecl/sgx_agent/v3/constants"
-	"intel/isecl/sgx_agent/v3/utils"
+	"intel/isecl/lib/clients/v4"
+	clog "intel/isecl/lib/common/v4/log"
+	"intel/isecl/sgx_agent/v4/config"
+	"intel/isecl/sgx_agent/v4/constants"
+	"intel/isecl/sgx_agent/v4/utils"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
+)
+
+// MSR.IA32_Feature_Control register tells availability of SGX
+const (
+	FeatureControlRegister = 0x3A
+	MSRDevice              = "/dev/cpu/0/msr"
 )
 
 var log = clog.GetDefaultLogger()
@@ -42,6 +52,10 @@ type PlatformData struct {
 	QeID          string `json:"qeid"`
 	Manifest      string `json:"Manifest"`
 }
+
+var (
+	pckIDRetrievalInfo = []string{"PCKIDRetrievalTool", "-f", constants.PCKDataFile}
+)
 
 type SCSPushResponse struct {
 	Status  string `json:"Status"`
@@ -78,6 +92,176 @@ func ExtractSGXPlatformValues(id int) (*SGXDiscoveryData, *PlatformData, error) 
 	return sgxEnablementInfo, sgxPlatformData, nil
 }
 
+// ReadMSR is a utility function that reads an 64 bit value from /dev/cpu/0/msr at offset 'offset'
+func ReadMSR(offset int64) (uint64, error) {
+
+	msr, err := os.Open(MSRDevice)
+	if err != nil {
+		return 0, errors.Wrapf(err, "sgx_detection:ReadMSR(): Error opening msr")
+	}
+
+	_, err = msr.Seek(offset, 0)
+	if err != nil {
+		return 0, errors.Wrapf(err, "sgx_detection:ReadMSR(): Could not seek to location %x", offset)
+	}
+
+	results := make([]byte, 8)
+	readLen, err := msr.Read(results)
+	if err != nil {
+		return 0, errors.Wrapf(err, "sgx_detection:ReadMSR(): There was an error reading msr at offset %x", offset)
+	}
+	if readLen < 8 {
+		return 0, errors.New("sgx_detection:ReadMSR(): Reading the msr returned the incorrect length")
+	}
+
+	err = msr.Close()
+	if err != nil {
+		return 0, errors.Wrapf(err, "sgx_detection:ReadMSR(): Error while closing msr device file")
+	}
+	return binary.LittleEndian.Uint64(results), nil
+}
+
+func isSGXAndFLCEnabled() (sgxEnabled, flcEnabled bool, err error) {
+	sgxEnabled = false
+	flcEnabled = false
+	sgxBits, err := ReadMSR(FeatureControlRegister)
+	if err != nil {
+		return sgxEnabled, flcEnabled, errors.Wrap(err, "Error while reading MSR")
+	}
+
+	// check if SGX is enabled or not
+	if (sgxBits&(1<<18) != 0) && (sgxBits&(1<<0) != 0) {
+		sgxEnabled = true
+	}
+
+	// check if FLC is enabled or not
+	if (sgxBits&(1<<17) != 0) && (sgxBits&(1<<0) != 0) {
+		flcEnabled = true
+	}
+	return sgxEnabled, flcEnabled, nil
+}
+
+func cpuid_low(arg1, arg2 uint32) (eax, ebx, ecx, edx uint32)
+
+func isCPUSupportsSGXExtensions() bool {
+	sgxExtensionsEnabled := false
+	_, ebx, _, _ := cpuid_low(7, 0)
+	if ((ebx >> 2) & 1) != 0 { // 2nd bit should be set if SGX extensions are supported.
+		sgxExtensionsEnabled = true
+	}
+	return sgxExtensionsEnabled
+}
+
+func epcMemoryDetails() (epcOffset, epcSize string) {
+	eax, ebx, ecx, edx := cpuid_low(18, 2)
+	log.Debugf("eax, ebx, ecx, edx: %08x-%08x-%08x-%08x", eax, ebx, ecx, edx)
+	// eax(31, 12) + ebx(51, 32)
+	range1 := uint64((((1 << 20) - 1) & (eax >> 12)))
+	range2 := uint64(((1 << 20) - 1) & ebx)
+	startAddress := (range2 << 32) | (range1 << 12)
+	log.Debugf("startaddress: %08x", startAddress)
+
+	// ecx(31, 12) + edx(51, 32)
+	range1 = uint64(((1 << 20) - 1) & (ecx >> 12))
+	range2 = uint64(((1 << 20) - 1) & edx)
+	size := (range2 << 32) | (range1 << 12)
+	sizeINMB := convertToMB(size)
+	startAddressinHex := "0x" + fmt.Sprintf("%08x", startAddress)
+	log.Debugf("size in decimal %20d  and mb %16q: ", size, sizeINMB)
+	return startAddressinHex, sizeINMB
+}
+
+func isSGXInstructionSetSuported() int {
+	cpuid.Detect()
+	sgxInstructionSet := 0
+	if cpuid.CPU.SGX.SGX1Supported {
+		sgxInstructionSet = 1
+		if cpuid.CPU.SGX.SGX2Supported {
+			sgxInstructionSet = 2
+		}
+	} else {
+		log.Debug("SGX instruction set 1 and 2 are not supported.")
+	}
+	return sgxInstructionSet
+}
+
+func maxEnclaveSize() (maxSizeNot64, maxSize64 int64) {
+	cpuid.Detect()
+	return cpuid.CPU.SGX.MaxEnclaveSizeNot64, cpuid.CPU.SGX.MaxEnclaveSize64
+}
+
+func runPCKIDRetrivalInfo() error {
+	// Output is written to /opt/pckData
+	// FIXME : Check the error messages.
+	log.Debug("Running PCKIDRetrival tool and write to cache...")
+	_, err := utils.ReadAndParseFromCommandLine(pckIDRetrievalInfo)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func isPCKDataCached() bool {
+	log.Debug("Checking if PCK Data was cached... ")
+
+	if _, err := os.Stat(constants.PCKDataFile); err == nil {
+		log.Debug("PCK Data is available in cache.")
+		return true
+	}
+
+	log.Debug("PCK Data is not cached. ")
+
+	return false
+}
+
+func writePCKData(fileContents string) error {
+	// path/to/whatever exists
+	err := ioutil.WriteFile(constants.PCKDataFile, []byte(fileContents), 0644)
+	if err != nil {
+		log.Error("Could not write sgx platform values to pckData file")
+	}
+
+	return err
+}
+
+func readPCKDetailsFromCache() (string, error) {
+	log.Debug("Reading PCKDetails from cache ... ")
+	fileContents := ""
+
+	// Check if file exists in the directory then parse it and write the values in log file.
+	_, err := os.Stat(constants.PCKDataFile)
+	if err == nil {
+		// path/to/whatever exists
+		dat, err := ioutil.ReadFile(constants.PCKDataFile)
+		if err != nil {
+			log.Error("could not read sgx platform values from pckData file")
+		} else {
+			fileContents = string(dat)
+		}
+	} else if os.IsNotExist(err) {
+		// path/to/whatever does *not* exist
+		log.Warning("pckData file not found.")
+	} else {
+		log.Warning("Unknown error while reading pckData file")
+	}
+	return fileContents, err
+}
+
+func convertToMB(b uint64) string {
+	const unit = 1024
+	if b < unit {
+		return fmt.Sprintf("%d B", b)
+	}
+	div, exp := int64(unit), 0
+	for n := b / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB",
+		float64(b)/float64(div), "kMGTPE"[exp])
+}
+
 func PushSGXData(pdata *PlatformData, hardwareUUID string) (bool, error) {
 	log.Trace("resource/sgx_detection.go: PushSGXData() Entering")
 	defer log.Trace("resource/sgx_detection.go: PushSGXData() Leaving")
@@ -95,7 +279,6 @@ func PushSGXData(pdata *PlatformData, hardwareUUID string) (bool, error) {
 	log.Debug("PushSGXData: URL: ", pushURL)
 	for i := conf.HostStartId; i < conf.HostStartId+conf.NumberOfHosts; i++ {
 		ExtractSGXPlatformValues(i)
-		hardwareUUID = "4219f9d3-c8c9-da13-bead-5f0445948a37"
 		requestStr := map[string]string{
 			"enc_ppid":      pdata.EncryptedPPID,
 			"cpu_svn":       pdata.CPUSvn,
@@ -130,7 +313,6 @@ func PushSGXData(pdata *PlatformData, hardwareUUID string) (bool, error) {
 
 		var retries = 0
 		var timeBwCalls = conf.WaitTime
-
 		resp, err := client.Do(req)
 		if err != nil || (resp != nil && resp.StatusCode >= http.StatusInternalServerError) {
 
@@ -159,6 +341,7 @@ func PushSGXData(pdata *PlatformData, hardwareUUID string) (bool, error) {
 					time.Sleep(time.Duration(timeBwCalls) * time.Minute)
 					retries = 0
 				}
+
 			}
 		}
 

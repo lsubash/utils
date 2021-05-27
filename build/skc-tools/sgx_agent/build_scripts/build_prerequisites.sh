@@ -24,7 +24,7 @@ install_pre_requisites()
 {
 	if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
 		dnf install -qy wget tar git gcc-c++ make curl-devel skopeo || exit 1
-		dnf install -qy https://dl.fedoraproject.org/pub/fedora/linux/releases/32/Everything/x86_64/os/Packages/m/makeself-2.4.0-5.fc32.noarch.rpm || exit 1
+		dnf install -qy https://download-ib01.fedoraproject.org/pub/epel/8/Everything/x86_64/Packages/m/makeself-2.4.2-1.el8.noarch.rpm || exit 1
 	elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
 		apt install -y wget tar build-essential libcurl4-openssl-dev makeself || exit 1
 	else

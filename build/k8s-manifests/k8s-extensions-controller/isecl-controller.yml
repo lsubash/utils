@@ -43,7 +43,7 @@ spec:
       securityContext:
         fsGroup: 1001
       initContainers:
-        - image: busybox:latest
+        - image: busybox:1.32
           imagePullPolicy: Always
           name: chmod-pg-data
           command:
@@ -56,7 +56,7 @@ spec:
               mountPath: /var/log/isecl-k8s-extensions
       containers:
         - name: isecl-controller
-          image: <image_name>:<tag>
+          image: <image-name>:<image-tag>
           imagePullPolicy: Always
           securityContext:
             runAsUser: 1001

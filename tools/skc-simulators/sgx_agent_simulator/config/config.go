@@ -6,15 +6,16 @@ package config
 
 import (
 	"errors"
-	errorLog "github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
-	commLog "intel/isecl/lib/common/v3/log"
-	"intel/isecl/lib/common/v3/setup"
-	"intel/isecl/sgx_agent/v3/constants"
 	"net/url"
 	"os"
 	"path"
 	"strconv"
+
+	errorLog "github.com/pkg/errors"
+	commLog "intel/isecl/lib/common/v4/log"
+	"intel/isecl/lib/common/v4/setup"
+	"intel/isecl/sgx_agent/v4/constants"
 
 	log "github.com/sirupsen/logrus"
 )

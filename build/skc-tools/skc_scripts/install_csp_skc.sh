@@ -14,9 +14,9 @@ OS="$temp"
 VER=$(cat /etc/os-release | grep ^VERSION_ID | tr -d 'VERSION_ID="')
 
 if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
-	dnf install -qy jq || exit 1
+	dnf install -qy curl || exit 1
 elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
-	apt install -y jq curl || exit 1
+	apt install -y curl || exit 1
 else
 	echo "${red} Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04 ${reset}"
 	exit 1
@@ -70,7 +70,7 @@ shvs uninstall --purge
 echo "Removing SGX Host Verification Service Database...."
 sudo -u postgres dropdb $SHVS_DB_NAME
 echo "Uninstalling Integration HUB...."
-ihub uninstall --purge
+ihub uninstall --purge --exec
 popd
 
 pushd $PWD
@@ -151,7 +151,7 @@ fi
 echo "${green} Installed AuthService.... ${reset}"
 
 echo "Updating Populate users env ...."
-ISECL_INSTALL_COMPONENTS=AAS,SCS,SHVS,SIH
+ISECL_INSTALL_COMPONENTS=AAS,SCS,SHVS,SIH,IHUB
 sed -i "s@^\(ISECL_INSTALL_COMPONENTS\s*=\s*\).*\$@\1$ISECL_INSTALL_COMPONENTS@" ~/populate-users.env
 sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/populate-users.env
 
@@ -252,7 +252,7 @@ sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/ihub.env
 sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@" ~/ihub.env
 SHVS_URL=https://$SYSTEM_IP:$SHVS_PORT/sgx-hvs/v2
 K8S_URL=https://$K8S_IP:$K8S_PORT/
-sed -i "s@^\(ATTESTATION_SERVICE_URL\s*=\s*\).*\$@\1$SHVS_URL@" ~/ihub.env
+sed -i "s@^\(SHVS_BASE_URL\s*=\s*\).*\$@\1$SHVS_URL@" ~/ihub.env
 sed -i "s@^\(KUBERNETES_URL\s*=\s*\).*\$@\1$K8S_URL@" ~/ihub.env
 if [[ "$OS" != "ubuntu" ]]; then
 OPENSTACK_AUTH_URL=http://$OPENSTACK_IP:$OPENSTACK_AUTH_PORT/

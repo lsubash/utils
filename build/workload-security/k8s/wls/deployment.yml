@@ -23,7 +23,7 @@ spec:
       securityContext:
         fsGroup: 1001
       initContainers:
-        - image: busybox:latest
+        - image: busybox:1.32
           imagePullPolicy: Always
           name: chmod-wls-data
           command:
@@ -38,7 +38,7 @@ spec:
             - name: wls-logs-volume
               mountPath: /var/log/workload-service
       containers:
-        - image: <image-name>:<image-path>
+        - image: <image-name>:<image-tag>
           name: wls
           imagePullPolicy: Always
           securityContext:

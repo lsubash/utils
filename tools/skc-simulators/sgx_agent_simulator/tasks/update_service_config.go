@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	clog "intel/isecl/lib/common/v3/log"
-	"intel/isecl/lib/common/v3/setup"
-	"intel/isecl/sgx_agent/v3/config"
-	"intel/isecl/sgx_agent/v3/constants"
+	clog "intel/isecl/lib/common/v4/log"
+	"intel/isecl/lib/common/v4/setup"
+	"intel/isecl/sgx_agent/v4/config"
+	"intel/isecl/sgx_agent/v4/constants"
 	"io"
 	"net/url"
 )
@@ -39,9 +39,7 @@ func (u Update_Service_Config) Run(c setup.Context) error {
 			u.Config.SGXHVSBaseURL = sgxHVSBaseURL
 		}
 	} else if u.Config.SGXHVSBaseURL == "" {
-		log.Error("SHVS_BASE_URL is not defined in environment")
-		return errors.Wrap(errors.New("SHVS_BASE_URL is not defined in environment"),
-			"SaveConfiguration() ENV variable not found")
+		log.Info("SHVS_BASE_URL is not defined in environment")
 	}
 
 	scsBaseURL, err := c.GetenvString("SCS_BASE_URL", "SCS Base URL")

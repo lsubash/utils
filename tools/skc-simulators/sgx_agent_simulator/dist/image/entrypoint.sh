@@ -1,5 +1,9 @@
 #!/bin/bash
 
+source /etc/secret-volume/secrets.txt
+export CCC_ADMIN_USERNAME
+export CCC_ADMIN_PASSWORD
+
 COMPONENT_NAME=sgx_agent
 PRODUCT_HOME=/opt/$COMPONENT_NAME
 BIN_PATH=$PRODUCT_HOME/bin
@@ -16,7 +20,7 @@ if [ ! -f $CONFIG_PATH/.setup_done ]; then
       echo "Cannot create directory: $directory"
       exit 1
     fi
-  chmod 700 $directory
+    chmod 700 $directory
     chmod g+s $directory
   done
   export BEARER_TOKEN=`./create_roles.sh`
@@ -34,24 +38,24 @@ fi
 cp /etc/hostname /proc/sys/kernel/hostname
 
 if [ ! -z "$SETUP_TASK" ]; then
+  cp $CONFIG_PATH/config.yml /tmp/config.yml
   IFS=',' read -ra ADDR <<< "$SETUP_TASK"
   for task in "${ADDR[@]}"; do
     if [ "$task" == "update_service_config" ]; then
         sgx_agent setup $task
         if [ $? -ne 0 ]; then
+          cp /tmp/config.yml $CONFIG_PATH/config.yml
           exit 1
         fi
         continue 1
     fi
     sgx_agent setup $task --force
     if [ $? -ne 0 ]; then
+      cp /tmp/config.yml $CONFIG_PATH/config.yml
       exit 1
     fi
   done
+  rm -rf /tmp/config.yml
 fi
-
-unset BEARER_TOKEN
-unset CSP_ADMIN_USERNAME
-unset CSP_ADMIN_PASSWORD
 
 sgx_agent run

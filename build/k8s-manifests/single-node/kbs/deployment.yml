@@ -23,7 +23,7 @@ spec:
       securityContext:
         fsGroup: 1001
       initContainers:
-        - image: busybox:latest
+        - image: busybox:1.32
           imagePullPolicy: Always
           name: chown-config-data
           command:
@@ -42,7 +42,7 @@ spec:
               mountPath: /opt/kbs
       containers:
         - name: kbs
-          image: <image-name>:<port>
+          image: <image-name>:<image-tag>
           imagePullPolicy: Always
           securityContext:
             runAsUser: 1001
@@ -59,6 +59,8 @@ spec:
               mountPath: /var/log/kbs
             - name: kbs-opt-volume
               mountPath: /opt/kbs
+            - name: kbs-kmip-volume
+              mountPath: /etc/kmip
             - mountPath: /etc/secret-volume/
               name: kbs-credentials
               readOnly: true              
@@ -78,3 +80,6 @@ spec:
         - name: kbs-credentials
           secret:
               secretName: kbs-secret
+        - name: kbs-kmip-volume
+          secret:
+            secretName: kmip-certs

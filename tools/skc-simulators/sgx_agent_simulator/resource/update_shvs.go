@@ -8,15 +8,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/pkg/errors"
-	"intel/isecl/lib/clients/v3"
-	"intel/isecl/sgx_agent/v3/config"
-	"intel/isecl/sgx_agent/v3/constants"
-	"intel/isecl/sgx_agent/v3/utils"
+	"intel/isecl/lib/clients/v4"
+	"intel/isecl/sgx_agent/v4/config"
+	"intel/isecl/sgx_agent/v4/constants"
+	"intel/isecl/sgx_agent/v4/utils"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
-	//	uuid "github.com/google/uuid"
 )
 
 // UpdateSHVSPeriodically Updates SHVS periodically. If an error occurs,
@@ -24,16 +23,19 @@ import (
 func UpdateSHVSPeriodically(sgxDiscovery *SGXDiscoveryData, platformData *PlatformData, hardwareUUID string, period int) error {
 	// update SHVS as per configured timer.
 	for {
-		conf := config.Global()
-		if conf == nil {
-			log.Debug("config issue")
-		}
-		tcbUptoDate := true
-		err := PushSGXEnablementData(sgxDiscovery, hardwareUUID, tcbUptoDate)
+		tcbStatus, err := GetTCBStatus(platformData.QeID, platformData.PceID)
 		if err != nil {
 			// Log error . But don't throw it.
-			log.WithError(err).Error("Unable to update SHVS.")
+			log.WithError(err).Error("Unable to get TCB Status from SCS.")
+		} else {
+			tcbUptoDate, _ := strconv.ParseBool(tcbStatus)
+			err = PushSGXEnablementData(sgxDiscovery, hardwareUUID, tcbUptoDate)
+			if err != nil {
+				// Log error . But don't throw it.
+				log.WithError(err).Error("Unable to update SHVS.")
+			}
 		}
+
 		// Sleep here on a timer.
 		log.Infof("Waiting for %v minutes until next update.", period)
 		time.Sleep(time.Duration(period) * time.Minute)
@@ -71,7 +73,6 @@ func PushSGXEnablementData(sgxDiscovery *SGXDiscoveryData, hardwareUUID string, 
 		for len(id_str) < 5 {
 			id_str = "0" + id_str
 		}
-		hardwareUUID := "4219f9d3-c8c9-da13-bead-5f0445948a37"
 
 		requestData := SGXHostInfo{
 			HostName:     hostName,
@@ -87,7 +88,6 @@ func PushSGXEnablementData(sgxDiscovery *SGXDiscoveryData, hardwareUUID string, 
 		if err != nil {
 			return errors.Wrap(err, "UpdateHostSGXDiscovery: struct to json marshalling failed")
 		}
-
 		request, _ := http.NewRequest("POST", apiEndPoint, bytes.NewBuffer(reqBytes))
 		request.Header.Set("Content-Type", "application/json")
 		request.Header.Set("Authorization", "Bearer "+conf.BearerToken)
@@ -100,7 +100,6 @@ func PushSGXEnablementData(sgxDiscovery *SGXDiscoveryData, hardwareUUID string, 
 		if tokenExpired {
 			slog.Warn("resource/update_shvs:UpdateHOSTSGXDiscovery() Token is about to expire within 7 days. Please refresh the token.")
 		}
-
 		client, err := clients.HTTPClientWithCADir(constants.TrustedCAsStoreDir)
 		if err != nil {
 			log.WithError(err).Error("resource/update_shvs:UpdateHOSTSGXDiscovery() Error while creating http client")
@@ -126,7 +125,6 @@ func PushSGXEnablementData(sgxDiscovery *SGXDiscoveryData, hardwareUUID string, 
 		}
 
 		log.Debug("Request Completed : ", response.StatusCode)
-
 		if (response.StatusCode != http.StatusOK) && (response.StatusCode != http.StatusCreated) {
 			return errors.Errorf("resource/UpdateHostSGXDiscovery Request made to %s returned status %d", apiEndPoint, response.StatusCode)
 		}

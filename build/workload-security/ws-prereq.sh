@@ -1,45 +1,80 @@
+# Check OS
+OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
+temp="${OS%\"}"
+temp="${temp#\"}"
+OS="$temp"
+
 declare -a PRE_REQ_REPO
 PRE_REQ_REPO=(
-https://download.docker.com/linux/centos/docker-ce.repo
+  https://download.docker.com/linux/centos/docker-ce.repo
 )
 
-declare -a PRE_REQ_PACKAGES
-PRE_REQ_PACKAGES=(
-https://download-ib01.fedoraproject.org/pub/epel/8/Everything/x86_64/Packages/m/makeself-2.4.2-1.el8.noarch.rpm
-http://mirror.centos.org/centos/8/PowerTools/x86_64/os/Packages/tpm2-abrmd-devel-2.1.1-3.el8.x86_64.rpm 
-http://mirror.centos.org/centos/8/PowerTools/x86_64/os/Packages/trousers-devel-0.3.14-4.el8.x86_64.rpm
-https://www.cabextract.org.uk/cabextract-1.9.1-1.i386.rpm
-glib2-devel 
-glibc-devel 
-wget 
-gcc 
-gcc-c++  
-git 
-patch 
-zip 
-unzip 
-make 
-tpm2-tss-2.0.0-4.el8.x86_64 
-openssl-devel
-cabextract
+declare -a RPM_PACKAGES
+RPM_PACKAGES=(
+  https://download-ib01.fedoraproject.org/pub/epel/8/Everything/x86_64/Packages/m/makeself-2.4.2-1.el8.noarch.rpm
+)
+
+declare -a DEB_PACKAGES
+DEB_PACKAGES=(
+  http://us.archive.ubuntu.com/ubuntu/pool/main/i/init-system-helpers/init-system-helpers_1.57_all.deb
+  http://archive.ubuntu.com/ubuntu/pool/main/t/tpm-udev/tpm-udev_0.4_all.deb
+  http://us.archive.ubuntu.com/ubuntu/pool/main/t/tpm2-tss/libtss2-esys0_2.3.2-1_amd64.deb
+  http://security.ubuntu.com/ubuntu/pool/main/libg/libgcrypt20/libgcrypt20-dev_1.8.1-4ubuntu1.2_amd64.deb
+  http://archive.ubuntu.com/ubuntu/pool/main/t/tpm2-tss/libtss2-dev_2.3.2-1_amd64.deb
+)
+
+declare -a DEB_PACKAGES_DOCKER
+DEB_PACKAGES_DOCKER=(
+  https://download.docker.com/linux/ubuntu/dists/bionic/pool/stable/amd64/containerd.io_1.2.10-3_amd64.deb
+  https://download.docker.com/linux/ubuntu/dists/bionic/pool/stable/amd64/docker-ce-cli_19.03.5~3-0~ubuntu-bionic_amd64.deb
+  https://download.docker.com/linux/ubuntu/dists/bionic/pool/stable/amd64/docker-ce_19.03.5~3-0~ubuntu-bionic_amd64.deb
+)
+
+declare -a PRE_REQ_COMMON_PACKAGES
+PRE_REQ_COMMON_PACKAGES=(
+  wget
+  gcc
+  git
+  patch
+  zip
+  unzip
+  make
+  cabextract
+)
+
+declare -a PRE_REQ_PACKAGES_RHEL
+PRE_REQ_PACKAGES_RHEL=(
+  glib2-devel
+  glibc-devel
+  gcc-c++
+  openssl-devel
+  tpm2-tss-2.0.0-4.el8.x86_64
+  tpm2-tss-devel.x86_64
+)
+
+declare -a PRE_REQ_PACKAGES_UBUNTU
+PRE_REQ_PACKAGES_UBUNTU=(
+  gcc-8
+  g++-8
+  build-essential
+  skopeo
 )
 
 declare -a PRE_REQ_PACKAGES_DOCKER
 PRE_REQ_PACKAGES_DOCKER=(
-containers-common
-docker-ce-19.03.13
-docker-ce-cli-19.03.13
-containerd
-skopeo
+  containers-common
+  docker-ce-19.03.13
+  docker-ce-cli-19.03.13
+  containerd
+  skopeo
 )
 
 declare -a PRE_REQ_PACKAGES_CRIO
 PRE_REQ_PACKAGES_CRIO=(
-conmon
+  conmon
 )
 
-
-install_prereq_repos() {
+install_prereq_repos_rhel() {
   local error_code=0
   for url in ${!PRE_REQ_REPO[@]}; do
     local repo_url=${PRE_REQ_REPO[${url}]}
@@ -56,30 +91,99 @@ install_prereq_repos() {
 #install generic pre-reqs
 install_prereqs_packages() {
   local error_code=0
-  for package in ${!PRE_REQ_PACKAGES[@]}; do
-    local package_name=${PRE_REQ_PACKAGES[${package}]}
-    dnf install -y ${package_name}
+  for package in ${!PRE_REQ_COMMON_PACKAGES[@]}; do
+    local package_name=${PRE_REQ_COMMON_PACKAGES[${package}]}
+    if [ "$OS" == "rhel" ]; then
+      dnf install -y ${package_name}
+    fi
+    if [ "$OS" == "ubuntu" ]; then
+      apt-get install -y ${package_name}
+    fi
     local install_error_code=$?
     if [ ${install_error_code} -ne 0 ]; then
       echo "ERROR: could not install [${package_name}]"
       return ${install_error_code}
     fi
   done
+  if [ "$OS" == "rhel" ]; then
+    for package in ${!PRE_REQ_PACKAGES_RHEL[@]}; do
+      local package_name=${PRE_REQ_PACKAGES_RHEL[${package}]}
+      dnf install -y ${package_name}
+      local install_error_code=$?
+      if [ ${install_error_code} -ne 0 ]; then
+        echo "ERROR: could not install [${package_name}]"
+        return ${install_error_code}
+      fi
+    done
+    for package in ${!RPM_PACKAGES[@]}; do
+      local package_name=${RPM_PACKAGES[${package}]}
+      dnf install -y ${package_name}
+      local install_error_code=$?
+      if [ ${install_error_code} -ne 0 ]; then
+        echo "ERROR: could not install [${package_name}]"
+        return ${install_error_code}
+      fi
+    done
+  fi
+  if [ "$OS" == "ubuntu" ]; then
+    add-apt-repository ppa:projectatomic/ppa -y
+    apt-get update -y
+
+    for package in ${!PRE_REQ_PACKAGES_UBUNTU[@]}; do
+      local package_name=${PRE_REQ_PACKAGES_UBUNTU[${package}]}
+      apt install -y ${package_name}
+      local install_error_code=$?
+      if [ ${install_error_code} -ne 0 ]; then
+        echo "ERROR: could not install [${package_name}]"
+        return ${install_error_code}
+      fi
+    done
+    for package in ${!DEB_PACKAGES[@]}; do
+      local package_name=${DEB_PACKAGES[${package}]}
+      local TEMP_DEB=tempdb
+      wget -O "$TEMP_DEB" ${package_name}
+      echo $TEMP_DEB
+      echo ${package_name}
+      dpkg -i $TEMP_DEB
+      rm -f $TEMP_DEB
+      local install_error_code=$?
+      if [ ${install_error_code} -ne 0 ]; then
+        echo "ERROR: could not install [${package_name}]"
+        return ${install_error_code}
+      fi
+    done
+  fi
   return ${error_code}
 }
 
 #install docker pre-reqs
 install_prereqs_packages_docker() {
   local error_code=0
-  for package in ${!PRE_REQ_PACKAGES_DOCKER[@]}; do
-    local package_name=${PRE_REQ_PACKAGES_DOCKER[${package}]}
-    dnf install -y ${package_name}
-    local install_error_code=$?
-    if [ ${install_error_code} -ne 0 ]; then
-      echo "ERROR: could not install [${package_name}]"
-      return ${install_error_code}
-    fi
-  done
+  if [ "$OS" == "rhel" ]; then
+    for package in ${!PRE_REQ_PACKAGES_DOCKER[@]}; do
+      local package_name=${PRE_REQ_PACKAGES_DOCKER[${package}]}
+      dnf install -y ${package_name}
+      local install_error_code=$?
+      if [ ${install_error_code} -ne 0 ]; then
+        echo "ERROR: could not install [${package_name}]"
+        return ${install_error_code}
+      fi
+    done
+  fi
+  if [ "$OS" == "ubuntu" ]; then
+    for package in ${!DEB_PACKAGES_DOCKER[@]}; do
+      local package_name=${DEB_PACKAGES_DOCKER[${package}]}
+      local TEMP_DEB=tempdb
+      wget -O "$TEMP_DEB" ${package_name}
+      dpkg -i $TEMP_DEB
+      rm -f $TEMP_DEB
+      local install_error_code=$?
+      if [ ${install_error_code} -ne 0 ]; then
+        echo "ERROR: could not install [${package_name}]"
+        return ${install_error_code}
+      fi
+    done
+  fi
   return ${error_code}
 }
 
@@ -88,13 +192,24 @@ install_prereqs_packages_crio() {
   local error_code=0
   for package in ${!PRE_REQ_PACKAGES_CRIO[@]}; do
     local package_name=${PRE_REQ_PACKAGES_CRIO[${package}]}
-    dnf install -y ${package_name}
+    if [ "$OS" == "rhel" ]; then
+      dnf install -y ${package_name}
+    fi
+    if [ "$OS" == "ubuntu" ]; then
+      apt-get install -y ${package_name}
+    fi
     local install_error_code=$?
     if [ ${install_error_code} -ne 0 ]; then
       echo "ERROR: could not install [${package_name}]"
       return ${install_error_code}
     fi
   done
+
+  go get github.com/cpuguy83/go-md2man
+  if [ ${install_error_code} -ne 0 ]; then
+    echo "ERROR: could not install [${package_name}]"
+    return ${install_error_code}
+  fi
   return ${error_code}
 }
 
@@ -119,51 +234,63 @@ install_libkmip() {
   return ${error_code}
 }
 
-
 # functions handling i/o on command line
 print_help() {
-    echo "Usage: $0 [-hdcv]"
-    echo "    -h     print help and exit"
-    echo "    -d     pre-req setup for Workload Security:Launch Time Protection - Containers with Docker Runtime"
-    echo "    -c     pre-req setup for Workload Security:Launch Time Protection - Containers with CRIO Runtime"
-    echo "    -v     pre-req setup for Workload Security:Launch Time Protection - VM Confidentiality"
+  echo "Usage: $0 [-hdcv]"
+  echo "    -h     print help and exit"
+  echo "    -d     pre-req setup for Workload Security:Launch Time Protection - Containers with Docker Runtime"
+  echo "    -c     pre-req setup for Workload Security:Launch Time Protection - Containers with CRIO Runtime"
+  echo "    -v     pre-req setup for Workload Security:Launch Time Protection - VM Confidentiality"
 }
 
 dispatch_works() {
-    mkdir -p ~/.tmp
-    if [[ $1 == *"d"* ]]; then
-      echo "Installing Packages for Workload Security:Launch Time Protection - Containers with Docker Runtime..."
-      install_prereqs_packages
-      install_prereq_repos
-      install_prereqs_packages_docker
-      install_libkmip
-    elif [[ $1 == *"c"* ]]; then
-      echo "Installing Packages for Workload Security:Launch Time Protection - Containers with CRIO Runtime..."
-      install_prereqs_packages
-      install_prereq_repos
-      install_prereqs_packages_docker
-      install_prereqs_packages_crio
-      install_libkmip
-    elif [[ $1 == *"v"* ]]; then
-      echo "Installing Packages for Workload Security:Launch Time Protection - VM Confidentiality..."
-      install_prereqs_packages
-      install_libkmip
-    else 
-      print_help
-      exit 1
+  mkdir -p ~/.tmp
+  if [[ $1 == *"d"* ]]; then
+    echo "Installing Packages for Workload Security:Launch Time Protection - Containers with Docker Runtime..."
+    if [ "$OS" == "rhel" ]; then
+      install_prereq_repos_rhel
     fi
+    install_prereqs_packages
+    install_prereqs_packages_docker
+    install_libkmip
+  elif [[ $1 == *"c"* ]]; then
+    echo "Installing Packages for Workload Security:Launch Time Protection - Containers with CRIO Runtime..."
+    if [ "$OS" == "rhel" ]; then
+      install_prereq_repos_rhel
+    fi
+    install_prereqs_packages
+    install_prereqs_packages_docker
+    install_prereqs_packages_crio
+    install_libkmip
+  elif [[ $1 == *"v"* ]]; then
+    echo "Installing Packages for Workload Security:Launch Time Protection - VM Confidentiality..."
+    if [ "$OS" == "rhel" ]; then
+      install_prereq_repos_rhel
+    fi
+    install_prereqs_packages
+    install_libkmip
+  else
+    print_help
+    exit 1
+  fi
 }
 
 optstring=":hdcv"
 work_list=""
 while getopts ${optstring} opt; do
-    case ${opt} in
-      h) print_help; exit 0 ;;
-      d) work_list+="d" ;;
-      c) work_list+="c" ;;
-      v) work_list+="v" ;;
-      *) print_help; exit 1 ;;
-    esac
+  case ${opt} in
+  h)
+    print_help
+    exit 0
+    ;;
+  d) work_list+="d" ;;
+  c) work_list+="c" ;;
+  v) work_list+="v" ;;
+  *)
+    print_help
+    exit 1
+    ;;
+  esac
 done
 
 # run commands
