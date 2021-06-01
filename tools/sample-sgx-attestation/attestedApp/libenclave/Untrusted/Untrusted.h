@@ -70,7 +70,7 @@
 #define FALSE 0
 #endif
 
-#define ENCLAVE_FILENAME "/usr/lib64/libenclave_signed.so"
+#define ENCLAVE_FILENAME "./enclave.signed.so"
 
 extern sgx_enclave_id_t global_eid;    /* global enclave id */
 

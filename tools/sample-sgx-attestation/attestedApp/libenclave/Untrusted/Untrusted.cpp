@@ -342,18 +342,29 @@ uint8_t* get_SGX_Quote(int* qSize, int* kSize) {
 
         qe3_ret = sgx_ql_set_path(SGX_QL_PCE_PATH, "/usr/lib64/libsgx_pce.signed.so");
         if(SGX_QL_SUCCESS != qe3_ret) {
-	     printf("libenclave/Untrusted(C/C++) : Error in set PCE directory: 0x%04x.\n", qe3_ret);
-	     return NULL;
+	     // We try again with default path for debian based distributions
+	     qe3_ret = sgx_ql_set_path(SGX_QL_PCE_PATH, "/usr/lib/x86_64-linux-gnu/libsgx_pce.signed.so");
+	     if(SGX_QL_SUCCESS != qe3_ret) {
+	       printf("libenclave/Untrusted(C/C++) : Error in setting PCE directory: 0x%04x.\n", qe3_ret);
+	       return NULL;
+	     }
         }
         qe3_ret = sgx_ql_set_path(SGX_QL_QE3_PATH, "/usr/lib64/libsgx_qe3.signed.so");
         if(SGX_QL_SUCCESS != qe3_ret) {
-	     printf("libenclave/Untrusted(C/C++) : Error in set QE3 directory: 0x%04x.\n", qe3_ret);
-	     return NULL;
-        }
+	     qe3_ret = sgx_ql_set_path(SGX_QL_QE3_PATH, "/usr/lib/x86_64-linux-gnu/libsgx_qe3.signed.so");
+	     if(SGX_QL_SUCCESS != qe3_ret) {
+		  printf("libenclave/Untrusted(C/C++) : Error in setting QE3 directory: 0x%04x.\n", qe3_ret);
+		  return NULL;
+	     }
+	}
+
         qe3_ret = sgx_ql_set_path(SGX_QL_QPL_PATH, "/usr/lib64/libdcap_quoteprov.so.1");
         if(SGX_QL_SUCCESS != qe3_ret) {
-	     printf("libenclave/Untrusted(C/C++) : /usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so.1 not found.\n");
-	     return NULL;
+	     qe3_ret = sgx_ql_set_path(SGX_QL_QPL_PATH, "/usr/lib/x86_64-linux-gnu/libdcap_quoteprov.so.1");
+	     if(SGX_QL_SUCCESS != qe3_ret) {
+		  printf("libenclave/Untrusted(C/C++) : Error in setting QPL directory: 0x%04x.\n", qe3_ret);
+		  return NULL;
+	     }
         }
 
         printf("libenclave/Untrusted(C/C++) : Fetching target info...\n");
