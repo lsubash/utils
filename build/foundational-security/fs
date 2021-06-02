@@ -41,6 +41,7 @@ k8s_common: clean $(INTEL_SECL_K8S)
 	mkdir -p k8s/manifests/aas/scripts
 	mv k8s/manifests/aas/populate-users k8s/manifests/aas/scripts/
 	mv k8s/manifests/aas/populate-users.env k8s/manifests/aas/scripts/
+	mv k8s/download-tls-certs.sh k8s/manifests/nats/download-nats-tls-certs.sh
 
 tagent_k8s:
 	cd trust-agent && make k8s

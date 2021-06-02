@@ -515,24 +515,19 @@ deploy_tagent() {
 
 }
 
-download_nats_tls_certs() {
-  NATS_CERT_COMMON_NAME=${NATS_CERT_COMMON_NAME:-"NATS TLS Certificate"}
-  sed -i "s#DNS.1=.*#DNS.1=$HOSTNAME#g" opensslSAN.conf
-  sed -i "s#IP.1=.*#IP.1=$K8S_MASTER_IP#g" opensslSAN.conf
-  echo "Creating certificate request..."
-  CSR_FILE=sslcert.csr
-  openssl req -out $CSR_FILE -newkey rsa:3072 -nodes -keyout secrets/server.key -config opensslSAN.conf -subj "/CN=$NATS_CERT_COMMON_NAME" -sha384
-  echo "Downloading TLS Cert from CMS...."
-  curl --noproxy "*" -k -X POST ${CMS_K8S_ENDPOINT_URL}/certificates?certType=TLS -H 'Accept: application/x-pem-file' -H "Authorization: Bearer $BEARER_TOKEN" -H 'Content-Type: application/x-pem-file' --data-binary "@$CSR_FILE" >secrets/server.pem
-}
-
 deploy_nats() {
 
   cd $HOME_DIR/nats/
   get_bearer_token
 
   mkdir -p secrets
-  download_nats_tls_certs
+  SERVER_KEY_PATH=secrets/server.key
+  SERVER_CERT_PATH=secrets/server.pem
+  ./download-nats-tls-certs.sh -d secrets -n "$NATS_CERT_COMMON_NAME" -u "$CMS_K8S_ENDPOINT_URL" -s ""$NATS_CERT_SAN_LIST"" -t $BEARER_TOKEN
+  if [ $? != 0 ]; then
+    echo "Error while downloading tls certs for nats server"
+    exit 1
+  fi
 
   # get operator and resolver preload from aas logs
   aas_pod=$($KUBECTL get pod -n isecl -l app=aas -o jsonpath="{.items[0].metadata.name}")

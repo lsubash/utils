@@ -11,7 +11,7 @@ data:
 
     tls: {
       cert_file: "/etc/nats-certs/server.pem"
-      key_file: "/etc/nats-certs/server.key"
+      key_file: "/etc/nats-certs/sslcert-key.pem"
     }
 
     // Operator "op"
