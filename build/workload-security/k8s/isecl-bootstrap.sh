@@ -145,6 +145,7 @@ get_bearer_token() {
   sed -i "s/KBS_CERT_SAN_LIST=.*/KBS_CERT_SAN_LIST=$KBS_CERT_SAN_LIST/g" $aas_scripts_dir/populate-users.env
   sed -i "s/WLS_CERT_SAN_LIST=.*/WLS_CERT_SAN_LIST=$WLS_CERT_SAN_LIST/g" $aas_scripts_dir/populate-users.env
   sed -i "s#TA_CERT_SAN_LIST=.*#TA_CERT_SAN_LIST=$TA_CERT_SAN_LIST#g" $aas_scripts_dir/populate-users.env
+  sed -i "s#NATS_CERT_SAN_LIST=.*#NATS_CERT_SAN_LIST=$NATS_CERT_SAN_LIST#g" $aas_scripts_dir/populate-users.env
 
   sed -i "s/AAS_ADMIN_USERNAME=.*/AAS_ADMIN_USERNAME=$AAS_ADMIN_USERNAME/g" $aas_scripts_dir/populate-users.env
   sed -i "s/AAS_ADMIN_PASSWORD=.*/AAS_ADMIN_PASSWORD=$AAS_ADMIN_PASSWORD/g" $aas_scripts_dir/populate-users.env
@@ -173,27 +174,20 @@ get_bearer_token() {
   sed -i "s/GLOBAL_ADMIN_USERNAME=.*/GLOBAL_ADMIN_USERNAME=$GLOBAL_ADMIN_USERNAME/g" $aas_scripts_dir/populate-users.env
   sed -i "s/GLOBAL_ADMIN_PASSWORD=.*/GLOBAL_ADMIN_PASSWORD=$GLOBAL_ADMIN_PASSWORD/g" $aas_scripts_dir/populate-users.env
 
-  sed -i "s/CCC_ADMIN_USERNAME=.*//g" $aas_scripts_dir/populate-users.env
-  sed -i "s/CCC_ADMIN_PASSWORD=.*//g" $aas_scripts_dir/populate-users.env
+  sed -i "s/CCC_ADMIN_USERNAME=.*/CCC_ADMIN_USERNAME=$CCC_ADMIN_USERNAME/g" $aas_scripts_dir/populate-users.env
+  sed -i "s/CCC_ADMIN_PASSWORD=.*/CCC_ADMIN_PASSWORD=$CCC_ADMIN_PASSWORD/g" $aas_scripts_dir/populate-users.env
 
   # TODO: need to check if this can be fetched from builds instead of bundling the script here
   chmod +x $aas_scripts_dir/populate-users
   $aas_scripts_dir/populate-users --answerfile $aas_scripts_dir/populate-users.env >$aas_scripts_dir/populate-users.log
 
-  BEARER_TOKEN=$(grep -m 1 "BEARER_TOKEN" $aas_scripts_dir/populate-users.log | cut -d '=' -f2)
+  BEARER_TOKEN=$(grep "Token for User: superAdmin" $aas_scripts_dir/populate-users.log -A 2 | grep BEARER_TOKEN | cut -d '=' -f2)
   echo "Install token: $BEARER_TOKEN"
 }
 
 deploy_hvs() {
 
-  cd hvs/
-
-  if [[ -v "${NATS_SERVERS}" ]]; then
-    deploy_nats
-    sed -i "s#NATS_SERVERS=.*#NATS_SERVERS=${NATS_SERVERS}#g" configMap.yml
-  else
-    sed -i "s/NATS_SERVERS=.*//g"configMap.yml
-  fi
+  cd $HOME_DIR/hvs
 
   echo "-------------------------------------------------------------"
   echo "|            DEPLOY: HOST VERIFICATION SERVICE            |"
@@ -207,6 +201,11 @@ deploy_hvs() {
   check_mandatory_variables $SHVS $required_variables
 
   # update hvs configMap & secrets
+  if [[ -z "${NATS_SERVERS}" ]]; then
+    sed -i "s/NATS_SERVERS:.*//g" configMap.yml
+  else
+    sed -i "s#NATS_SERVERS:.*#NATS_SERVERS: ${NATS_SERVERS}#g" configMap.yml
+  fi
   sed -i "s/HVS_SERVICE_USERNAME=.*/HVS_SERVICE_USERNAME=${HVS_SERVICE_USERNAME}/g" secrets.txt
   sed -i "s/HVS_SERVICE_PASSWORD=.*/HVS_SERVICE_PASSWORD=${HVS_SERVICE_PASSWORD}/g" secrets.txt
   sed -i "s/HVS_DB_USERNAME=.*/HVS_DB_USERNAME=${HVS_DB_USERNAME}/g" secrets.txt
@@ -516,21 +515,34 @@ deploy_tagent() {
 
 }
 
+download_nats_tls_certs() {
+  NATS_CERT_COMMON_NAME=${NATS_CERT_COMMON_NAME:-"NATS TLS Certificate"}
+  sed -i "s#DNS.1=.*#DNS.1=$HOSTNAME#g" opensslSAN.conf
+  sed -i "s#IP.1=.*#IP.1=$K8S_MASTER_IP#g" opensslSAN.conf
+  echo "Creating certificate request..."
+  CSR_FILE=sslcert.csr
+  openssl req -out $CSR_FILE -newkey rsa:3072 -nodes -keyout secrets/server.key -config opensslSAN.conf -subj "/CN=$NATS_CERT_COMMON_NAME" -sha384
+  echo "Downloading TLS Cert from CMS...."
+  curl --noproxy "*" -k -X POST ${CMS_K8S_ENDPOINT_URL}/certificates?certType=TLS -H 'Accept: application/x-pem-file' -H "Authorization: Bearer $BEARER_TOKEN" -H 'Content-Type: application/x-pem-file' --data-binary "@$CSR_FILE" >secrets/server.pem
+}
+
 deploy_nats() {
 
-  cd nats/
+  cd $HOME_DIR/nats/
   get_bearer_token
 
-  aas_pod=$(kubectl get pod -n isecl -l app=aas -o jsonpath="{.items[0].metadata.name}")
-
-  ./nats-download-tls-certs.sh
+  mkdir -p secrets
+  download_nats_tls_certs
 
   # get operator and resolver preload from aas logs
-  nats_operator=$($KUBECTL logs -n isecl $aas_pod | grep operator: | awk '{print $2}')
-  resolver_preload=$($KUBECTL logs -n isecl $aas_pod | grep resolver_preload -A 2)
+  aas_pod=$($KUBECTL get pod -n isecl -l app=aas -o jsonpath="{.items[0].metadata.name}")
+  credentials=$($KUBECTL exec -n isecl --stdin $aas_pod -- authservice setup create-credentials --force)
+  nats_operator=$(echo "$credentials" | grep operator: | awk '{print $2}')
+  resolver_preload=$(echo "$credentials" | grep "Account ISecL-account" -A 1)
+  resolver_jwt=$(echo "$resolver_preload" | cut -d$'\n' -f2)
 
   sed -i "s#operator:.*#operator: $nats_operator#g" configMap.yml
-  sed -i "s#resolver_preload:.*#resolver_preload: $resolver_preload#g" configMap.yml
+  sed -i "s#resolver_preload:.*#resolver_preload: { $resolver_jwt }#g" configMap.yml
 
   $KUBECTL create secret generic nats-certs --from-file=secrets --namespace=isecl
 
@@ -610,6 +622,7 @@ cleanup_nats() {
 
   $KUBECTL delete secret nats-certs --namespace isecl
   $KUBECTL delete configmap nats-config --namespace isecl
+  $KUBECTL delete service nats --namespace isecl
   $KUBECTL delete statefulset nats --namespace isecl
 
 }
@@ -703,10 +716,6 @@ cleanup_hvs() {
     $KUBECTL delete pv hvs-logs-pv --namespace isecl
   fi
 
-  if [[ -v "${NATS_SERVERS}" ]]; then
-    cleanup_nats
-  fi
-
   echo $(pwd)
 }
 
@@ -782,17 +791,11 @@ bootstrap() {
   echo "----------------------------------------------------"
   echo ""
 
-  deploy_cms
-  get_cms_tls_cert_sha384
-  get_aas_bootstrap_token
-  deploy_authservice
-  get_bearer_token
-  deploy_hvs
+  deploy_common_components
   deploy_custom_controller
   deploy_ihub
   deploy_wls
   deploy_kbs
-  deploy_tagent
   deploy_wlagent
 
   if [ "$K8S_DISTRIBUTION" == "microk8s" ]; then
@@ -812,14 +815,11 @@ cleanup() {
 
   cleanup_kbs
   cleanup_wlagent
-  cleanup_tagent
   cleanup_ihub
   cleanup_wls
   cleanup_isecl_scheduler
   cleanup_isecl_controller
-  cleanup_hvs
-  cleanup_authservice
-  cleanup_cms
+  cleanup_common_components
   if [ $? == 0 ]; then
     echo "Wait for pods to terminate..."
     sleep 30
@@ -851,6 +851,9 @@ print_help() {
 deploy_common_components() {
   deploy_cms
   deploy_authservice
+  if [[ ! -z "${NATS_SERVERS}" ]]; then
+    deploy_nats
+  fi
   deploy_hvs
   deploy_tagent
 }
@@ -859,6 +862,9 @@ cleanup_common_components() {
   cleanup_cms
   cleanup_authservice
   cleanup_hvs
+  if [[ ! -z "${NATS_SERVERS}" ]]; then
+    cleanup_nats
+  fi
   cleanup_tagent
 }
 
@@ -899,12 +905,15 @@ dispatch_works() {
     "wlagent")
       deploy_wlagent
       ;;
-    "foundational-security")
+    "foundational-security-control-plane")
       deploy_cms
       deploy_authservice
+      if [[ ! -z "${NATS_SERVERS}" ]]; then
+        deploy_nats
+      fi
       deploy_hvs
       ;;
-    "foundational-security-control-plane")
+    "foundational-security")
       deploy_common_components
       ;;
     "workload-security")
@@ -986,6 +995,9 @@ dispatch_works() {
       cleanup_cms
       cleanup_authservice
       cleanup_hvs
+      if [[ ! -z "${NATS_SERVERS}" ]]; then
+        cleanup_nats
+      fi
       ;;
     "isecl-orchestration-k8s")
       cleanup_common_components
