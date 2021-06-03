@@ -523,7 +523,7 @@ deploy_nats() {
   mkdir -p secrets
   SERVER_KEY_PATH=secrets/server.key
   SERVER_CERT_PATH=secrets/server.pem
-  ./download-nats-tls-certs.sh -d secrets -n "$NATS_CERT_COMMON_NAME" -u "$CMS_K8S_ENDPOINT_URL" -s ""$NATS_CERT_SAN_LIST"" -t $BEARER_TOKEN
+  ./download-nats-tls-certs.sh -d secrets -n "$NATS_CERT_COMMON_NAME" -u "$CMS_K8S_ENDPOINT_URL" -s "$NATS_CERT_SAN_LIST" -t $BEARER_TOKEN
   if [ $? != 0 ]; then
     echo "Error while downloading tls certs for nats server"
     exit 1

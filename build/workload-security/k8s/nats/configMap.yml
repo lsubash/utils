@@ -7,7 +7,6 @@ metadata:
 data:
   nats.conf: |
     pid_file: "/var/run/nats/nats.pid"
-    http: 8222
 
     tls: {
       cert_file: "/etc/nats-certs/server.pem"
