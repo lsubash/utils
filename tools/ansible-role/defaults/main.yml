@@ -210,8 +210,8 @@ kbs_admin_username: admin@kbs
 # The service account password for Key Broker Service
 kbs_admin_password: kbsAdminPass
 
-# To install pykmip server. By default pykmip will not be installed and KEY_MANAGER is set to 'Directory'
-backend_pykmip: "no"
+# To install pykmip server
+backend_pykmip: "yes"
 
 # The Key Broker Service script folder
 kbs_script_folder_name: kbs_script
