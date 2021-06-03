@@ -9,10 +9,11 @@ metadata:
 spec:
   selector:
     app: nats
-  clusterIP: None
+  type: NodePort
   ports:
     - name: client
       port: 4222
+      nodePort: 30222
 
 ---
 apiVersion: apps/v1

@@ -1,8 +1,6 @@
 ---
 - name: ISECL - KEY BROKER SERVICE | Install PyKMIP Server
   include: setup-kmip.yml
-  when: backend_pykmip == "yes"
-
 
 - name: ISECL - KEY BROKER SERVICE | Generate kbs.env file
   template:
