@@ -61,7 +61,6 @@ spec:
           ports:
             - containerPort: 4222
               name: client
-              hostPort: 4222
           command:
             - "nats-server"
             - "--config"

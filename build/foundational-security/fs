@@ -41,14 +41,14 @@ k8s_common: clean $(INTEL_SECL_K8S)
 	mkdir -p k8s/manifests/aas/scripts
 	mv k8s/manifests/aas/populate-users k8s/manifests/aas/scripts/
 	mv k8s/manifests/aas/populate-users.env k8s/manifests/aas/scripts/
-	mv k8s/download-tls-certs.sh k8s/manifests/nats/download-nats-tls-certs.sh
+	mv k8s/manifests/download-tls-certs.sh k8s/manifests/nats/download-nats-tls-certs.sh
 
 tagent_k8s:
 	cd trust-agent && make k8s
 
 k8s-control-plane: clean k8s_common $(TARGETS)
-	mkdir binaries
-	cp trust-agent/out/*.bin binaries/
+	mkdir k8s/binaries
+	cp trust-agent/out/*.bin k8s/binaries/
 	cp -r intel-secl/deployments/k8s/* k8s/manifests/
 	cp -r utils/build/k8s-manifests/db-deployments/multi-node/aas-db k8s/manifests/
 	cp -r utils/build/k8s-manifests/db-deployments/multi-node/ws/hvs-db k8s/manifests/
