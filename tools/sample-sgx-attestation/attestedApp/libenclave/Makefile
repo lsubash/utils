@@ -91,6 +91,8 @@ SGX_COMMON_CXXFLAGS := $(SGX_COMMON_FLAGS) -Wnon-virtual-dtor -std=c++11
 
 ######## App Settings ########
 
+OUT_DIR := ../../out
+
 ifneq ($(SGX_MODE), HW)
 	Urts_Library_Name := sgx_urts_sim
 else
@@ -199,6 +201,7 @@ endif
 .PHONY: all target run 
 all: .config_$(Build_Mode)_$(SGX_ARCH)
 	@$(MAKE) target
+	@cp -f ./untrusted.so $(OUT_DIR)/libuntrusted.so
 	@cp -f ./untrusted.so $(DEFAULT_LIB_PATH)/libuntrusted.so
 	@cp -f $(Signed_Enclave_Name) $(DEFAULT_LIB_PATH)/$(Lib_Signed_Enclave_Name)
 	@echo "COPY-------------------------------------=>  $@"
