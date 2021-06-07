@@ -258,7 +258,7 @@ The ISecL services and scripts required w.r.t each use case is as follows. The b
     Once `Kubernetes`  is installed and running, `ihub.env` can be updated for `tenant` configuration and installed.
     Please refer product guide for supported versions of orchestrator and setup details for installing `integration-hub` 
 
-> **Note:** In addition to this `isecl-k8s-extensions` need to be installed on Kubernetes master. 
+> **Note:** In addition to this `isecl-k8s-extensions` need to be installed on Kubernetes control-plane. 
     Please refer product guide for supported versions of orchestrator and setup details for installing `isecl-k8s-extensions`<br>
 
 **Launch Time Protection - Container Confidentiality with CRIO Runtime**
@@ -281,7 +281,7 @@ The ISecL services and scripts required w.r.t each use case is as follows. The b
     The playbook will place the `integration-hub` installer and configure the env except for `kubernetes` configuration in the `ihub.env`.  
     Once `Kubernetes`  is installed and running, `ihub.env` can be updated for `tenant` configuration and installed. 
 
-> **Note:** In addition to this `isecl-k8s-extensions` need to be installed on Kubernetes master. 
+> **Note:** In addition to this `isecl-k8s-extensions` need to be installed on Kubernetes control-plane. 
     Please refer product guide for supported versions of orchestrator and setup details for installing `isecl-k8s-extensions`<br>
 
 **Secure Key Caching**
@@ -311,7 +311,7 @@ The ISecL services and scripts required w.r.t each use case is as follows. The b
     The playbook will place the `integration-hub` installer and configure the env except for `kubernetes`  configuration in the `ihub.env`.  
     Once `kubernetes`  is installed and running, `ihub.env` can be updated for `tenant` configuration and installed. 
 
-> **Note:** In addition to this `isecl-k8s-extensions` need to be installed on Kubernetes master. 
+> **Note:** In addition to this `isecl-k8s-extensions` need to be installed on Kubernetes control-plane. 
     Please refer product guide for supported versions of orchestrator and setup details for installing `isecl-k8s-extensions`<br>
 
 **SGX Attestation Kubernetes**
@@ -329,7 +329,7 @@ The ISecL services and scripts required w.r.t each use case is as follows. The b
     The playbook will place the `integration-hub` installer and configure the env except for `kubernetes` configuration in the `ihub.env`.  
     Once `kubernetes` is installed and running, `ihub.env` can be updated for `tenant` configuration and installed. 
 
-> **Note:** In addition to this `isecl-k8s-extensions` need to be installed on Kubernetes master. 
+> **Note:** In addition to this `isecl-k8s-extensions` need to be installed on Kubernetes control-plane. 
     Please refer product guide for supported versions of orchestrator and setup details for installing `isecl-k8s-extensions`<br>
 
 **SGX Orchestration Openstack**

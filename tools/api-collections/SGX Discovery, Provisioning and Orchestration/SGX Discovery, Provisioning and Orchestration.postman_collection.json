@@ -1105,7 +1105,7 @@
 				{
 					"name": "Configure Kubernetes Pods to Require Matching Attributes",
 					"item": [],
-					"description": "Verify that the worker nodes have had their SGX platform data attributes populated: \n\n```kubectl get nodes --show-labels```\n\nThe output should show the SGX-Enabled and any other platform information applied to all of the registered Worker Nodes.\n\nNow create a pod_config.yaml (say for nginx container) containing the matchExpression policy\nrequirements in root directory on master node.\n\n```yaml\nkind: Pod   \n  metadata:     \n  name: nginx       \n  labels:         \n    name: nginx    \nspec:   \n  affinity:     \n    nodeAffinity:       \n      requiredDuringSchedulingIgnoredDuringExecution:         \n        nodeSelectorTerms:           \n          - matchExpressions:                \n\t         - key: SGX-Enabled                \n\t           operator: In                 \n\t\t       values:                    \n\t\t         - \"true\"\n  containers:       \n    - name: nginx         \n      image: nginx           \n\t  ports:    \n        - containerPort: 80\n```\n",
+					"description": "Verify that the worker nodes have had their SGX platform data attributes populated: \n\n```kubectl get nodes --show-labels```\n\nThe output should show the SGX-Enabled and any other platform information applied to all of the registered Worker Nodes.\n\nNow create a pod_config.yaml (say for nginx container) containing the matchExpression policy\nrequirements in root directory on k8s control-plane node.\n\n```yaml\nkind: Pod   \n  metadata:     \n  name: nginx       \n  labels:         \n    name: nginx    \nspec:   \n  affinity:     \n    nodeAffinity:       \n      requiredDuringSchedulingIgnoredDuringExecution:         \n        nodeSelectorTerms:           \n          - matchExpressions:                \n\t         - key: SGX-Enabled                \n\t           operator: In                 \n\t\t       values:                    \n\t\t         - \"true\"\n  containers:       \n    - name: nginx         \n      image: nginx           \n\t  ports:    \n        - containerPort: 80\n```\n",
 					"event": [
 						{
 							"listen": "prerequest",
@@ -1130,7 +1130,7 @@
 				{
 					"name": "Launching a Kubernetes Pod on a Compliant Worker Node",
 					"item": [],
-					"description": "Below is a sample command for the Kubernetes Master to launch a Pod:\r\n\r\n```kubectl create -f pod_config.yaml```\r\n\r\nWe can verify that the Master Node CRDs contain attributes successfully pushed from the Integration Hub:\r\n\r\n```kubectl get crds kubectl get -o json hostattributes.isecl.intel.com```\r\n\r\nWe can list the Worker Nodes and their labels:\r\n\r\n```kubectl get nodes --show-labels```\r\n\r\nFinally, we can list the running Pods to confirm that the Pod launched and is running on a compliant Worker Node:\r\n\r\n```kubectl get pods```",
+					"description": "Below is a sample command for the Kubernetes control-plane to launch a Pod:\r\n\r\n```kubectl create -f pod_config.yaml```\r\n\r\nWe can verify that the K8s control-plane node CRDs contain attributes successfully pushed from the Integration Hub:\r\n\r\n```kubectl get crds kubectl get -o json hostattributes.isecl.intel.com```\r\n\r\nWe can list the Worker Nodes and their labels:\r\n\r\n```kubectl get nodes --show-labels```\r\n\r\nFinally, we can list the running Pods to confirm that the Pod launched and is running on a compliant Worker Node:\r\n\r\n```kubectl get pods```",
 					"event": [
 						{
 							"listen": "prerequest",

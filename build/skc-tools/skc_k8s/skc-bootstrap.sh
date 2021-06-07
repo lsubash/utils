@@ -427,7 +427,7 @@ deploy_ihub() {
   sed -i "s/CMS_TLS_CERT_SHA384:.*/CMS_TLS_CERT_SHA384: $CMS_TLS_CERT_SHA384/g" configMap.yml
   sed -i "s/TLS_SAN_LIST:.*/TLS_SAN_LIST: $IH_CERT_SAN_LIST/g" configMap.yml
   sed -i "s/KUBERNETES_TOKEN:.*/KUBERNETES_TOKEN: $kubernetes_token/g" configMap.yml
-  sed -i "s/KUBERNETES_URL:.*/KUBERNETES_URL: https:\/\/$K8S_MASTER_IP:$API_SERVER_PORT\//g" configMap.yml
+  sed -i "s/KUBERNETES_URL:.*/KUBERNETES_URL: https:\/\/$K8S_CONTROL_PLANE_IP:$API_SERVER_PORT\//g" configMap.yml
   sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: ${CMS_BASE_URL}#g" configMap.yml
   sed -i "s#AAS_API_URL:.*#AAS_API_URL: ${AAS_API_URL}#g" configMap.yml
   sed -i "s#SHVS_BASE_URL:.*#SHVS_BASE_URL: ${SHVS_BASE_URL}#g" configMap.yml
@@ -475,8 +475,8 @@ deploy_extended_scheduler() {
 
   # create certs
   chmod +x scripts/create_k8s_extsched_certs.sh
-  cd scripts && echo ./create_k8s_extsched_certs.sh -n "K8S Extended Scheduler" -s "$K8S_MASTER_IP","$K8S_MASTER_HOSTNAME" -c "$K8S_CA_CERT" -k "$K8S_CA_KEY"
-  ./create_k8s_extsched_certs.sh -n "K8S Extended Scheduler" -s "$K8S_MASTER_IP","$K8S_MASTER_HOSTNAME" -c "$K8S_CA_CERT" -k "$K8S_CA_KEY"
+  cd scripts && echo ./create_k8s_extsched_certs.sh -n "K8S Extended Scheduler" -s "$K8S_CONTROL_PLANE_IP","$K8S_CONTROL_PLANE_HOSTNAME" -c "$K8S_CA_CERT" -k "$K8S_CA_KEY"
+  ./create_k8s_extsched_certs.sh -n "K8S Extended Scheduler" -s "$K8S_CONTROL_PLANE_IP","$K8S_CONTROL_PLANE_HOSTNAME" -c "$K8S_CA_CERT" -k "$K8S_CA_KEY"
   if [ $? -ne 0 ]; then
     echo "Error while creating certificates for extended scheduler"
     exit 1
@@ -910,8 +910,8 @@ bootstrap() {
     echo "K8s Distribution" $K8S_DISTRIBUTION "not supported"
   fi
 
-  echo "ipAddress: $K8S_MASTER_IP"
-  echo "hostName: $K8S_MASTER_HOSTNAME"
+  echo "ipAddress: $K8S_CONTROL_PLANE_IP"
+  echo "hostName: $K8S_CONTROL_PLANE_HOSTNAME"
 
   echo "----------------------------------------------------"
   echo "|     DEPLOY: ISECL SERVICES                        |"
