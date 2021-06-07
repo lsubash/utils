@@ -183,6 +183,8 @@ get_bearer_token() {
 
   BEARER_TOKEN=$(grep "Token for User: superAdmin" $aas_scripts_dir/populate-users.log -A 2 | grep BEARER_TOKEN | cut -d '=' -f2)
   echo "Install token: $BEARER_TOKEN"
+
+  CC_TOKEN=$(grep "Custom Claims Token" $aas_scripts_dir/populate-users.log -A 2 | grep BEARER_TOKEN | cut -d '=' -f2)
 }
 
 deploy_hvs() {
@@ -503,7 +505,17 @@ deploy_tagent() {
   sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: $CMS_BASE_URL#g" configMap.yml
   sed -i "s#CMS_TLS_CERT_SHA384:.*#CMS_TLS_CERT_SHA384: $CMS_TLS_CERT_SHA384#g" configMap.yml
   sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=$BEARER_TOKEN/g" secrets.txt
-  sed -i "s/TPM_OWNER_SECRET=.*/TPM_OWNER_SECRET=$TPM_OWNER_SECRET/g" secrets.txt
+  if [ -z "$TPM_OWNER_SECRET" ]; then
+    sed -i "s/TPM_OWNER_SECRET=.*/TPM_OWNER_SECRET=$TPM_OWNER_SECRET/g" secrets.txt
+  else
+    sed -i "s/TPM_OWNER_SECRET:.*//g" configMap.yml
+  fi
+  if [ "$TA_SERVICE_MODE" == "outbound" ]; then
+    sed -i "s/TA_SERVICE_MODE=.*/TA_SERVICE_MODE=$TA_SERVICE_MODE/g" configMap.yml
+    sed -i "s/TA_NATS_SERVERS=.*/TA_NATS_SERVERS=$TA_NATS_SERVERS/g" configMap.yml
+  else
+    sed -i "s/TA_SERVICE_MODE=.*//g" configMap.yml
+  fi
 
   $KUBECTL create secret generic ta-secret --from-file=secrets.txt --namespace=isecl
 
