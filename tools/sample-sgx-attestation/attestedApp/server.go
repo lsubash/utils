@@ -10,16 +10,59 @@ package main
 import "C"
 
 import (
+	"encoding/base64"
 	"encoding/gob"
+	"encoding/json"
+	"fmt"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
 	"github.com/intel-secl/sample-sgx-attestation/v4/common"
 	"github.com/pkg/errors"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 	"unsafe"
 )
+
+type privilegeError struct {
+	StatusCode int
+	Message    string
+}
+
+func (e privilegeError) Error() string {
+	return fmt.Sprintf("%d: %s", e.StatusCode, e.Message)
+}
+
+type resourceError struct {
+	StatusCode int
+	Message    string
+}
+
+func (e resourceError) Error() string {
+	return fmt.Sprintf("%d: %s", e.StatusCode, e.Message)
+}
+
+type errorHandlerFunc func(w http.ResponseWriter, r *http.Request) error
+
+func (ehf errorHandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if err := ehf(w, r); err != nil {
+		log.WithError(err).Error("HTTP Error")
+		switch t := err.(type) {
+		case *resourceError:
+			http.Error(w, t.Message, t.StatusCode)
+		case resourceError:
+			http.Error(w, t.Message, t.StatusCode)
+		case *privilegeError:
+			http.Error(w, t.Message, t.StatusCode)
+		case privilegeError:
+			http.Error(w, t.Message, t.StatusCode)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
 
 func (a *App) getPubkeyFromEnclave() []byte {
 	var keyBuffer []byte
@@ -276,6 +319,75 @@ func (a *App) EnclaveDestroy() error {
 	return nil
 }
 
+func authorizeEndpoint(r *http.Request) error {
+	// Dummy authorization.
+	token := r.Header.Get("Authorization")
+	if token != common.DummyBearerToken {
+		return resourceError{Message: "Bearer token is invalid.", StatusCode: http.StatusUnauthorized}
+	}
+
+	return nil
+}
+
+// Step 1 - Receive a connect request. Respond with Quote and Public Key
+func httpGetQuotePubkey(a *App) errorHandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		err := authorizeEndpoint(r)
+		if err != nil {
+			return err
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		// Note : Robust input validation is skipped for brevity
+		// Retrive Nonce from request
+		var idr common.IdentityRequest
+		err = json.NewDecoder(r.Body).Decode(&idr)
+		if err != nil {
+			log.Info(err)
+			return resourceError{Message: "Unable to parse request.",
+				StatusCode: http.StatusBadRequest}
+
+		}
+		// Get the quote from Enclave
+		pubKey, sgxQuote := a.getQuoteAndPubkeyFromEnclave(idr.Nonce)
+
+		// Get public key from Enclave.
+		pubKey = a.getPubkeyFromEnclave()
+		if pubKey == nil {
+			log.Error("Fetching public key from enclave failed!")
+			w.WriteHeader(http.StatusInternalServerError)
+			return &resourceError{
+				Message:    "Fetching public key from enclave failed.",
+				StatusCode: http.StatusInternalServerError}
+		}
+
+		// Encode quote and public key.
+		encodedQuote := base64.StdEncoding.EncodeToString(sgxQuote)
+		encodedPublicKey := base64.StdEncoding.EncodeToString(pubKey)
+
+		res := common.IdentityResponse{
+			Quote:    encodedQuote,
+			Userdata: common.UserData{Publickey: encodedPublicKey}}
+
+		js, err := json.Marshal(res)
+		if err != nil {
+			return &resourceError{
+				Message:    err.Error(),
+				StatusCode: http.StatusInternalServerError}
+		}
+
+		_, err = w.Write(js)
+		if err != nil {
+			return &resourceError{
+				Message:    err.Error(),
+				StatusCode: http.StatusInternalServerError}
+		}
+
+		return nil
+	}
+}
+
 func (a *App) startServer() error {
 	log.Trace("app:startServer() Entering")
 	defer log.Trace("app:startServer() Leaving")
@@ -287,17 +399,19 @@ func (a *App) startServer() error {
 
 	log.Info("Starting Attested App ...")
 
-	// AttestedApp would always bind to localhost. Port can be configured.
-	listenAddr := ":" + strconv.Itoa(c.AttestedAppServicePort)
-	log.Infof("Attested App socket binding to %s", listenAddr)
-	listener, err := net.Listen(common.ProtocolTcp, listenAddr)
-	if err != nil {
-		log.Error(errors.Wrapf(err, "app:startServer() Error binding to socket %s", listenAddr))
-		return err
-	}
-	defer listener.Close()
+	r := mux.NewRouter()
+	r.SkipClean(true)
 
-	err = a.EnclaveInit()
+	r.Handle("/id", handlers.ContentTypeHandler(httpGetQuotePubkey(a), "application/json")).Methods("GET")
+	// r.Handle("/wrapped_swk", handlers.ContentTypeHandler(httpReceiveWrappedSWK(), "application/json")).Methods("POST")
+	// r.Handle("/wrapped_message", handlers.ContentTypeHandler(httpReceiveWrappedMessage(), "application/json")).Methods("POST")
+
+	h := &http.Server{
+		Addr:    fmt.Sprintf(":%d", c.AttestedAppServicePort),
+		Handler: r,
+	}
+
+	err := a.EnclaveInit()
 	if err != nil {
 		log.WithError(err).Error("app:startServer() Error initializing enclave!")
 		return err
@@ -305,30 +419,21 @@ func (a *App) startServer() error {
 
 	// Setup signal handlers to gracefully handle termination
 	stop := make(chan os.Signal, 1)
-	done := make(chan bool, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGKILL)
 
+	// Dispatch web server go routine
 	go func() {
-		for {
-			conn, err := listener.Accept()
-
-			if err != nil {
-				log.Error(errors.Wrapf(err, "app:startServer() Error binding to socket %s", listenAddr))
-				break
-			}
-			go a.handleConnection(conn)
-
+		// FIXME : Add HTTPs
+		err := h.ListenAndServe()
+		if err != nil {
+			log.Info(err)
+			log.WithError(err).Info("Failed to start HTTP server")
+			stop <- syscall.SIGTERM
 		}
-		done <- true
 	}()
 
-	go func() {
-		sig := <-stop
-		log.Infof("app:startServer() Received signal %s", sig)
-		done <- true
-	}()
+	<-stop
 
-	<-done
 	// let's destroy enclave and exit
 	err = a.EnclaveDestroy()
 
