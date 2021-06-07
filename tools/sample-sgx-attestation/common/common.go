@@ -7,6 +7,7 @@ package common
 const (
 	AppUsername            = "foobar"
 	AppPassword            = "21345h8askjdf"
+	DummyBearerToken       = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkR1bW15QmVhcmVyVG9rZW4iLCJpYXQiOjE1MTYyMzkwMjJ9.Czed89Gn-nhHGAH2DzVqo453k04eF0PvBuZvvOJeE1Q"
 	DefaultAttestedAppHost = "127.0.0.1"
 	DefaultAttestedAppPort = 9999
 	ProtocolTcp            = "tcp4"
@@ -35,6 +36,19 @@ const (
 )
 
 // Message definitions
+
+type UserData struct {
+	Publickey string `json:"public-key"`
+}
+
+type IdentityResponse struct {
+	Quote    string   `json:"quote"`
+	Userdata UserData `json:"user-data"`
+}
+
+type IdentityRequest struct {
+	Nonce string `json:"nonce"`
+}
 
 const (
 	MsgTypeConnect          uint8 = 1
