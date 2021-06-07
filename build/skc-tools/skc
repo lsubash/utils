@@ -1,7 +1,7 @@
 TARGETS = sgx-caching-service sgx-verification-service sgx-hvs
 COMMON_TARGETS = authservice cms ihub kbs
 
-binaries: clean $(COMMON_TARGETS) skc_installer sgx_agent skc_library k8s_extensions
+binaries: clean $(COMMON_TARGETS) skc_installer sgx_agent skc_library sample_apps k8s_extensions
 	mkdir -p binaries/env
 	cp sgx-caching-service/out/*.bin binaries/
 	cp sgx-caching-service/dist/linux/scs.env binaries/env
@@ -19,6 +19,8 @@ binaries: clean $(COMMON_TARGETS) skc_installer sgx_agent skc_library k8s_extens
 	cp utils/build/skc-tools/sgx_agent/agent_untar.sh binaries/
 	cp utils/build/skc-tools/skc_library/build_scripts/skc_library.* binaries/
 	cp utils/build/skc-tools/skc_library/skclib_untar.sh binaries/
+	cp utils/build/skc-tools/sample_apps/build_scripts/sample_apps.* binaries/
+	cp utils/build/skc-tools/sample_apps/sampleapps_untar.sh binaries/
 	cp -pf utils/build/skc-tools/skc_scripts/env/*.env binaries/env
 	cp -pf utils/build/skc-tools/skc_scripts/env/install_pgdb.sh binaries/
 	cp -pf utils/build/skc-tools/skc_scripts/install_*.sh binaries/
@@ -55,6 +57,9 @@ sgx_agent:
 	
 skc_library:
 	cd utils/build/skc-tools/skc_library/build_scripts/ && ./skc_library_build.sh
+
+sample_apps:
+	cd utils/build/skc-tools/sample_apps/build_scripts/ && ./sample_apps_build.sh
 
 skc_installer:
 	cd sgx-caching-service && make installer
@@ -115,4 +120,4 @@ k8s_common: clean intel_secl_k8s skc_k8s k8s_extensions sgx_agent_k8s skc_librar
 	cd $* && make clean
 	cd intel-secl && make clean
 
-.PHONY: all clean sgx_agent skc_library $(COMMON_TARGETS)
+.PHONY: all clean sgx_agent skc_library sample_apps $(COMMON_TARGETS)

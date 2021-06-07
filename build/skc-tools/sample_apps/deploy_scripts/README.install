@@ -1,0 +1,30 @@
+Pre-requisite for the Sample Apps Deployment
+==========================================
+ - SGX Enabled in BIOS
+ - RHEL 8.2 OS or UBUNTU 18.O4
+ - GoLang v1.13 or greater
+ - gcc toolchain
+ - make
+ - Running instance of CMS, SCS and SQVS.
+ - Install SGX Agent on the host.
+ - Install Intel® SGX SDK for Linux*OS into /opt/intel/sgxsdk . Refer Intel® Software Guard Extensions (Intel® SGX) SDK for Linux* OS - Installation   guide . Please install the *-devel for Intel® SGX PSW packages as mentioned in the installation guide.
+
+How to Test
+==============
+- Please ensure the SGX Agent is already deployed first  on the same machine, where Sample Apps is being deployed. for SGX Agent deployment instructions, refer to sgx_agent/deploy_scripts/README.install
+
+- To verify the checksum of the Sample Apps tar file and extract
+# ./sampleapps_untar.sh
+
+# cd  sample_apps
+- Update the IP Address in sample_apps.conf
+
+- To Run Sample Apps on a SGX Enabled Server,
+   Run Attested and attesting App from out directory
+
+Contents of the Deployment Tar file
+===================================
+- Pre-filled sample_apps.conf
+- install_sgxsdk.sh script file
+- Sample Apps Automation script
+- Sample apps out directory with attested and attesting app binaries
