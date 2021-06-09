@@ -11,6 +11,8 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
@@ -18,6 +20,7 @@ import (
 	"github.com/intel-secl/sample-sgx-attestation/v4/common"
 	"github.com/pkg/errors"
 	logger "github.com/sirupsen/logrus"
+	cos "intel/isecl/lib/common/v4/os"
 	"io"
 	"io/ioutil"
 	"math/big"
@@ -137,14 +140,28 @@ func (ca AppVerifierController) SharePubkeyWrappedSWK(baseURL string, key []byte
 	req.Header.Add("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Add("Authorization", common.DummyBearerToken)
+
+	// Get the SystemCertPool, continue with an empty pool on error
+	rootCAs, _ := x509.SystemCertPool()
+	if rootCAs == nil {
+		rootCAs = x509.NewCertPool()
+	}
+
+	// Looking for self signed certificates.
+	rootCaCertPems, err := cos.GetDirFileContents("./", "cert.pem")
+
+	for _, rootCACert := range rootCaCertPems {
+		rootCAs.AppendCertsFromPEM(rootCACert)
+	}
+
 	client := &http.Client{
-		// FIXME : Enable TLS
-		// Transport: &http.Transport{
-		// 	TLSClientConfig: &tls.Config{
-		// 		InsecureSkipVerify: false,
-		// 		RootCAs:            rootCAs,
-		// 	},
-		// },
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: false,
+				RootCAs:            rootCAs,
+				ServerName:         common.SelfSignedCertSNI,
+			},
+		},
 	}
 
 	resp, err := client.Do(req)
@@ -220,14 +237,28 @@ func (ca AppVerifierController) ShareSWKWrappedSecret(baseURL string, key []byte
 	req.Header.Add("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Add("Authorization", common.DummyBearerToken)
+
+	// Get the SystemCertPool, continue with an empty pool on error
+	rootCAs, _ := x509.SystemCertPool()
+	if rootCAs == nil {
+		rootCAs = x509.NewCertPool()
+	}
+
+	// Look for self signed certificates
+	rootCaCertPems, err := cos.GetDirFileContents("./", "cert.pem")
+
+	for _, rootCACert := range rootCaCertPems {
+		rootCAs.AppendCertsFromPEM(rootCACert)
+	}
+
 	client := &http.Client{
-		// FIXME : Enable TLS
-		// Transport: &http.Transport{
-		// 	TLSClientConfig: &tls.Config{
-		// 		InsecureSkipVerify: false,
-		// 		RootCAs:            rootCAs,
-		// 	},
-		// },
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: false,
+				RootCAs:            rootCAs,
+				ServerName:         common.SelfSignedCertSNI,
+			},
+		},
 	}
 
 	resp, err := client.Do(req)
@@ -275,14 +306,28 @@ func (ca AppVerifierController) ConnectAndReceiveQuote(baseURL string, nonce str
 	req.Header.Add("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Add("Authorization", common.DummyBearerToken)
+
+	// Get the SystemCertPool, continue with an empty pool on error
+	rootCAs, _ := x509.SystemCertPool()
+	if rootCAs == nil {
+		rootCAs = x509.NewCertPool()
+	}
+
+	// Looking for self signed certificates.
+	rootCaCertPems, err := cos.GetDirFileContents("./", "cert.pem")
+
+	for _, rootCACert := range rootCaCertPems {
+		rootCAs.AppendCertsFromPEM(rootCACert)
+	}
+
 	client := &http.Client{
-		// FIXME : Enable TLS
-		// Transport: &http.Transport{
-		// 	TLSClientConfig: &tls.Config{
-		// 		InsecureSkipVerify: false,
-		// 		RootCAs:            rootCAs,
-		// 	},
-		// },
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: false,
+				RootCAs:            rootCAs,
+				ServerName:         common.SelfSignedCertSNI,
+			},
+		},
 	}
 
 	resp, err := client.Do(req)
