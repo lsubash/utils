@@ -24,6 +24,7 @@ const (
 	GetIdentity           = "/id"
 	PostWrappedSWK        = "/wrapped_swk"
 	PostWrappedMessage    = "/wrapped_message"
+	SelfSignedCertSNI     = "attested.app"
 	// SWK Size in bytes
 	SWKSize = 32
 	// NonceSize in bits

@@ -10,6 +10,7 @@ package main
 import "C"
 
 import (
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/gob"
 	"encoding/json"
@@ -508,12 +509,23 @@ func (a *App) startServer() error {
 	r.Handle("/wrapped_swk", handlers.ContentTypeHandler(httpReceiveWrappedSWK(a), "application/json")).Methods("POST")
 	r.Handle("/wrapped_message", handlers.ContentTypeHandler(httpReceiveWrappedMessage(a), "application/json")).Methods("POST")
 
+	serverCert, err := tls.LoadX509KeyPair("cert.pem", "key.pem")
+	if err != nil {
+		log.WithError(err).Error("app:startServer() Unable to load TLS certificates!")
+		return err
+	}
+
 	h := &http.Server{
 		Addr:    fmt.Sprintf(":%d", c.AttestedAppServicePort),
 		Handler: r,
+
+		TLSConfig: &tls.Config{
+			Certificates: []tls.Certificate{serverCert},
+			ServerName:   common.SelfSignedCertSNI,
+		},
 	}
 
-	err := a.EnclaveInit()
+	err = a.EnclaveInit()
 	if err != nil {
 		log.WithError(err).Error("app:startServer() Error initializing enclave!")
 		return err
@@ -525,8 +537,7 @@ func (a *App) startServer() error {
 
 	// Dispatch web server go routine
 	go func() {
-		// FIXME : Add HTTPs
-		err := h.ListenAndServe()
+		err := h.ListenAndServeTLS("", "")
 		if err != nil {
 			log.Info(err)
 			log.WithError(err).Info("Failed to start HTTP server")
