@@ -20,3 +20,18 @@
   args:
     chdir: /tmp/{{sgxdep_installer_file__name}}
     executable: /bin/bash
+
+- name: ISECL - SAMPLE APPS | Create installation directory
+  file:
+    path: "/root/{{sampleapps_installer_name}}"
+    state: directory
+
+- name: ISECL - SAMPLE APPS | Copy tar bundle and other files
+  copy:
+    src: "{{sampleapps_installer_file_src}}/{{item}}"
+    dest: "/root/{{sampleapps_installer_name}}"
+    mode: "u+x"
+  loop:
+    - sample_apps.tar
+    - sample_apps.sha2
+    - sampleapps_untar.sh

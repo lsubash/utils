@@ -388,12 +388,20 @@ skclib_admin_password: password
 permissions: nginx,USA
 
 # --------------------------------------- SGX Dependency ----------------------------------------------- #
-#
+
 # The name of the binary installer as per release tag for SGX Dependency
 sgxdep_installer_file__name: skc_library.tar
-#
+
 # The binary installer file source for SGX Depencency
 sgxdep_installer_file_src: "{{binaries_path}}"
+
+# --------------------------------------- Sample Apps -------------------------------------------------- #
+
+# The name of the binary installer as per release tag for Sample Apps
+sampleapps_installer_name: sample_apps
+
+# The binary installer file source for Sample Apps
+sampleapps_installer_file_src: "{{binaries_path}}"
 
 # ------------------------------------ Custom Claims Creator ------------------------------------------- #
 
