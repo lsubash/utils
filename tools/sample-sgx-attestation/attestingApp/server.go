@@ -31,7 +31,7 @@ func (a *App) startVerifier() error {
 		SgxQuotePolicyPath: common.SgxQuotePolicyPath,
 	}
 
-	baseURL := "http://" + c.AttestedAppServiceHost + ":" + strconv.Itoa(c.AttestedAppServicePort)
+	baseURL := "https://" + c.AttestedAppServiceHost + ":" + strconv.Itoa(c.AttestedAppServicePort)
 
 	// Generate a Nonce
 	var nonceLimit big.Int
