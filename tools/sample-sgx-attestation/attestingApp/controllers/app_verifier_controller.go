@@ -13,7 +13,6 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/binary"
-	"encoding/gob"
 	"encoding/json"
 	"fmt"
 	"github.com/intel-secl/sample-sgx-attestation/v4/common"
@@ -22,7 +21,6 @@ import (
 	"io"
 	"io/ioutil"
 	"math/big"
-	"net"
 	"net/http"
 	"strings"
 )
@@ -172,14 +170,16 @@ func (ca AppVerifierController) SharePubkeyWrappedSWK(baseURL string, key []byte
 	return nil
 }
 
-func (ca AppVerifierController) ShareSWKWrappedSecret(conn net.Conn, key []byte, secret []byte) error {
+func (ca AppVerifierController) ShareSWKWrappedSecret(baseURL string, key []byte, message []byte) error {
 
-	log.Info("Secret : ", string(secret))
+	log.Info("Message : ", string(message))
 
 	if len(key) != common.SWKSize {
 		log.Errorf("Key length has to be %d bytes.", common.SWKSize)
 		return errors.New("Invalid key length.")
 	}
+
+	// Wrap the message with SWK
 	cipherBlock, err := aes.NewCipher(key)
 	if err != nil {
 		log.Error("Error initialising cipher block", err)
@@ -199,19 +199,55 @@ func (ca AppVerifierController) ShareSWKWrappedSecret(conn net.Conn, key []byte,
 		return err
 	}
 
-	wrappedSecret := gcm.Seal(nonce, nonce, secret, nil)
+	wrappedMessage := gcm.Seal(nonce, nonce, message, nil)
 
-	// Send
-	var msg common.Message
-	msg.Type = common.MsgTypeSWKWrappedSecret
-	msg.SWKWrappedSecret.WrappedSecret = wrappedSecret
+	// Send request to Attested App
+	url := baseURL + common.PostWrappedMessage
 
-	log.Info("Sending SWK Wrapped Secret message ...")
-	gobEncoder := gob.NewEncoder(conn)
-	err = gobEncoder.Encode(msg)
+	var wm common.WrappedMessage
+	wm.Message = base64.StdEncoding.EncodeToString(wrappedMessage)
+	reqBytes := new(bytes.Buffer)
+	err = json.NewEncoder(reqBytes).Encode(wm)
 	if err != nil {
-		log.Error("Error sending SWK Wrapped Secret message!")
-		return err
+		return errors.Wrap(err, "Error in encoding Wrapped Message.")
+	}
+
+	req, err := http.NewRequest("POST", url, reqBytes)
+	if err != nil {
+		return errors.Wrap(err, "Error in Creating request.")
+	}
+
+	req.Header.Add("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Add("Authorization", common.DummyBearerToken)
+	client := &http.Client{
+		// FIXME : Enable TLS
+		// Transport: &http.Transport{
+		// 	TLSClientConfig: &tls.Config{
+		// 		InsecureSkipVerify: false,
+		// 		RootCAs:            rootCAs,
+		// 	},
+		// },
+	}
+
+	resp, err := client.Do(req)
+	if resp != nil {
+		defer func() {
+			derr := resp.Body.Close()
+			if derr != nil {
+				log.WithError(derr).Error("Error closing wrapped message body.")
+			}
+		}()
+	}
+
+	if err != nil {
+		log.Error(err)
+		return errors.Wrap(err, "Error posting wrapped message Attested App.")
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		log.Error("Status Code : ", resp.StatusCode)
+		return errors.New("Posting wrapped message to Attested App failed.")
 	}
 
 	return nil
