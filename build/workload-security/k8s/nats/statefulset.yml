@@ -14,6 +14,8 @@ spec:
     - name: client
       port: 4222
       nodePort: 30222
+    - name: cluster
+      port: 6222
 
 ---
 apiVersion: apps/v1
@@ -27,7 +29,7 @@ spec:
   selector:
     matchLabels:
       app: nats
-  replicas: 3
+  replicas: 2
   serviceName: "nats"
   template:
     metadata:
@@ -61,6 +63,9 @@ spec:
           ports:
             - containerPort: 4222
               name: client
+            - containerPort: 6222
+              name: cluster
+
           command:
             - "nats-server"
             - "--config"

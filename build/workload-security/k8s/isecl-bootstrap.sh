@@ -177,6 +177,9 @@ get_bearer_token() {
   sed -i "s/CCC_ADMIN_USERNAME=.*/CCC_ADMIN_USERNAME=$CCC_ADMIN_USERNAME/g" $aas_scripts_dir/populate-users.env
   sed -i "s/CCC_ADMIN_PASSWORD=.*/CCC_ADMIN_PASSWORD=$CCC_ADMIN_PASSWORD/g" $aas_scripts_dir/populate-users.env
 
+  sed -i "s/CUSTOM_CLAIMS_COMPONENTS=.*/CUSTOM_CLAIMS_COMPONENTS=$CUSTOM_CLAIMS_COMPONENTS/g" $aas_scripts_dir/populate-users.env
+  sed -i "s/CUSTOM_CLAIMS_TOKEN_VALIDITY_SECS=.*/CUSTOM_CLAIMS_TOKEN_VALIDITY_SECS=$CUSTOM_CLAIMS_TOKEN_VALIDITY_SECS/g" $aas_scripts_dir/populate-users.env
+
   # TODO: need to check if this can be fetched from builds instead of bundling the script here
   chmod +x $aas_scripts_dir/populate-users
   $aas_scripts_dir/populate-users --answerfile $aas_scripts_dir/populate-users.env >$aas_scripts_dir/populate-users.log
@@ -184,7 +187,9 @@ get_bearer_token() {
   BEARER_TOKEN=$(grep "Token for User: superAdmin" $aas_scripts_dir/populate-users.log -A 2 | grep BEARER_TOKEN | cut -d '=' -f2)
   echo "Install token: $BEARER_TOKEN"
 
-  CC_TOKEN=$(grep "Custom Claims Token" $aas_scripts_dir/populate-users.log -A 2 | grep BEARER_TOKEN | cut -d '=' -f2)
+  if [ ! -z "$NATS_SERVERS"]; then
+    CC_TA_TOKEN=$(grep "Custom Claims Token For TA" $aas_scripts_dir/populate-users.log -A 2 | grep BEARER_TOKEN | cut -d '=' -f2)
+  fi
 }
 
 deploy_hvs() {
@@ -495,26 +500,29 @@ deploy_tagent() {
   get_bearer_token
   get_cms_tls_cert_sha384
 
-  required_variables="TPM_OWNER_SECRET,TA_CERT_SAN_LIST,AAS_API_URL,HVS_URL,CMS_BASE_URL"
+  required_variables="TA_CERT_SAN_LIST,AAS_API_URL,HVS_URL,CMS_BASE_URL"
   check_mandatory_variables $TAGENT $required_variables
 
   cd ta/
-  # #update trustagent.env
+  # update trustagent configMap.yml
   sed -i "s#AAS_API_URL:.*#AAS_API_URL: $AAS_API_URL#g" configMap.yml
   sed -i "s#HVS_URL:.*#HVS_URL: $HVS_URL#g" configMap.yml
   sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: $CMS_BASE_URL#g" configMap.yml
   sed -i "s#CMS_TLS_CERT_SHA384:.*#CMS_TLS_CERT_SHA384: $CMS_TLS_CERT_SHA384#g" configMap.yml
-  sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=$BEARER_TOKEN/g" secrets.txt
-  if [ -z "$TPM_OWNER_SECRET" ]; then
+
+  if [ ! -z "$TPM_OWNER_SECRET" ]; then
     sed -i "s/TPM_OWNER_SECRET=.*/TPM_OWNER_SECRET=$TPM_OWNER_SECRET/g" secrets.txt
   else
-    sed -i "s/TPM_OWNER_SECRET:.*//g" configMap.yml
+    sed -i "s/TPM_OWNER_SECRET=.*//g" secrets.txt
   fi
   if [ "$TA_SERVICE_MODE" == "outbound" ]; then
-    sed -i "s/TA_SERVICE_MODE=.*/TA_SERVICE_MODE=$TA_SERVICE_MODE/g" configMap.yml
-    sed -i "s/TA_NATS_SERVERS=.*/TA_NATS_SERVERS=$TA_NATS_SERVERS/g" configMap.yml
+    sed -i "s/TA_SERVICE_MODE:.*/TA_SERVICE_MODE: $TA_SERVICE_MODE/g" configMap.yml
+    sed -i "s#NATS_SERVERS:.*#NATS_SERVERS: $NATS_SERVERS#g" configMap.yml
+    sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=$CC_TA_TOKEN/g" secrets.txt
   else
-    sed -i "s/TA_SERVICE_MODE=.*//g" configMap.yml
+    sed -i "s/TA_SERVICE_MODE:.*//g" configMap.yml
+    sed -i "s/NATS_SERVERS:.*//g" configMap.yml
+    sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=$BEARER_TOKEN/g" secrets.txt
   fi
 
   $KUBECTL create secret generic ta-secret --from-file=secrets.txt --namespace=isecl

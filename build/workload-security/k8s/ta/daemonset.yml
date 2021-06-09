@@ -48,13 +48,20 @@ spec:
               mountPath: /opt/trustagent/bin
             - mountPath: /dev/tpmrm0
               name: tpmrm
-            - mountPath: /usr/sbin/txt-stat
-              name: txt-stat
             - mountPath: /etc/hostname
               name: ta-hostname-path
               readOnly: true
             - mountPath: /etc/hosts
               name: ta-hosts-path
+              readOnly: true
+            - mountPath: /etc/os-release
+              name: ta-host-os-path
+              readOnly: true
+            - mountPath: /dev/mem
+              name: ta-mem-path
+              readOnly: true
+            - mountPath: /sys/firmware/acpi/tables/TPM2
+              name: ta-acpi-path
               readOnly: true
             - name: wla-config-volume
               mountPath: /etc/workload-agent/
@@ -77,9 +84,6 @@ spec:
         - name: tpmrm
           hostPath:
             path: /dev/tpmrm0
-        - name: txt-stat
-          hostPath:
-            path: /usr/sbin/txt-stat
         - name: ta-hostname-path
           hostPath:
             path: /etc/hostname
@@ -88,6 +92,16 @@ spec:
           hostPath:
             path: /etc/hosts
             type: File
+        - name: ta-host-os-path
+          hostPath:
+            path: /etc/os-release
+            type: File
+        - name: ta-mem-path
+          hostPath:
+            path: /dev/mem
+        - name: ta-acpi-path
+          hostPath:
+            path: /sys/firmware/acpi/tables/TPM2
         - name: wla-config-volume
           hostPath:
             path: /etc/workload-agent
