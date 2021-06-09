@@ -57,9 +57,15 @@ spec:
       #               #
       #################
       terminationGracePeriodSeconds: 60
+      securityContext:
+        fsGroup: 1001
       containers:
         - name: nats
           image: nats:2.2.4-alpine3.13
+          imagePullPolicy: Always
+          securityContext:
+            runAsUser: 1001
+            runAsGroup: 1001
           ports:
             - containerPort: 4222
               name: client
