@@ -388,6 +388,73 @@ func httpGetQuotePubkey(a *App) errorHandlerFunc {
 	}
 }
 
+// Step 2 : Receive Wrapped SWK from Attesting App
+func httpReceiveWrappedSWK(a *App) errorHandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		err := authorizeEndpoint(r)
+		if err != nil {
+			return err
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		// Note : Robust input validation is skipped for brevity
+
+		// Extract wrapped SWK from request
+		var ws common.WrappedSWKRequest
+		err = json.NewDecoder(r.Body).Decode(&ws)
+		if err != nil {
+			log.Info(err)
+			return resourceError{Message: "Unable to parse request.",
+				StatusCode: http.StatusBadRequest}
+
+		}
+
+		swk, err := base64.StdEncoding.DecodeString(ws.SWK)
+		if err != nil {
+			log.Error("Unable to decode base64 SWK.")
+			return resourceError{Message: "Unable to decode base64 SWK.",
+				StatusCode: http.StatusBadRequest}
+			return err
+		}
+
+		log.Info("SWK : ", ws.SWK)
+
+		pSize := C.ulong(len(swk))
+		log.Info("Size of Wrapped SWK : ", pSize)
+
+		pStr := C.CBytes(swk)
+		p := (*C.uint8_t)(unsafe.Pointer(pStr))
+
+		// Unwrap inside the enclave.
+		status := C.unwrap_SWK(p, pSize)
+		if status != 0 {
+			err = errors.New("SWK unwrapping failed!")
+			return &resourceError{
+				Message:    err.Error(),
+				StatusCode: http.StatusInternalServerError}
+
+			return err
+		}
+
+		return nil
+	}
+}
+
+// Step 3 : Receive Wrapped Message from Attesting App
+func httpReceiveWrappedMessage(a *App) errorHandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		err := authorizeEndpoint(r)
+		if err != nil {
+			return err
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		return nil
+	}
+}
+
 func (a *App) startServer() error {
 	log.Trace("app:startServer() Entering")
 	defer log.Trace("app:startServer() Leaving")
@@ -403,8 +470,8 @@ func (a *App) startServer() error {
 	r.SkipClean(true)
 
 	r.Handle("/id", handlers.ContentTypeHandler(httpGetQuotePubkey(a), "application/json")).Methods("GET")
-	// r.Handle("/wrapped_swk", handlers.ContentTypeHandler(httpReceiveWrappedSWK(), "application/json")).Methods("POST")
-	// r.Handle("/wrapped_message", handlers.ContentTypeHandler(httpReceiveWrappedMessage(), "application/json")).Methods("POST")
+	r.Handle("/wrapped_swk", handlers.ContentTypeHandler(httpReceiveWrappedSWK(a), "application/json")).Methods("POST")
+	r.Handle("/wrapped_message", handlers.ContentTypeHandler(httpReceiveWrappedMessage(a), "application/json")).Methods("POST")
 
 	h := &http.Server{
 		Addr:    fmt.Sprintf(":%d", c.AttestedAppServicePort),
