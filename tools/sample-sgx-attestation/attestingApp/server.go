@@ -92,21 +92,16 @@ func (a *App) startVerifier() error {
 
 	log.Info("SWK Shared.")
 
-	// // We wait before sending the next message so that
-	// // the enclave has time to unwrap the SWK before it
-	// // can receive the secret.
-	// time.Sleep(1 * time.Second)
+	// Share secret with the Attested App
+	log.Info("Sharing secret ...")
+	secret := "For your eyes only!"
+	err = verifyController.ShareSWKWrappedSecret(baseURL, swk, []byte(secret))
+	if err != nil {
+		log.Error("Sending SWK Wrapped Secret failed!")
+		return err
+	}
 
-	// // Share secret with the Attested App
-	// log.Info("Sharing secret ...")
-	// secret := "For your eyes only!"
-	// err = verifyController.ShareSWKWrappedSecret(conn, swk, []byte(secret))
-	// if err != nil {
-	// 	log.Error("Sending SWK Wrapped Secret failed!")
-	// 	return err
-	// }
-
-	// log.Info("Secret shared.")
+	log.Info("Secret shared.")
 
 	return nil
 }
