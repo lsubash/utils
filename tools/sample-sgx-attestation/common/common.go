@@ -53,6 +53,14 @@ type IdentityRequest struct {
 	Nonce string `json:"nonce"`
 }
 
+type WrappedSWKRequest struct {
+	SWK string `json:swk`
+}
+
+type WrappedMessage struct {
+	Message string `json:message`
+}
+
 const (
 	MsgTypeConnect          uint8 = 1
 	MsgTypePubkeyQuote      uint8 = 2
