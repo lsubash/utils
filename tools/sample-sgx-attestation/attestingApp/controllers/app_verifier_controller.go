@@ -110,7 +110,7 @@ func (ca AppVerifierController) GenerateSWK() ([]byte, error) {
 	return keyBytes, nil
 }
 
-func (ca AppVerifierController) SharePubkeyWrappedSWK(conn net.Conn, key []byte, swk []byte) error {
+func (ca AppVerifierController) SharePubkeyWrappedSWK(baseURL string, key []byte, swk []byte) error {
 	cipherText, err := wrapSWKByPublicKey(swk, key)
 	if err != nil {
 		log.Info("Cipher Text generation Failed.", err)
@@ -119,16 +119,54 @@ func (ca AppVerifierController) SharePubkeyWrappedSWK(conn net.Conn, key []byte,
 
 	log.Info("Wrapped SWK Cipher Text Length : ", len(cipherText))
 
-	var msg common.Message
-	msg.Type = common.MsgTypePubkeyWrappedSWK
-	msg.PubkeyWrappedSWK.WrappedSWK = cipherText
+	url := baseURL + common.PostWrappedSWK
 
-	log.Info("Sending Public key wrapped SWK message...")
-	gobEncoder := gob.NewEncoder(conn)
-	err = gobEncoder.Encode(msg)
+	var wsr common.WrappedSWKRequest
+	wsr.SWK = base64.StdEncoding.EncodeToString(cipherText)
+
+	reqBytes := new(bytes.Buffer)
+	err = json.NewEncoder(reqBytes).Encode(wsr)
 	if err != nil {
-		log.Error("Sending Public key wrapped SWK message failed!")
-		return err
+		return errors.Wrap(err, "Error in encoding SWK.")
+	}
+
+	// Send request to Attested App
+	req, err := http.NewRequest("POST", url, reqBytes)
+	if err != nil {
+		return errors.Wrap(err, "Error in Creating request.")
+	}
+
+	req.Header.Add("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Add("Authorization", common.DummyBearerToken)
+	client := &http.Client{
+		// FIXME : Enable TLS
+		// Transport: &http.Transport{
+		// 	TLSClientConfig: &tls.Config{
+		// 		InsecureSkipVerify: false,
+		// 		RootCAs:            rootCAs,
+		// 	},
+		// },
+	}
+
+	resp, err := client.Do(req)
+	if resp != nil {
+		defer func() {
+			derr := resp.Body.Close()
+			if derr != nil {
+				log.WithError(derr).Error("Error closing wrapped SWK body.")
+			}
+		}()
+	}
+
+	if err != nil {
+		log.Error(err)
+		return errors.Wrap(err, "Error posting SWK Attested App.")
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		log.Error("Status Code : ", resp.StatusCode)
+		return errors.New("Posting SWK to Attested App failed.")
 	}
 
 	return nil
@@ -329,7 +367,7 @@ func (ca AppVerifierController) verifyQuote(quote []byte, userData []byte) error
 	if responseAttributes.EnclaveMeasurement != mreValue {
 		log.Errorf("Quote policy mismatch in %s", common.MREnclaveField)
 		err = errors.Errorf("Quote policy mismatch in %s", common.MREnclaveField)
-		return err
+		//return err
 	} else {
 		log.Infof("%s matched with Quote Policy", common.MREnclaveField)
 	}
