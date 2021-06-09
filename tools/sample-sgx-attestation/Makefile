@@ -22,7 +22,6 @@ attestedapp: attestedapplib
 
 attestedapp-installer: attestedapp
 	cp attestedApp/libenclave/untrusted.so out/untrusted.so
-	cp attestedApp/libenclave/untrusted.so out/untrusted.so
 	cp attestedApp/libenclave/enclave.signed.so out/enclave.signed.so
 
 test:
