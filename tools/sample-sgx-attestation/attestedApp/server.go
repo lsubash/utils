@@ -415,10 +415,7 @@ func httpReceiveWrappedSWK(a *App) errorHandlerFunc {
 			log.Error("Unable to decode base64 SWK.")
 			return resourceError{Message: "Unable to decode base64 SWK.",
 				StatusCode: http.StatusBadRequest}
-			return err
 		}
-
-		log.Info("SWK : ", ws.SWK)
 
 		pSize := C.ulong(len(swk))
 		log.Info("Size of Wrapped SWK : ", pSize)
@@ -429,12 +426,11 @@ func httpReceiveWrappedSWK(a *App) errorHandlerFunc {
 		// Unwrap inside the enclave.
 		status := C.unwrap_SWK(p, pSize)
 		if status != 0 {
-			err = errors.New("SWK unwrapping failed!")
+			log.Error("SWK unwrapping failed.")
 			return &resourceError{
-				Message:    err.Error(),
+				Message:    "SWK unwrapping failed!",
 				StatusCode: http.StatusInternalServerError}
 
-			return err
 		}
 
 		return nil
@@ -450,6 +446,45 @@ func httpReceiveWrappedMessage(a *App) errorHandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
+
+		// Note : Robust input validation is skipped for brevity
+
+		// Extract wrapped SWK from request
+		var wm common.WrappedMessage
+		err = json.NewDecoder(r.Body).Decode(&wm)
+		if err != nil {
+			log.Error(err)
+			return resourceError{Message: "Unable to parse request.",
+				StatusCode: http.StatusBadRequest}
+
+		}
+
+		wrappedMessage, err := base64.StdEncoding.DecodeString(wm.Message)
+		if err != nil {
+			log.Error("Unable to decode base64 wrapped message.")
+			return resourceError{Message: "Unable to decode base64 wrapped message.",
+				StatusCode: http.StatusBadRequest}
+		}
+
+		if len(wrappedMessage) == 0 {
+			log.Error("Size of wrapped message can't be zero!")
+			return &resourceError{
+				Message:    "Size of wrapped message can't be zero!",
+				StatusCode: http.StatusInternalServerError}
+		}
+
+		pSecretSize := C.ulong(len(wrappedMessage))
+		pSecret := C.CBytes(wrappedMessage)
+		pSecretPtr := (*C.uint8_t)(unsafe.Pointer(pSecret))
+
+		//Unwrap the secret inside the Enclave
+		status := C.unwrap_secret(pSecretPtr, pSecretSize)
+		if status != 0 {
+			return &resourceError{
+				Message:    "Unwrapping of secret failed!",
+				StatusCode: http.StatusInternalServerError}
+
+		}
 
 		return nil
 	}
