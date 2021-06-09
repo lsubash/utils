@@ -76,21 +76,21 @@ func (a *App) startVerifier() error {
 	}
 
 	// Generate a SWK
-	// log.Info("Generating SWK ...")
-	// swk, err := verifyController.GenerateSWK()
-	// if err != nil {
-	// 	log.Error("SWK Generation Failed.")
-	// 	return err
-	// }
+	log.Info("Generating SWK ...")
+	swk, err := verifyController.GenerateSWK()
+	if err != nil {
+		log.Error("SWK Generation Failed.")
+		return err
+	}
 
-	// // Share SWK with  the Attested App
-	// err = verifyController.SharePubkeyWrappedSWK(conn, respMsg.PubkeyQuote.Pubkey, swk)
-	// if err != nil {
-	// 	log.Error("Sending Pubkey Wrapped SWK failed!")
-	// 	return err
-	// }
+	// Share SWK with  the Attested App
+	err = verifyController.SharePubkeyWrappedSWK(baseURL, pubkey, swk)
+	if err != nil {
+		log.Error("Sending Pubkey Wrapped SWK failed!")
+		return err
+	}
 
-	// log.Info("SWK Shared.")
+	log.Info("SWK Shared.")
 
 	// // We wait before sending the next message so that
 	// // the enclave has time to unwrap the SWK before it
