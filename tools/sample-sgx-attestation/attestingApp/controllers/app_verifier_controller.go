@@ -14,6 +14,7 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/gob"
+	"encoding/json"
 	"fmt"
 	"github.com/intel-secl/sample-sgx-attestation/v4/common"
 	"github.com/pkg/errors"
@@ -22,6 +23,7 @@ import (
 	"io/ioutil"
 	"math/big"
 	"net"
+	"net/http"
 	"strings"
 )
 
@@ -177,31 +179,74 @@ func (ca AppVerifierController) ShareSWKWrappedSecret(conn net.Conn, key []byte,
 	return nil
 }
 
-func (ca AppVerifierController) ConnectAndReceiveQuote(conn net.Conn, nonce string) (bool, *common.Message) {
-	var msg common.Message
-	msg.Type = common.MsgTypeConnect
-	msg.ConnectRequest.Username = common.AppUsername
-	msg.ConnectRequest.Password = common.AppPassword
-	msg.ConnectRequest.Nonce = nonce
+func (ca AppVerifierController) ConnectAndReceiveQuote(baseURL string, nonce string) (error, *common.IdentityResponse) {
 
-	// Write to socket
-	gobEncoder := gob.NewEncoder(conn)
-	err := gobEncoder.Encode(msg)
+	url := baseURL + common.GetIdentity
+
+	var idr common.IdentityRequest
+	idr.Nonce = nonce
+
+	reqBytes := new(bytes.Buffer)
+	err := json.NewEncoder(reqBytes).Encode(idr)
 	if err != nil {
-		log.Error("Error sending connect message!")
-		return false, nil
+		return errors.Wrap(err, "Error in encoding the nonce."), nil
 	}
 
-	// Receive from socket
-	respMsg := &common.Message{}
-	gobDecoder := gob.NewDecoder(conn)
-	err = gobDecoder.Decode(respMsg)
+	// Send request to Attested App
+	req, err := http.NewRequest("GET", url, reqBytes)
 	if err != nil {
-		log.Error("Error receiving SGX Quote + Pubkey message!")
-		return false, nil
+		return errors.Wrap(err, "Error in Creating request."), nil
 	}
 
-	return true, respMsg
+	req.Header.Add("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Add("Authorization", common.DummyBearerToken)
+	client := &http.Client{
+		// FIXME : Enable TLS
+		// Transport: &http.Transport{
+		// 	TLSClientConfig: &tls.Config{
+		// 		InsecureSkipVerify: false,
+		// 		RootCAs:            rootCAs,
+		// 	},
+		// },
+	}
+
+	resp, err := client.Do(req)
+	if resp != nil {
+		defer func() {
+			derr := resp.Body.Close()
+			if derr != nil {
+				log.WithError(derr).Error("Error closing get quote response body.")
+			}
+		}()
+	}
+
+	if err != nil {
+		log.Error(err)
+		return errors.Wrap(err, "Error fetching quote and public key from Attested App."), nil
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		log.Error("Status Code : ", resp.StatusCode)
+		return errors.New("Fetching quote and public key from Attested App failed."), nil
+	}
+
+	response, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.WithError(err).Error("Could not read Quote Response body.")
+		return err, nil
+	}
+
+	log.Info("Attested App Response Body:", string(response))
+
+	// Unmarshal JSON response
+	var responseAttributes common.IdentityResponse
+	err = json.Unmarshal(response, &responseAttributes)
+	if err != nil {
+		return errors.Wrap(err, "Error in unmarshalling response."), nil
+	}
+
+	return nil, &responseAttributes
 }
 
 func (ca AppVerifierController) VerifySGXQuote(sgxQuote []byte, userData []byte) bool {
