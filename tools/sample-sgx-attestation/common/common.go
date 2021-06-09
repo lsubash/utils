@@ -21,6 +21,9 @@ const (
 	SgxQuotePolicyPath    = ConfigDir + "sgx-quote-policy.txt"
 	EndLine               = "\n"
 	VerifyQuote           = "/sgx_qv_verify_quote"
+	GetIdentity           = "/id"
+	PostWrappedSWK        = "/wrapped_swk"
+	PostWrappedMessage    = "/wrapped_message"
 	// SWK Size in bytes
 	SWKSize = 32
 	// NonceSize in bits
