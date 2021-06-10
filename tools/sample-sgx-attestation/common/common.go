@@ -5,12 +5,9 @@
 package common
 
 const (
-	AppUsername            = "foobar"
-	AppPassword            = "21345h8askjdf"
 	DummyBearerToken       = "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkR1bW15QmVhcmVyVG9rZW4iLCJpYXQiOjE1MTYyMzkwMjJ9.Czed89Gn-nhHGAH2DzVqo453k04eF0PvBuZvvOJeE1Q"
 	DefaultAttestedAppHost = "127.0.0.1"
 	DefaultAttestedAppPort = 9999
-	ProtocolTcp            = "tcp4"
 )
 
 const (
@@ -24,7 +21,8 @@ const (
 	GetIdentity           = "/id"
 	PostWrappedSWK        = "/wrapped_swk"
 	PostWrappedMessage    = "/wrapped_message"
-	SelfSignedCertSNI     = "attested.app"
+	// Enable client to verify the right cert using SNI.
+	SelfSignedCertSNI = "attested.app"
 	// SWK Size in bytes
 	SWKSize = 32
 	// NonceSize in bits
@@ -40,7 +38,6 @@ const (
 )
 
 // Message definitions
-
 type UserData struct {
 	Publickey string `json:"public-key"`
 }
@@ -60,39 +57,4 @@ type WrappedSWKRequest struct {
 
 type WrappedMessage struct {
 	Message string `json:message`
-}
-
-const (
-	MsgTypeConnect          uint8 = 1
-	MsgTypePubkeyQuote      uint8 = 2
-	MsgTypePubkeyWrappedSWK uint8 = 3
-	MsgTypeSWKWrappedSecret uint8 = 4
-)
-
-type PayloadConnect struct {
-	Username string
-	Password string
-	Nonce    string
-}
-
-type PayloadPubkeyQuote struct {
-	Pubkey []byte
-	Quote  []byte
-}
-
-type PayloadPubkeyWrappedSWK struct {
-	WrappedSWK []byte
-}
-
-type PayloadSWKWrappedSecret struct {
-	WrappedSecret []byte
-}
-
-type Message struct {
-	Type             uint8
-	ResponseCode     int
-	ConnectRequest   PayloadConnect
-	PubkeyQuote      PayloadPubkeyQuote
-	PubkeyWrappedSWK PayloadPubkeyWrappedSWK
-	SWKWrappedSecret PayloadSWKWrappedSecret
 }
