@@ -12,14 +12,12 @@ import "C"
 import (
 	"crypto/tls"
 	"encoding/base64"
-	"encoding/gob"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/intel-secl/sample-sgx-attestation/v4/common"
 	"github.com/pkg/errors"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -49,7 +47,7 @@ type errorHandlerFunc func(w http.ResponseWriter, r *http.Request) error
 
 func (ehf errorHandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err := ehf(w, r); err != nil {
-		log.WithError(err).Error("HTTP Error")
+		log.WithError(err).Error("HTTP Error!")
 		switch t := err.(type) {
 		case *resourceError:
 			http.Error(w, t.Message, t.StatusCode)
@@ -70,9 +68,17 @@ func (a *App) getPubkeyFromEnclave() []byte {
 	var pubKeySize C.int
 	var keyPtr *C.u_int8_t
 
-	keyPtr = C.get_pubkey(&pubKeySize)
-	log.Info("getPubkeyFromEnclave : Pub key length : ", pubKeySize)
+	keyPtr = C.get_public_key(&pubKeySize)
+
+	if keyPtr == nil {
+		log.Error("Unable to retrive public key from enclave.")
+		return nil
+	}
+
+	log.Info("getPubkeyFromEnclave : Public key length : ", pubKeySize)
+
 	if pubKeySize == 0 {
+		log.Error("Unable to retrive public key from enclave.")
 		return nil
 	}
 
@@ -81,206 +87,31 @@ func (a *App) getPubkeyFromEnclave() []byte {
 	return keyBuffer
 }
 
-func (a *App) getQuoteAndPubkeyFromEnclave(nonce string) ([]byte, []byte) {
+func (a *App) getQuoteFromEnclave(nonce string) []byte {
 	var qBytes []byte
-	var kBytes []byte
 
 	// qSize holds the length of the quote byte array returned from enclave
 	var qSize C.int
-	var keySize C.int
 
 	// qPtr holds the bytes array of the quote returned from enclave
 	var qPtr *C.u_int8_t
 
 	nonceCStr := C.CString(nonce)
 	if nonceCStr == nil {
-		log.Error("Error marshelling nonce.")
-		return kBytes, qBytes
+		log.Error("Error marshalling nonce.")
+		return nil
 	}
 
-	qPtr = C.get_SGX_Quote(&qSize, &keySize, nonceCStr)
+	qPtr = C.get_sgx_quote(&qSize, nonceCStr)
 	if qPtr == nil {
 		log.Error("Unable to retrive quote from enclave.")
-		return kBytes, qBytes
+		return nil
 	}
 
 	log.Printf("Quote size : %d", qSize)
 	qBytes = C.GoBytes(unsafe.Pointer(qPtr), qSize)
-	kBytes = C.GoBytes(unsafe.Pointer(qPtr), qSize+keySize)
 
-	return kBytes, qBytes
-}
-
-func (a *App) receiveConnectRequest(connection net.Conn) (error, bool, string) {
-	authenticated := false
-
-	gobDecoder := gob.NewDecoder(connection)
-	requestMsg := new(common.Message)
-	err := gobDecoder.Decode(requestMsg)
-	if err != nil {
-		log.Error("Decoding connect message failed!")
-		return err, authenticated, ""
-	}
-
-	if requestMsg.Type != common.MsgTypeConnect {
-		err = errors.New("Incorrect message type!")
-		log.Error("Incorrect message type!")
-		return err, authenticated, ""
-	}
-
-	if requestMsg.ConnectRequest.Username == common.AppUsername &&
-		requestMsg.ConnectRequest.Password == common.AppPassword {
-		authenticated = true
-	}
-
-	nonce := requestMsg.ConnectRequest.Nonce
-
-	return err, authenticated, nonce
-}
-
-func (a *App) sendPubkeySGXQuote(connection net.Conn, nonce string) error {
-
-	// Get the quote from Enclave
-	pubKey, sgxQuote := a.getQuoteAndPubkeyFromEnclave(nonce)
-
-	// Get public key from Enclave.
-	pubKey = a.getPubkeyFromEnclave()
-	if pubKey == nil {
-		log.Error("Fetching public key from enclave failed!")
-		return errors.New("Fetching public key from enclave failed!")
-	}
-
-	if len(pubKey) == 0 || len(sgxQuote) == 0 {
-		log.Error("Fetching quote and public key from enclave failed!")
-		return errors.New("Fetching quote and public key from enclave failed!")
-	}
-
-	// Prepare response with SGX Quote and Enclave
-	log.Info("Sending Pubkey and SGX Quote message...")
-	gobEncoder := gob.NewEncoder(connection)
-	responseMsg := new(common.Message)
-	responseMsg.Type = common.MsgTypePubkeyQuote
-	responseMsg.PubkeyQuote.Pubkey = pubKey
-	responseMsg.PubkeyQuote.Quote = sgxQuote
-
-	// Send quote + public key to attestingApp
-	err := gobEncoder.Encode(responseMsg)
-	if err != nil {
-		log.Error("Encoding Pubkey Quote message failed!")
-	}
-
-	return err
-}
-
-func (a *App) receivePubkeyWrappedSWK(connection net.Conn) error {
-	log.Info("Receiving Pubkey wrapped SWK message...")
-	gobWrappedSWKDecoder := gob.NewDecoder(connection)
-	wrappedSWKMsg := new(common.Message)
-	err := gobWrappedSWKDecoder.Decode(wrappedSWKMsg)
-	if err != nil {
-		log.Error("Decoding Pubkey wapped SWK message failed!")
-		return err
-	}
-
-	if wrappedSWKMsg.Type != common.MsgTypePubkeyWrappedSWK {
-		err = errors.New("Incorrect message type!")
-		log.Error("Incorrect message type!")
-		return err
-	}
-
-	log.Info("Wrapped SWK Received length : ", len(wrappedSWKMsg.PubkeyWrappedSWK.WrappedSWK))
-
-	pSize := C.ulong(len(wrappedSWKMsg.PubkeyWrappedSWK.WrappedSWK))
-	log.Info("Size of Wrapped SWK : ", pSize)
-
-	pStr := C.CBytes(wrappedSWKMsg.PubkeyWrappedSWK.WrappedSWK)
-	p := (*C.uint8_t)(unsafe.Pointer(pStr))
-
-	// Unwrap inside the enclave.
-	status := C.unwrap_SWK(p, pSize)
-	if status != 0 {
-		err = errors.New("SWK unwrapping failed!")
-	}
-
-	return err
-}
-
-func (a *App) receiveSWKWrappedSecret(connection net.Conn) error {
-	log.Info("Receiving SWK wrapped Secret message...")
-
-	gobWrappedSecretDecoder := gob.NewDecoder(connection)
-	wrappedSecretMsg := new(common.Message)
-
-	err := gobWrappedSecretDecoder.Decode(wrappedSecretMsg)
-	if err != nil {
-		log.Error("Decoding wrapped secret message failed!")
-		return err
-	}
-
-	if wrappedSecretMsg.Type != common.MsgTypeSWKWrappedSecret {
-		err = errors.New("Incorrect message type!")
-		log.Error("Incorrect message type!")
-		return err
-	}
-
-	if len(wrappedSecretMsg.SWKWrappedSecret.WrappedSecret) == 0 {
-		log.Error("Wrapped secret Size can't be zero")
-		err = errors.New("Wrapped secret Size can't be zero!")
-		return err
-	}
-
-	pSecretSize := C.ulong(len(wrappedSecretMsg.SWKWrappedSecret.WrappedSecret))
-	pSecret := C.CBytes(wrappedSecretMsg.SWKWrappedSecret.WrappedSecret)
-	pSecretPtr := (*C.uint8_t)(unsafe.Pointer(pSecret))
-
-	//Unwrap the secret inside the Enclave
-	status := C.unwrap_secret(pSecretPtr, pSecretSize)
-	if status != 0 {
-		err = errors.New("Unwrapping of secret failed!")
-	}
-
-	return err
-}
-
-func (a *App) handleConnection(connection net.Conn) error {
-	defer connection.Close()
-
-	// Step 1 - Receive a connect request
-	err, authenticated, nonce := a.receiveConnectRequest(connection)
-	if err != nil {
-		log.Error("server:handleConnection : ", err)
-		return err
-	}
-
-	if !authenticated {
-		err = errors.New("Connection authentication failed!")
-		log.Error("server:handleConnection : ", err)
-		return err
-	}
-
-	// Step 2 - Get the quote from enclave and send it to
-	// the attesting app.
-	err = a.sendPubkeySGXQuote(connection, nonce)
-	if err != nil {
-		log.Error("server:handleConnection : ", err)
-		return err
-	}
-
-	// Step 3 - Wait and receive public key wrapped SWK.
-	err = a.receivePubkeyWrappedSWK(connection)
-	if err != nil {
-		log.Error("server:handleConnection : ", err)
-		return err
-	}
-
-	// Step 4 - Receive SWK wrapped secret
-	err = a.receiveSWKWrappedSecret(connection)
-	if err != nil {
-		log.Error("server:handleConnection : ", err)
-		return err
-	}
-
-	return nil
+	return qBytes
 }
 
 // EnclaveInit initializes the enclave.
@@ -309,13 +140,13 @@ func (a *App) EnclaveDestroy() error {
 	defer log.Trace("EnclaveDestroy Leaving")
 
 	// Destroy enclave
-	enclaveDestroyStatus := C.destroy_Enclave()
+	enclaveDestroyStatus := C.destroy_enclave()
 
 	if enclaveDestroyStatus != 0 {
 		return errors.Errorf("Failed to destroy enclave. Error code: %d", enclaveDestroyStatus)
 	}
 
-	log.Info("controller/socket_handler:EnclaveInit Destroyed enclave")
+	log.Info("Enclave destroyed.")
 
 	return nil
 }
@@ -341,7 +172,7 @@ func httpGetQuotePubkey(a *App) errorHandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 
 		// Note : Robust input validation is skipped for brevity
-		// Retrive Nonce from request
+		// Extract nonce from request
 		var idr common.IdentityRequest
 		err = json.NewDecoder(r.Body).Decode(&idr)
 		if err != nil {
@@ -351,10 +182,17 @@ func httpGetQuotePubkey(a *App) errorHandlerFunc {
 
 		}
 		// Get the quote from Enclave
-		pubKey, sgxQuote := a.getQuoteAndPubkeyFromEnclave(idr.Nonce)
+		sgxQuote := a.getQuoteFromEnclave(idr.Nonce)
+		if sgxQuote == nil {
+			log.Error("Fetching quote from enclave failed!")
+			w.WriteHeader(http.StatusInternalServerError)
+			return &resourceError{
+				Message:    "Fetching quote from enclave failed.",
+				StatusCode: http.StatusInternalServerError}
+		}
 
 		// Get public key from Enclave.
-		pubKey = a.getPubkeyFromEnclave()
+		pubKey := a.getPubkeyFromEnclave()
 		if pubKey == nil {
 			log.Error("Fetching public key from enclave failed!")
 			w.WriteHeader(http.StatusInternalServerError)
@@ -547,7 +385,7 @@ func (a *App) startServer() error {
 
 	<-stop
 
-	// let's destroy enclave and exit
+	// Destroy enclave and exit
 	err = a.EnclaveDestroy()
 
 	if err != nil {
