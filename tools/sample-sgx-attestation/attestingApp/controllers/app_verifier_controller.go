@@ -356,8 +356,6 @@ func (ca AppVerifierController) ConnectAndReceiveQuote(baseURL string, nonce str
 		return err, nil
 	}
 
-	log.Info("Attested App Response Body:", string(response))
-
 	// Unmarshal JSON response
 	var responseAttributes common.IdentityResponse
 	err = json.Unmarshal(response, &responseAttributes)
@@ -448,7 +446,7 @@ func (ca AppVerifierController) verifyQuote(quote []byte, userData []byte) error
 	if responseAttributes.EnclaveMeasurement != mreValue {
 		log.Errorf("Quote policy mismatch in %s", common.MREnclaveField)
 		err = errors.Errorf("Quote policy mismatch in %s", common.MREnclaveField)
-		//return err
+		return err
 	} else {
 		log.Infof("%s matched with Quote Policy", common.MREnclaveField)
 	}
