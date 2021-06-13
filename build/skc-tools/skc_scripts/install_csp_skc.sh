@@ -39,19 +39,21 @@ fi
 
 # read from environment variables file if it exists
 if [ -f ./csp_skc.conf ]; then
-    echo "Reading Installation variables from $(pwd)/csp_skc.conf"
-    source csp_skc.conf
-    if [ $? -ne 0 ]; then
-	echo "${red} please set correct values in csp_skc.conf ${reset}"
-	exit 1
-    fi
+	echo "Reading Installation variables from $(pwd)/csp_skc.conf"
+	source csp_skc.conf
+	if [ $? -ne 0 ]; then
+		echo "${red} please set correct values in csp_skc.conf ${reset}"
+		exit 1
+	fi
 
-    if [[ "$SCS_DB_NAME" == "$SHVS_DB_NAME" || "$AAS_DB_NAME" == "$SHVS_DB_NAME" || "$SCS_DB_NAME" == "$AAS_DB_NAME" ]]; then
-        echo "${red} SCS_DB_NAME, SHVS_DB_NAME & AAS_DB_NAME should not be same. Please change in csp_skc.conf ${reset}"
-        exit 1
-    fi
-    env_file_exports=$(cat ./csp_skc.conf | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
-    if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
+	if [[ "$SCS_DB_NAME" == "$SHVS_DB_NAME" || "$AAS_DB_NAME" == "$SHVS_DB_NAME" || "$SCS_DB_NAME" == "$AAS_DB_NAME" ]]; then
+		echo "${red} SCS_DB_NAME, SHVS_DB_NAME & AAS_DB_NAME should not be same. Please change in csp_skc.conf ${reset}"
+	exit 1
+	fi
+	env_file_exports=$(cat ./csp_skc.conf | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
+	if [ -n "$env_file_exports" ]; then
+		eval export $env_file_exports;
+	fi
 fi
 
 echo "Uninstalling Certificate Management Service...."
@@ -120,8 +122,8 @@ sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_SAN/" ~/cms.env
 ./cms-*.bin
 cms status > /dev/null
 if [ $? -ne 0 ]; then
-  echo "${red} Certificate Management Service Installation Failed $reset}"
-  exit 1
+	echo "${red} Certificate Management Service Installation Failed $reset}"
+	exit 1
 fi
 echo "${green} Installed Certificate Management Service.... ${reset}"
 
@@ -146,8 +148,8 @@ sed -i "s/^\(AAS_DB_PASSWORD\s*=\s*\).*\$/\1$AAS_DB_PASSWORD/"  ~/authservice.en
 ./authservice-*.bin
 authservice status > /dev/null
 if [ $? -ne 0 ]; then
-  echo "${red} AuthService Installation Failed ${reset}"
-  exit 1
+	echo "${red} AuthService Installation Failed ${reset}"
+	exit 1
 fi
 echo "${green} Installed AuthService.... ${reset}"
 
@@ -191,16 +193,16 @@ pushd $PWD
 cd ~
 ./populate-users.sh
 if [ $? -ne 0 ]; then
-  echo "${red} populate user script failed ${reset}"
-  exit 1
+	echo "${red} populate user script failed ${reset}"
+	exit 1
 fi
 popd
 
 echo "Getting AuthService Admin token...."
 INSTALL_ADMIN_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:$AAS_PORT/aas/v1/token -d '{"username": "'"$INSTALL_ADMIN_USERNAME"'", "password": "'"$INSTALL_ADMIN_PASSWORD"'"}'`
 if [ $? -ne 0 ]; then
-  echo "${red} Could not get AuthService Admin token ${reset}"
-  exit 1
+	echo "${red} Could not get AuthService Admin token ${reset}"
+	exit 1
 fi
 
 echo "Updating SGX Caching Service env...."
@@ -219,8 +221,8 @@ echo "Installing SGX Caching Service...."
 ./scs-*.bin
 scs status > /dev/null
 if [ $? -ne 0 ]; then
-  echo "${red} SGX Caching Service Installation Failed ${reset}"
-  exit 1
+	echo "${red} SGX Caching Service Installation Failed ${reset}"
+	exit 1
 fi
 echo "${green} Installed SGX Caching Service.... ${reset}"
 
@@ -240,8 +242,8 @@ echo "Installing SGX Host Verification Service...."
 ./shvs-*.bin
 shvs status > /dev/null
 if [ $? -ne 0 ]; then
-  echo "${red} SGX Host Verification Service Installation Failed ${reset}"
-  exit 1
+	echo "${red} SGX Host Verification Service Installation Failed ${reset}"
+	exit 1
 fi
 echo "${green} Installed SGX Host Verification Service.... ${reset}"
 
@@ -256,10 +258,10 @@ K8S_URL=https://$K8S_IP:$K8S_PORT/
 sed -i "s@^\(SHVS_BASE_URL\s*=\s*\).*\$@\1$SHVS_URL@" ~/ihub.env
 sed -i "s@^\(KUBERNETES_URL\s*=\s*\).*\$@\1$K8S_URL@" ~/ihub.env
 if [[ "$OS" != "ubuntu" ]]; then
-OPENSTACK_AUTH_URL=http://$OPENSTACK_IP:$OPENSTACK_AUTH_PORT/
-OPENSTACK_PLACEMENT_URL=http://$OPENSTACK_IP:$OPENSTACK_PLACEMENT_PORT/
-sed -i "s@^\(OPENSTACK_AUTH_URL\s*=\s*\).*\$@\1$OPENSTACK_AUTH_URL@" ~/ihub.env
-sed -i "s@^\(OPENSTACK_PLACEMENT_URL\s*=\s*\).*\$@\1$OPENSTACK_PLACEMENT_URL@" ~/ihub.env
+	OPENSTACK_AUTH_URL=http://$OPENSTACK_IP:$OPENSTACK_AUTH_PORT/
+	OPENSTACK_PLACEMENT_URL=http://$OPENSTACK_IP:$OPENSTACK_PLACEMENT_PORT/
+	sed -i "s@^\(OPENSTACK_AUTH_URL\s*=\s*\).*\$@\1$OPENSTACK_AUTH_URL@" ~/ihub.env
+	sed -i "s@^\(OPENSTACK_PLACEMENT_URL\s*=\s*\).*\$@\1$OPENSTACK_PLACEMENT_URL@" ~/ihub.env
 fi
 sed -i "s@^\(TENANT\s*=\s*\).*\$@\1$TENANT@" ~/ihub.env
 
@@ -267,7 +269,7 @@ echo "Installing Integration HUB...."
 ./ihub-*.bin
 ihub status > /dev/null
 if [ $? -ne 0 ]; then
-  echo " ${red} Integration HUB Installation Failed ${reset}"
-  exit 1
+	echo " ${red} Integration HUB Installation Failed ${reset}"
+	exit 1
 fi
 echo "${green} Installed Integration HUB.... ${reset}"
