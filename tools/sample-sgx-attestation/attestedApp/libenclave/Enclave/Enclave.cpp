@@ -96,9 +96,10 @@ sgx_status_t enclave_pubkey(ref_rsa_params_t* key) {
     return SGX_SUCCESS;
 }
 
-uint32_t enclave_create_report(const sgx_target_info_t* p_qe3_target, sgx_report_data_t* reportData,
+uint32_t enclave_create_report(const sgx_target_info_t* p_qe3_target,
 			       char *nonceStr, sgx_report_t* p_report) {
 
+     sgx_report_data_t reportData{};
      // Convert Nonce string to Bignum.
      BIGNUM *p = BN_new();
      BN_dec2bn(&p, nonceStr);
@@ -178,7 +179,7 @@ uint32_t enclave_create_report(const sgx_target_info_t* p_qe3_target, sgx_report
         return status;
     }
 
-    err = memcpy_s(reportData->d, sizeof(msg_hash), msg_hash, sizeof(msg_hash));
+    err = memcpy_s(reportData.d, sizeof(msg_hash), msg_hash, sizeof(msg_hash));
     if (err != 0) {
 	 ocall_print_error_string("memcpy of userdata hash failed.");
 	 free(pdata);
@@ -187,7 +188,7 @@ uint32_t enclave_create_report(const sgx_target_info_t* p_qe3_target, sgx_report
 
     free(pdata);
     // Generate the report for the app_enclave
-    sgx_status_t  sgx_error = sgx_create_report(p_qe3_target, reportData, p_report);
+    sgx_status_t  sgx_error = sgx_create_report(p_qe3_target, &reportData, p_report);
 
     return sgx_error;
 }
