@@ -9,7 +9,7 @@ import (
 	"io"
 	"strings"
 
-	"intel/isecl/lib/platform-info/v4/platforminfo"
+	"intel/isecl/lib/platform-info/v3/platforminfo"
 
 	"github.com/pkg/errors"
 )

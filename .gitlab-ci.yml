@@ -1,0 +1,113 @@
+image: golang:1.14
+
+before_script:
+  - git config --global http.proxy ${HTTP_PROXY}
+  - git config --global https.proxy ${HTTPS_PROXY}
+  - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@${GITLAB_SERVER}".insteadOf "https://${GITLAB_SERVER}"
+  - export http_proxy=$HTTP_PROXY
+  - export https_proxy=$HTTPS_PROXY
+  - export no_proxy=$NO_PROXY
+  - apt-get update -y -o Acquire::Max-FutureTime=31536000
+  - apt-get install -yq makeself
+  - cd $CI_PROJECT_DIR
+
+variables:
+  HTTPS_PROXY: "${HTTP_PROXY}"
+  no_proxy: "${NO_PROXY}"
+
+stages:
+  - build
+  - scan
+
+tasim:
+  stage: build
+  only:
+    changes:
+      - tools/ta-sim
+  tags:
+    - go
+  script:
+    - make -C tools/ta-sim all
+
+pcssimulator:
+  stage: build
+  only:
+    changes:
+      - tools/skc-simulators/pcs_simulator
+  tags:
+    - go
+  script:
+    - cd tools/skc-simulators/pcs_simulator
+    - go get -u github.com/gorilla/mux
+    - go build ./...
+
+sgxagentsim:
+  stage: build
+  only:
+    changes:
+      -  tools/skc-simulators/sgx_agent_simulator
+  tags:
+    - go
+  script:
+    - make -C tools/skc-simulators/sgx_agent_simulator all
+
+bkc:
+  stage: build
+  allow_failure: true
+  only:
+    changes:
+      - tools/bkc
+  tags:
+    - go
+  script:
+    - make -C tools/bkc all
+
+sample-sgx-attestation:
+  stage: build
+  image: centos:8.2.2004
+  only:
+    changes:
+      - tools/sample-sgx-attestation
+  before_script:
+    - export http_proxy=${HTTP_PROXY}
+    - export https_proxy=${HTTPS_PROXY}
+    - export no_proxy=${NO_PROXY}
+    - yum -yq install epel-release && yum update -yq && yum install -yq dnf-plugins-core && dnf config-manager -yq --set-enabled powertools
+    - yum install -yq ocaml ocaml-ocamlbuild redhat-rpm-config openssl-devel rpm-build cmake perl openssl-devel libcurl-devel protobuf-devel yum-utils makeself git wget tar unzip kernel-devel elfutils-libelf-devel dkms
+    - git config --global http.proxy ${HTTP_PROXY}
+    - git config --global https.proxy ${HTTPS_PROXY}
+    - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@${GITLAB_SERVER}".insteadOf "https://${GITLAB_SERVER}"
+    - yum groupinstall -yq 'Development Tools'
+    - cd /root && wget -q https://download.01.org/intel-sgx/sgx-linux/2.13.3/distro/centos8.2-server/sgx_rpm_local_repo.tgz && tar -xzf sgx_rpm_local_repo.tgz
+    - yum-config-manager -yq --add-repo file:///root/sgx_rpm_local_repo
+    - yum install -yq --nogpgcheck libsgx-launch-devel libsgx-urts libsgx-epid-devel libsgx-quote-ex-devel libsgx-dcap*devel
+    - wget https://download.01.org/intel-sgx/sgx-linux/2.13.3/as.ld.objdump.gold.r3.tar.gz && tar xzf as.ld.objdump.gold.r3.tar.gz && chmod +x external/toolset/centos8.2/* && mv external/toolset/centos8.2/* /usr/bin/
+    - cd /root && wget -q https://github.com/intel/intel-sgx-ssl/archive/refs/tags/lin_2.13_1.1.1i.zip && unzip lin_2.13_1.1.1i.zip
+    - cd /root/intel-sgx-ssl-lin_2.13_1.1.1i/openssl_source && wget -q  https://www.openssl.org/source/openssl-1.1.1k.tar.gz && cd ../Linux && make all >/dev/null && make install > /dev/null
+    - cd /root && wget -q  https://download.01.org/intel-sgx/sgx-linux/2.13.3/distro/centos8.2-server/sgx_linux_x64_sdk_2.13.103.1.bin
+    - chmod +x sgx_linux_x64_sdk_2.13.103.1.bin && echo "yes" | ./sgx_linux_x64_sdk_2.13.103.1.bin && mv sgxsdk /opt/intel/ && sed -i 's/root/opt\/intel/g' /opt/intel/sgxsdk/environment
+    - source /opt/intel/sgxsdk/environment
+    - wget -q https://golang.org/dl/go1.14.6.linux-amd64.tar.gz && tar -xzf go1.14.6.linux-amd64.tar.gz -C /usr/local/
+    - ln -sf /usr/local/go/bin/* /usr/bin/
+    - git config --global http.proxy ${HTTP_PROXY}
+    - git config --global https.proxy ${HTTPS_PROXY}
+    - git config --global url."https://gitlab-ci-token:${CI_JOB_TOKEN}@${GITLAB_SERVER}".insteadOf "https://${GITLAB_SERVER}"
+    - cd $CI_PROJECT_DIR
+  tags:
+    - go
+  script:
+    - touch tools/sample-sgx-attestation/rootca.pem && make -C tools/sample-sgx-attestation all || make -C tools/sample-sgx-attestation all
+
+stylechecker:
+  stage: scan
+  only:
+    - merge_requests
+  tags:
+    - go
+  script:
+    - cd tools
+    - gofmt -l .
+    - |
+      if [ "$(gofmt -l . | wc -l)"  -gt 0 ]; then
+             exit 1
+      fi
