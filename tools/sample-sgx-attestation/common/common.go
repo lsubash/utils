@@ -26,7 +26,7 @@ const (
 	// SWK Size in bytes
 	SWKSize = 32
 	// NonceSize in bits
-	NonceSize = 128
+	NonceSize = 256
 )
 
 // SGX Policy
