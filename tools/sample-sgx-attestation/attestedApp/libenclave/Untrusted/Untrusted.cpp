@@ -308,7 +308,6 @@ uint8_t* get_sgx_quote(int* qSize, char *nonce) {
         uint8_t* key_buffer = NULL;
         sgx_target_info_t qe_target_info;
         sgx_report_t app_report;
-        sgx_report_data_t reportData{};
         sgx_quote3_t *p_quote;
         sgx_ql_auth_data_t *p_auth_data;
         sgx_ql_ecdsa_sig_data_t *p_sig_data;
@@ -396,12 +395,10 @@ uint8_t* get_sgx_quote(int* qSize, char *nonce) {
 	     return NULL;
         }
 
-
         printf("libenclave/Untrusted(C/C++) : ECALL - Fetching enclave report...\n");
         status = enclave_create_report(global_eid,
                                        &retval,
                                        &qe_target_info,
-                                       &reportData,
                                        nonce,
                                        &app_report);
 
