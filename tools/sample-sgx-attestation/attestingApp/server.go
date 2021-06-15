@@ -6,14 +6,12 @@ package main
 
 import (
 	"crypto/rand"
+	"encoding/base64"
 	"github.com/intel-secl/sample-sgx-attestation/v4/attestingApp/controllers"
 	"github.com/intel-secl/sample-sgx-attestation/v4/common"
 	"github.com/pkg/errors"
 	"math/big"
-	"net"
 	"strconv"
-	"strings"
-	"time"
 )
 
 func (a *App) startVerifier() error {
@@ -33,12 +31,7 @@ func (a *App) startVerifier() error {
 		SgxQuotePolicyPath: common.SgxQuotePolicyPath,
 	}
 
-	// Connect to the Attested App
-	conn, err := net.Dial(common.ProtocolTcp, strings.Join([]string{c.AttestedAppServiceHost, strconv.Itoa(c.AttestedAppServicePort)}, ":"))
-	if err != nil {
-		return err
-	}
-	log.Info("Connected to AttestedApp.")
+	baseURL := "https://" + c.AttestedAppServiceHost + ":" + strconv.Itoa(c.AttestedAppServicePort)
 
 	// Generate a Nonce
 	var nonceLimit big.Int
@@ -50,14 +43,32 @@ func (a *App) startVerifier() error {
 	}
 
 	// Send a connect message and receive SGX Quote + Public key
-	status, respMsg := verifyController.ConnectAndReceiveQuote(conn, nonce.String())
+	err, respMsg := verifyController.ConnectAndReceiveQuote(baseURL, nonce.String())
+
+	if err != nil {
+		log.Error("Error in receiving quote and public key.")
+		return err
+	}
+
 	log.Info("Received public key and SGX quote from AttestedApp.")
 
+	pubkey, err := base64.StdEncoding.DecodeString(respMsg.Userdata.Publickey)
+	if err != nil {
+		log.Error("Unable to decode base64 public key.")
+		return err
+	}
+
 	// User Data is Public Key + Nonce
-	userData := append(respMsg.PubkeyQuote.Pubkey, nonce.Bytes()...)
+	userData := append(pubkey, nonce.Bytes()...)
+
+	quote, err := base64.StdEncoding.DecodeString(respMsg.Quote)
+	if err != nil {
+		log.Error("Unable to decode base64 quote.")
+		return err
+	}
 
 	// Verify SGX Quote
-	status = verifyController.VerifySGXQuote(respMsg.PubkeyQuote.Quote, userData)
+	status := verifyController.VerifySGXQuote(quote, userData)
 	if !status {
 		err = errors.New("SGX Quote verification failed!")
 		log.Error("SGX Quote verification failed!")
@@ -73,7 +84,7 @@ func (a *App) startVerifier() error {
 	}
 
 	// Share SWK with  the Attested App
-	err = verifyController.SharePubkeyWrappedSWK(conn, respMsg.PubkeyQuote.Pubkey, swk)
+	err = verifyController.SharePubkeyWrappedSWK(baseURL, pubkey, swk)
 	if err != nil {
 		log.Error("Sending Pubkey Wrapped SWK failed!")
 		return err
@@ -81,15 +92,10 @@ func (a *App) startVerifier() error {
 
 	log.Info("SWK Shared.")
 
-	// We wait before sending the next message so that
-	// the enclave has time to unwrap the SWK before it
-	// can receive the secret.
-	time.Sleep(1 * time.Second)
-
 	// Share secret with the Attested App
 	log.Info("Sharing secret ...")
 	secret := "For your eyes only!"
-	err = verifyController.ShareSWKWrappedSecret(conn, swk, []byte(secret))
+	err = verifyController.ShareSWKWrappedSecret(baseURL, swk, []byte(secret))
 	if err != nil {
 		log.Error("Sending SWK Wrapped Secret failed!")
 		return err
