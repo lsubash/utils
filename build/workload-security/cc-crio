@@ -88,7 +88,7 @@ download-eca:
 
 workload-agent:
 	cd workload-agent && \
-	make installer-no-docker
+	make installer
 
 skopeo:
 	cd skopeo && \

@@ -187,7 +187,7 @@ get_bearer_token() {
   BEARER_TOKEN=$(grep "Token for User: superAdmin" $aas_scripts_dir/populate-users.log -A 2 | grep BEARER_TOKEN | cut -d '=' -f2)
   echo "Install token: $BEARER_TOKEN"
 
-  if [ ! -z "$NATS_SERVERS"]; then
+  if [ ! -z "$NATS_SERVERS" ]; then
     CC_TA_TOKEN=$(grep "Custom Claims Token For TA" $aas_scripts_dir/populate-users.log -A 2 | grep BEARER_TOKEN | cut -d '=' -f2)
   fi
 }
