@@ -2,7 +2,7 @@
 SGX_DRIVER_VERSION=1.41
 KDIR=/lib/modules/$(uname -r)/build
 SGX_INSTALL_DIR=/opt/intel
-MP_RPM_VER=1.10.100.4-1
+MP_RPM_VER=1.10.103.1-1
 SGX_AGENT_BIN=bin
 
 red=`tput setaf 1`
