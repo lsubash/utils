@@ -35,6 +35,14 @@
 +[ openssl_def ]
 +engines = engine_section
 +oid_section = new_oids
++ssl_conf = ssl_module
++
++[ ssl_module ]
++
++system_default = crypto_policy
++
++[ crypto_policy ]
++.include /etc/crypto-policies/back-ends/opensslcnf.config
 +
 +[ engine_section ]
 +pkcs11 = pkcs11_section
