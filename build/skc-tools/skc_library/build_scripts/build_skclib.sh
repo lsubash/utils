@@ -1,7 +1,7 @@
 #!/bin/bash
 SKCLIB_DIR=$PWD/skc_library
 SKCLIB_BIN_DIR=$SKCLIB_DIR/bin
-SKCLIB_VERSION=3.6
+SKCLIB_VERSION=4.0
 
 build_skc_library()
 {
