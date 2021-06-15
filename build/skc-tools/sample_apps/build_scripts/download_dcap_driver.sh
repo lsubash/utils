@@ -1,7 +1,7 @@
 #!/bin/bash
 SAMPLEAPPS_DIR=$PWD/sample_apps
 SAMPLEAPPS_BIN_DIR=$SAMPLEAPPS_DIR/bin
-SGX_VERSION=2.13
+SGX_VERSION=2.13.3
 
 # Check OS and VERSION
 OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
