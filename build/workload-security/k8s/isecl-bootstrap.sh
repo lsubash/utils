@@ -184,7 +184,7 @@ get_bearer_token() {
   chmod +x $aas_scripts_dir/populate-users
   $aas_scripts_dir/populate-users --answerfile $aas_scripts_dir/populate-users.env >$aas_scripts_dir/populate-users.log
 
-  BEARER_TOKEN=$(grep "Token for User: superAdmin" $aas_scripts_dir/populate-users.log -A 2 | grep BEARER_TOKEN | cut -d '=' -f2)
+  BEARER_TOKEN=$(grep "Token for User: $INSTALL_ADMIN_USERNAME" $aas_scripts_dir/populate-users.log -A 2 | grep BEARER_TOKEN | cut -d '=' -f2)
   echo "Install token: $BEARER_TOKEN"
 
   if [ ! -z "$NATS_SERVERS" ]; then

@@ -175,8 +175,8 @@ get_bearer_token() {
   # TODO: need to check if this can be fetched from builds instead of bundling the script here
   chmod +x $aas_scripts_dir/populate-users
   $aas_scripts_dir/populate-users --answerfile $aas_scripts_dir/populate-users.env >$aas_scripts_dir/populate-users.log
-
-  BEARER_TOKEN=$(grep -m 1 "BEARER_TOKEN" $aas_scripts_dir/populate-users.log | cut -d '=' -f2)
+ 
+  BEARER_TOKEN=$(grep "Token for User: $INSTALL_ADMIN_USERNAME" $aas_scripts_dir/populate-users.log -A 2 | grep BEARER_TOKEN | cut -d '=' -f2)
   echo "Install token: $BEARER_TOKEN"
 }
 
