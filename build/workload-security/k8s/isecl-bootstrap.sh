@@ -553,7 +553,7 @@ deploy_nats() {
   aas_pod=$($KUBECTL get pod -n isecl -l app=aas -o jsonpath="{.items[0].metadata.name}")
   credentials=$($KUBECTL exec -n isecl --stdin $aas_pod -- authservice setup create-credentials --force)
   nats_operator=$(echo "$credentials" | grep operator: | awk '{print $2}')
-  resolver_preload=$(echo "$credentials" | grep "Account ISecL-account" -A 1)
+  resolver_preload=$(echo "$credentials" | grep "Account $NATS_ACCOUNT_NAME" -A 1)
   resolver_jwt=$(echo "$resolver_preload" | cut -d$'\n' -f2)
 
   sed -i "s#operator:.*#operator: $nats_operator#g" configMap.yml
