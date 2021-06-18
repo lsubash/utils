@@ -107,6 +107,11 @@ deploy_authservice() {
   sed -i "s/AAS_DB_PORT:.*/AAS_DB_PORT: \"$AAS_DB_PORT\"/g" configMap.yml
   sed -i "s/AAS_DB_SSLMODE:.*/AAS_DB_SSLMODE: $AAS_DB_SSLMODE/g" configMap.yml
   sed -i "s#AAS_DB_SSLCERT:.*#AAS_DB_SSLCERT: $AAS_DB_SSLCERT#g" configMap.yml
+  nats_account_name_exists=$(grep "NATS_ACCOUNT_NAME" configMap.yml)
+  if [ ! -z "${NATS_ACCOUNT_NAME}" ] && [ -z "$nats_account_name_exists" ]; then
+    echo "  NATS_ACCOUNT_NAME: $NATS_ACCOUNT_NAME" >>configMap.yml
+    echo "hi"
+  fi
   sed -i "s/AAS_DB_USERNAME=.*/AAS_DB_USERNAME=$AAS_DB_USERNAME/g" secrets.txt
   sed -i "s/AAS_DB_PASSWORD=.*/AAS_DB_PASSWORD=$AAS_DB_PASSWORD/g" secrets.txt
   sed -i "s/AAS_ADMIN_USERNAME=.*/AAS_ADMIN_USERNAME=$AAS_ADMIN_USERNAME/g" secrets.txt
