@@ -13,6 +13,7 @@ DEFAULT_CMS_PORT=8445
 DEFAULT_AAS_PORT=8444
 DEFAULT_HVS_PORT=8443
 DEFAULT_TA_PORT=1443
+DEFAULT_TA_MODE=http
 
 PRIVACY_CA_CERT_PATH="${PRIVACY_CA_CERT_PATH:-$DEFAULT_PRIVACY_CA_CERT_PATH}"
 PRIVACY_CA_KEY_PATH="${PRIVACY_CA_KEY_PATH:-$DEFAULT_PRIVACY_CA_KEY_PATH}"
@@ -35,7 +36,7 @@ function GetValue()
 
 
 if [ -f ~/go-ta-sim.env ]; then
-  echo "Loading environment variables from  $(cd ~ && pwd)/go-ta-sim.env" 
+  echo "Loading environment variables from  $(cd ~ && pwd)/go-ta-sim.env"
   . ~/go-ta-sim.env
   env_file_exports=$(cat ~/go-ta-sim.env | grep -E '^[A-ZX0-9_]+\s*=' | cut -d = -f 1)
 fi
@@ -81,9 +82,19 @@ if [ -z "$HVS_IP" ]; then
   HVS_IP=$AAS_IP
 fi
 
+[ -z "$AAS_IP" ] && read -p "Enter the AAS ip (ex: 10.1.2.3):" AAS_IP
+[ -z "$NATS_SERVERS" ] && read -p "Enter TA mode (ex: outbound or http) (Leave empty to use http):" NATS_SERVERS
+[ -z "$TA_HOST_ID" ] && read -p "Enter TA host ID):" TA_HOST_ID
+
+echo -e "NatsServers : "$NATS_SERVERS >> configuration/config.yml
+echo -e "TaHostID : "$TA_HOST_ID >> configuration/config.yml
 sed -i "s/^\(HvsApiUrl\s*:\s*\).*\$/\1https:\/\/$HVS_IP:$HVS_PORT\/hvs\/v2\//" configuration/config.yml
 sed -i "s/^\(AasApiUrl\s*:\s*\).*\$/\1https:\/\/$AAS_IP:$AAS_PORT\/aas\/v1\//" configuration/config.yml
 sed -i "s/^\(CmsApiUrl\s*:\s*\).*\$/\1https:\/\/$CMS_IP:$CMS_PORT\/cms\/v1\//" configuration/config.yml
+
+sed -i "s/^\(NatsServers\s*:\s*\).*\$/\1$NATS_SERVERS\/" configuration/config.yml
+sed -i "s/^\(TaHostID\s*:\s*\).*\$/\1$TA_HOST_ID\/" configuration/config.yml
+
 
 [ -z "$AAS_USERNAME" ] && read -p "Enter the AAS Admin username (Also, has access to all TA and VS APIs):" AAS_USERNAME
 sed -i "s/^\(ApiUserName\s*:\s*\).*\$/\1$AAS_USERNAME/" configuration/config.yml
@@ -133,19 +144,29 @@ openssl req -out $CSR_FILE -newkey rsa:3072 -nodes -keyout configuration/key.pem
 echo "Requesting token from CMS...."
 curl --noproxy "*" -k -X POST https://$CMS_IP:$CMS_PORT/cms/v1/certificates?certType=TLS -H 'Accept: application/x-pem-file' -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/x-pem-file' --data-binary "@$CSR_FILE" > configuration/cert.pem
 
-if [ -n "$TA_IP" ]; then
-  echo "Downloading data from Trust Agent..."
-  rm -rf ./repository/host_info.json
-  rm -rf ./repository/quote.xml
+rm -rf ./repository/host_info.json
+rm -rf ./repository/quote.xml
 
-  curl --noproxy "*" -H "Authorization: Bearer $TOKEN" -H "Accept:application/json" $TA_URL/v2/host -k > ./repository/host_info.json
-  FILE_SIZE=`wc -c < ./repository/host_info.json`
-  if [ -z "$FILE_SIZE" ] || [[ $FILE_SIZE == 0 ]]; then
-    echo "Error : Installation incomplete - unable to download content from Trust Agent at $TA_IP:$TA_PORT"
-    exit 1
+if [ -n "$NATS_SERVERS" ]; then
+  echo "Requesting Nats credentials for TA simulator as publisher from AAS...."
+  curl --noproxy "*" -X POST -H "Authorization: Bearer $TOKEN" -H "Accept:application/xml" -H "Content-Type:application/json" https://$AAS_IP:$AAS_PORT/aas/v1/credentials -k -d '{"type" : "TA","parameters" : {"host-id" : ""}}' > ./repository/ta-sim.creds
+  echo "Requesting Nats credentials to download data from TA..."
+  curl --noproxy "*" -X POST -H "Authorization: Bearer $TOKEN" -H "Accept:application/xml" -H "Content-Type:application/json" https://$AAS_IP:$AAS_PORT/aas/v1/credentials -k -d '{"type" : "HVS","parameters" : {"host-id" : ""}}' > ./repository/ta-sub.creds
+
+  echo "Downloading data from Trust Agent in outbound mode..."
+  ./ta-sim get-host-data-from-nats
+else
+  if [ -n "$TA_IP" ]; then
+    echo "Downloading data from Trust Agent in http mode..."
+    curl --noproxy "*" -H "Authorization: Bearer $TOKEN" -H "Accept:application/json" $TA_URL/v2/host -k > ./repository/host_info.json
+    FILE_SIZE=`wc -c < ./repository/host_info.json`
+    if [ -z "$FILE_SIZE" ] || [[ $FILE_SIZE == 0 ]]; then
+      echo "Error : Installation incomplete - unable to download content from Trust Agent at $TA_IP:$TA_PORT"
+      exit 1
+    fi
+
+    curl --noproxy "*" -X POST -H "Authorization: Bearer $TOKEN" -H "Accept:application/xml" -H "Content-Type:application/json" $TA_URL/v2/tpm/quote -k -d '{"nonce":"+c4ZEmco4aj1G5dTXQvjIMGFd44=","pcrs":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],"pcrbanks":["SHA1", "SHA256", "SHA384"]}' > ./repository/quote.xml
   fi
-
-  curl --noproxy "*" -X POST -H "Authorization: Bearer $TOKEN" -H "Accept:application/xml" -H "Content-Type:application/json" $TA_URL/v2/tpm/quote -k -d '{"nonce":"+c4ZEmco4aj1G5dTXQvjIMGFd44=","pcrs":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],"pcrbanks":["SHA1", "SHA256"]}' > ./repository/quote.xml
 fi
 
 echo "Done"
