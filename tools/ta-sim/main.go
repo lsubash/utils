@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	client "github.com/intel-secl/intel-secl/v4/pkg/clients/ta"
 	"github.com/intel-secl/intel-secl/v4/pkg/lib/common/crypt"
 	tamodel "github.com/intel-secl/intel-secl/v4/pkg/model/ta"
 	"github.com/pkg/errors"
@@ -793,5 +794,45 @@ func main() {
 		fmt.Printf("\n\t %s create-binding-key-cert --pca-cert=<path_to_privacy_ca_cert> --pca-key=<path_to_privacy_ca_key>", os.Args[0])
 		fmt.Println("\n create-all-flavors and create-all-host require that start is called and process is running in background ")
 	}
+}
 
+func getHostData(ac *AppConfig) error {
+
+	// tls configuration with disabled server certificate chain verification
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: true,
+	}
+	// get TA client
+	taClient, err := client.NewNatsTAClient(ac.NatsServers, ac.TaHostId, tlsConfig, ac.natsTaSubCredentialsPath)
+	if err != nil {
+		return errors.Wrap(err, "Could not create Nats Trust Agent client")
+	}
+
+	hostInfo, err := taClient.GetHostInfo()
+	if err != nil {
+		return errors.Wrapf(err, "Error getting host-info from TA with HostId %s", ac.TaHostId)
+	}
+	taHostInfo, _ := json.Marshal(hostInfo)
+	err = ioutil.WriteFile(ac.hostInfoPath, taHostInfo, 0644)
+	if err != nil {
+		return errors.Wrapf(err, "Error writing host-info to file %s", ac.hostInfoPath)
+	}
+
+	nonce := "+c4ZEmco4aj1G5dTXQvjIMGFd44="
+	pcrList := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}
+	pcrbanks := []string{"SHA1", "SHA256", "SHA384"}
+
+	quote, err := taClient.GetTPMQuote(nonce, pcrList, pcrbanks)
+	if err != nil {
+		return errors.Wrapf(err, "Error getting host-info from TA with HostId %s", ac.TaHostId)
+	}
+	tpmQuote, err := xml.Marshal(quote)
+	if err != nil {
+		return errors.Wrap(err, "Error marshalling tpm-quote")
+	}
+	err = ioutil.WriteFile(ac.tpmQuotePath, tpmQuote, 0644)
+	if err != nil {
+		return errors.Wrapf(err, "Error writing tpm-quote to file %s", ac.tpmQuotePath)
+	}
+	return nil
 }
