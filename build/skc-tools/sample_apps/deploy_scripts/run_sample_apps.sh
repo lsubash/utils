@@ -52,13 +52,7 @@ echo "$(sgx_sign dump -enclave enclave.signed.so -dumpfile info.txt)"
 echo "$HOME_DIR"
 
 # Get the required enclave measurement values
-SORT_OPTS="-u -r"
-
-if [ $OS == "ubuntu" ]; then
-        SORT_OPTS="-u"
-fi
-
-MR_ENCLAVE=$(cat $HOME_DIR/info.txt | grep -A2 "metadata->enclave_css.body.enclave_hash.m:" | tr -d '\ \:\-\>\_\.'|sort $SORT_OPTS |tr -d '\n'|sed "s/metadataenclavecssbodyenclavehashm//g" | sed "s/0x//g")
+MR_ENCLAVE=$(cat -n $HOME_DIR/info.txt | grep -A2 "metadata->enclave_css.body.enclave_hash.m:" | tr -d '\ \:\-\>\_\.' | sort -uk2 | sort -n | cut -f2- | tr -d '\n'| sed "s/metadataenclavecssbodyenclavehashm//g" | sed "s/0x//g")
 MR_SIGNER=$(cat $HOME_DIR/info.txt | grep -A3 "mrsigner->value" | tr -d '\n\ \:\-\>' | sed "s/mrsignervalue//g" | sed "s/0x//g")
 
 # Update the contents of sgx-quote-policy.txt file
