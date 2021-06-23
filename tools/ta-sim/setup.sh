@@ -13,7 +13,7 @@ DEFAULT_CMS_PORT=8445
 DEFAULT_AAS_PORT=8444
 DEFAULT_HVS_PORT=8443
 DEFAULT_TA_PORT=1443
-DEFAULT_TA_MODE=http
+DEFAULT_TA_SERVICE_MODE=http
 
 PRIVACY_CA_CERT_PATH="${PRIVACY_CA_CERT_PATH:-$DEFAULT_PRIVACY_CA_CERT_PATH}"
 PRIVACY_CA_KEY_PATH="${PRIVACY_CA_KEY_PATH:-$DEFAULT_PRIVACY_CA_KEY_PATH}"
@@ -23,6 +23,7 @@ CMS_PORT="${CMS_PORT:-$DEFAULT_CMS_PORT}"
 AAS_PORT="${AAS_PORT:-$DEFAULT_AAS_PORT}"
 HVS_PORT="${HVS_PORT:-$DEFAULT_HVS_PORT}"
 TA_PORT="${TA_PORT:-$DEFAULT_TA_PORT}"
+TA_SERVICE_MODE="${TA_SERVICE_MODE:-DEFAULT_TA_SERVICE_MODE}"
 
 function GetValue()
 {
@@ -55,7 +56,7 @@ if [ -z "$AIK_CERT_PATH" ] || [ -z  "$AIK_KEY_PATH" ]; then
     echo "keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment" >> v3.ext
     openssl x509 -req -days 365 -extfile ./configuration/v3.ext -in ./configuration/aik_req.csr -CA "$PRIVACY_CA_CERT_PATH" -CAkey "$PRIVACY_CA_KEY_PATH" -CAcreateserial -out ./configuration/aik.cert.pem
     if [ $? -ne 0 ]; then
-      echo "Error - could not create create AIK certificate... Simulator will not work without it"
+      echo "ERROR - could not create create AIK certificate... Simulator will not work without it"
       echo "configuration/aik.req.csr can be used to create AIK certificate with Privacy CA. set AIK_CERT_PATH and AIK_KEY_PATH before running installation"
       exit 1
     fi
@@ -82,19 +83,16 @@ if [ -z "$HVS_IP" ]; then
   HVS_IP=$AAS_IP
 fi
 
-[ -z "$AAS_IP" ] && read -p "Enter the AAS ip (ex: 10.1.2.3):" AAS_IP
-[ -z "$NATS_SERVERS" ] && read -p "Enter TA mode (ex: outbound or http) (Leave empty to use http):" NATS_SERVERS
-[ -z "$TA_HOST_ID" ] && read -p "Enter TA host ID):" TA_HOST_ID
+if [ "$TA_SERVICE_MODE" == "outbound" ]; then
+  [ -z "$NATS_SERVERS" ] && read -p "Enter NATS server IP (ex: 10.1.2.3:4222) :" NATS_SERVERS
+  [ -z "$TA_HOST_ID" ] && read -p "Enter TA host ID):" TA_HOST_ID
+  echo -e "NatsServers : "$NATS_SERVERS >> configuration/config.yml
+  echo -e "TaHostID : "$TA_HOST_ID >> configuration/config.yml
+fi
 
-echo -e "NatsServers : "$NATS_SERVERS >> configuration/config.yml
-echo -e "TaHostID : "$TA_HOST_ID >> configuration/config.yml
 sed -i "s/^\(HvsApiUrl\s*:\s*\).*\$/\1https:\/\/$HVS_IP:$HVS_PORT\/hvs\/v2\//" configuration/config.yml
 sed -i "s/^\(AasApiUrl\s*:\s*\).*\$/\1https:\/\/$AAS_IP:$AAS_PORT\/aas\/v1\//" configuration/config.yml
 sed -i "s/^\(CmsApiUrl\s*:\s*\).*\$/\1https:\/\/$CMS_IP:$CMS_PORT\/cms\/v1\//" configuration/config.yml
-
-sed -i "s/^\(NatsServers\s*:\s*\).*\$/\1$NATS_SERVERS\/" configuration/config.yml
-sed -i "s/^\(TaHostID\s*:\s*\).*\$/\1$TA_HOST_ID\/" configuration/config.yml
-
 
 [ -z "$AAS_USERNAME" ] && read -p "Enter the AAS Admin username (Also, has access to all TA and VS APIs):" AAS_USERNAME
 sed -i "s/^\(ApiUserName\s*:\s*\).*\$/\1$AAS_USERNAME/" configuration/config.yml
@@ -108,7 +106,7 @@ TOKEN=`curl --noproxy "*" -k -X POST https://$AAS_IP:$AAS_PORT/aas/v1/token -d '
 RESPONSE=`curl --noproxy "*" -k https://$AAS_IP:$AAS_PORT/aas/v1/users?name=$AAS_USERNAME -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json'`
 USER_ID=$(GetValue user_id $RESPONSE)
 if [ -z "$USER_ID" ]; then
-  echo "Error - cannot get user id"
+  echo "ERROR - cannot get user id"
   exit 1
 fi
 echo userid:$USER_ID
@@ -124,7 +122,7 @@ if [ -z $ROLE_ID ]; then
 	ROLE_ID=$(GetValue role_id $RESPONSE)
 fi
 if [ -z "$ROLE_ID" ]; then
-  echo "Error - cannot get role id"
+  echo "ERROR - cannot get role id"
   exit 1
 fi
 
@@ -147,26 +145,24 @@ curl --noproxy "*" -k -X POST https://$CMS_IP:$CMS_PORT/cms/v1/certificates?cert
 rm -rf ./repository/host_info.json
 rm -rf ./repository/quote.xml
 
-if [ -n "$NATS_SERVERS" ]; then
+if [ "$TA_SERVICE_MODE" == "outbound" ] && [ -n "$NATS_SERVERS" ] && [ -n "$TA_HOST_ID" ]; then
   echo "Requesting Nats credentials for TA simulator as publisher from AAS...."
   curl --noproxy "*" -X POST -H "Authorization: Bearer $TOKEN" -H "Accept:application/xml" -H "Content-Type:application/json" https://$AAS_IP:$AAS_PORT/aas/v1/credentials -k -d '{"type" : "TA","parameters" : {"host-id" : ""}}' > ./repository/ta-sim.creds
   echo "Requesting Nats credentials to download data from TA..."
   curl --noproxy "*" -X POST -H "Authorization: Bearer $TOKEN" -H "Accept:application/xml" -H "Content-Type:application/json" https://$AAS_IP:$AAS_PORT/aas/v1/credentials -k -d '{"type" : "HVS","parameters" : {"host-id" : ""}}' > ./repository/ta-sub.creds
-
   echo "Downloading data from Trust Agent in outbound mode..."
   ./ta-sim get-host-data-from-nats
-else
-  if [ -n "$TA_IP" ]; then
+elif [ -n "$TA_IP" ]; then
     echo "Downloading data from Trust Agent in http mode..."
     curl --noproxy "*" -H "Authorization: Bearer $TOKEN" -H "Accept:application/json" $TA_URL/v2/host -k > ./repository/host_info.json
     FILE_SIZE=`wc -c < ./repository/host_info.json`
     if [ -z "$FILE_SIZE" ] || [[ $FILE_SIZE == 0 ]]; then
-      echo "Error : Installation incomplete - unable to download content from Trust Agent at $TA_IP:$TA_PORT"
+      echo "ERROR : Installation incomplete - unable to download content from Trust Agent at $TA_IP:$TA_PORT"
       exit 1
     fi
-
     curl --noproxy "*" -X POST -H "Authorization: Bearer $TOKEN" -H "Accept:application/xml" -H "Content-Type:application/json" $TA_URL/v2/tpm/quote -k -d '{"nonce":"+c4ZEmco4aj1G5dTXQvjIMGFd44=","pcrs":[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23],"pcrbanks":["SHA1", "SHA256", "SHA384"]}' > ./repository/quote.xml
-  fi
+else
+  echo "ERROR: TA IP address or NATS_SERVER information with TA host ID must be given to download data from a trustagent"
 fi
 
 echo "Done"
@@ -180,11 +176,10 @@ if [ -z "$BINDING_KEY_CERT_PATH" ]; then
   $TA_SIMULATOR_HOME/ta-sim create-binding-key-cert --pca-cert=$PRIVACY_CA_CERT_PATH --pca-key=$PRIVACY_CA_KEY_PATH
   if [ $? -ne 0 ]; then
     cat "Binding key certificate does not exist" > $TA_SIMULATOR_HOME/configuration/bk.cert
-    echo "Error: failed to create binding key certificate. TA simulator will still function - but APIs such as WLS get flavor-key will not work"
+    echo "ERROR: failed to create binding key certificate. TA simulator will still function - but APIs such as WLS get flavor-key will not work"
     echo "The ta-sim binary can be used to generate the binding key certificate as follows"
     echo "\t ./ta-sim create-binding-key-cert --pca-cert=/root/privacy-ca-cert.pem --pca-key=/root/privacy-ca.key"
   fi
 else
   cp $BINDING_KEY_CERT_PATH $TA_SIMULATOR_HOME/configuration/bk.cert
 fi
-
