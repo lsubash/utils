@@ -82,7 +82,7 @@ cp -pf ./server.conf $PYKMIP_PATH
 
 # Run certificate script to generate certificates
 cd $PYKMIP_PATH
-python3 create_certificates.py
+python3 create_certificates.py $KBS_KMIP_IP
 if [ $? -ne 0 ]; then
   echo "${red} Create Certificates failed"
   exit 1

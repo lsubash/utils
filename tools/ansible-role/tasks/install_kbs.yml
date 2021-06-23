@@ -1,4 +1,9 @@
 ---
+- name: ISECL - KEY BROKER SERVICE | Set KBS_KMIP_IP variable
+  shell: "echo $KBS_KMIP_IP"
+  environment:
+    KBS_KMIP_IP: "{{ kbs }}"
+
 - name: ISECL - KEY BROKER SERVICE | Install PyKMIP Server
   include: setup-kmip.yml
 
