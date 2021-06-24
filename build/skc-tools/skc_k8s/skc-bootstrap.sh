@@ -567,7 +567,7 @@ deploy_kbs() {
   echo "|            DEPLOY:KBS                            |"
   echo "----------------------------------------------------"
 
-  required_variables="KBS_SERVICE_USERNAME,KBS_SERVICE_PASSWORD,SQVS_URL,ENDPOINT_URL,SKC_CHALLENGE_TYPE,SESSION_EXPIRY_TIME,KMIP_SERVER_IP,KMIP_SERVER_PORT,KMIP_CLIENT_CERT_NAME,KMIP_CLIENT_KEY_NAME,KMIP_ROOT_CERT_NAME"
+  required_variables="KBS_SERVICE_USERNAME,KBS_SERVICE_PASSWORD,SQVS_URL,ENDPOINT_URL,SKC_CHALLENGE_TYPE,SESSION_EXPIRY_TIME,KMIP_SERVER_IP,KMIP_SERVER_PORT,KMIP_CLIENT_CERT_NAME,KMIP_CLIENT_KEY_NAME,KMIP_ROOT_CERT_NAME,KMIP_HOSTNAME"
   check_mandatory_variables $KBS $required_variables
 
   get_bearer_token
@@ -586,6 +586,7 @@ deploy_kbs() {
   sed -i "s/SESSION_EXPIRY_TIME:.*/SESSION_EXPIRY_TIME: \"$SESSION_EXPIRY_TIME\"/g" configMap.yml
 
   # Create kubernetes secrets kmip-certs for kbs kmip certificates.
+  sed -i "s/KMIP_HOSTNAME:.*/KMIP_HOSTNAME: \"$KMIP_HOSTNAME\"/g" configMap.yml
   sed -i "s/KMIP_SERVER_PORT:.*/KMIP_SERVER_PORT: \"$KMIP_SERVER_PORT\"/g" configMap.yml
   sed -i "s/KMIP_SERVER_IP:.*/KMIP_SERVER_IP: $KMIP_SERVER_IP/g" configMap.yml
   KMIP_CLIENT_CERT_PATH=/etc/kmip/$KMIP_CLIENT_CERT_NAME
