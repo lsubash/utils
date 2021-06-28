@@ -24,7 +24,6 @@ k8s-aio: k8s_common k8s_ta
 	cp -r utils/build/workload-security/k8s/hvs k8s/manifests/
 
 k8s_ta: tagent_k8s
-	mkdir -p k8s/platform-dependencies
 	cp trust-agent/out/*.tar k8s/container-images/
 	cp -r utils/build/workload-security/k8s/ta k8s/manifests/ta
 
