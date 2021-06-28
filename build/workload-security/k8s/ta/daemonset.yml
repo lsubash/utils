@@ -44,8 +44,6 @@ spec:
               mountPath: /var/log/trustagent/
             - name: ta-config-volume
               mountPath: /opt/trustagent/configuration
-            - name: ta-bin-volume
-              mountPath: /opt/trustagent/bin
             - mountPath: /dev/tpmrm0
               name: tpmrm
             - mountPath: /etc/hostname
@@ -76,10 +74,6 @@ spec:
         - name: ta-config-volume
           hostPath:
             path: /opt/trustagent/configuration
-            type: DirectoryOrCreate
-        - name: ta-bin-volume
-          hostPath:
-            path: /opt/trustagent/bin
             type: DirectoryOrCreate
         - name: tpmrm
           hostPath:
