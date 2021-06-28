@@ -5,18 +5,18 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: wla-backup
+  name: wla-upgrade
   namespace: isecl
   labels:
-    run-once-daemonset: wla-backup
+    run-once-daemonset: wla-upgrade
 spec:
   selector:
     matchLabels:
-      run-once-daemonset: wla-backup
+      run-once-daemonset: wla-upgrade
   template:
     metadata:
       labels:
-        run-once-daemonset: wla-backup
+        run-once-daemonset: wla-upgrade
     spec:
       affinity:
         nodeAffinity:
@@ -28,7 +28,7 @@ spec:
                     values:
                       - "TXT-ENABLED"
                       - "SUEFI-ENABLED"
-      containers:
+      initContainers:
         - image: busybox:1.32
           imagePullPolicy: Always
           name: wla-backup
@@ -41,12 +41,39 @@ spec:
               mountPath: /etc/workload-agent
             - name: wla-backup-volume
               mountPath: /tmp/wlagent_backup
+      containers:
+        - name: wla-upgrade
+          image: <image-name>:<tag>
+          imagePullPolicy: Always
+          command: ["/container_upgrade.sh"]
+          securityContext:
+            privileged: true
+          env:
+            - name: CONFIG_DIR
+              value: "/etc/workload-agent"
+            - name: COMPONENT_VERSION
+              value: <component-exising-installed-version>
+          volumeMounts:
+            - name: wla-logs-volume
+              mountPath: /var/log/workload-agent/
+            - name: wla-config-volume
+              mountPath: /etc/workload-agent
+            - name: tpmrm
+              mountPath: /dev/tpmrm0
+            - name: wla-credentials
+              mountPath: /etc/secret-volume/
       volumes:
         - name: wla-config-volume
           hostPath:
-            path: /etc/workload-agen
+            path: /etc/workload-agent
             type: Directory
         - name: wla-backup-volume
           hostPath:
             path: /tmp/wlagent_backup
             type: DirectoryOrCreate
+        - name: tpmrm
+            hostPath:
+              path: /dev/tpmrm0
+        - name: wla-credentials
+          secret:
+            secretName: wla-secret

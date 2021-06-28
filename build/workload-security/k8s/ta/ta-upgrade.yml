@@ -45,6 +45,7 @@ spec:
         - name: ta-upgrade
           image: <image-name>:<tag>
           imagePullPolicy: Always
+          command: ["/container_upgrade.sh"]
           securityContext:
             privileged: true
           env:
