@@ -28,7 +28,7 @@ spec:
                     values:
                       - "TXT-ENABLED"
                       - "SUEFI-ENABLED"
-      containers:
+      initContainers:
         - image: busybox:1.32
           imagePullPolicy: Always
           name: restore
@@ -41,6 +41,9 @@ spec:
               mountPath: /etc/workload-agent
             - name: wla-backup-volume
               mountPath: /tmp/wlagent_backup
+      containers:
+        - name: pause
+          image: gcr.io/google_containers/pause
       volumes:
         - name: wla-config-volume
           hostPath:

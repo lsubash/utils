@@ -41,7 +41,6 @@ spec:
               mountPath: /etc/workload-agent
             - name: wla-backup-volume
               mountPath: /tmp/wlagent_backup
-      containers:
         - name: wla-upgrade
           image: <image-name>:<tag>
           imagePullPolicy: Always
@@ -62,6 +61,9 @@ spec:
               mountPath: /dev/tpmrm0
             - name: wla-credentials
               mountPath: /etc/secret-volume/
+      containers:
+        - name: pause
+          image: gcr.io/google_containers/pause
       volumes:
         - name: wla-config-volume
           hostPath:

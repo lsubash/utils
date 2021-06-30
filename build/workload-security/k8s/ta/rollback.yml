@@ -28,7 +28,7 @@ spec:
                     values:
                       - "TXT-ENABLED"
                       - "SUEFI-ENABLED"
-      containers:
+      initContainers:
         - image: busybox:1.32
           imagePullPolicy: Always
           name: restore
@@ -41,6 +41,9 @@ spec:
               mountPath: /opt/trustagent
             - name: ta-backup-volume
               mountPath: /tmp/trustagent_backup
+      containers:
+        - name: pause
+          image: gcr.io/google_containers/pause
       volumes:
         - name: ta-volume
           hostPath:
