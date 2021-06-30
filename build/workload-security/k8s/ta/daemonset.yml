@@ -61,6 +61,9 @@ spec:
             - mountPath: /sys/firmware/acpi/tables/TPM2
               name: ta-acpi-path
               readOnly: true
+            - name: uefi
+              mountPath: /sys/firmware/dmi/tables/DMI
+              readOnly: true
             - name: wla-config-volume
               mountPath: /etc/workload-agent/
             - mountPath: /etc/secret-volume/
@@ -96,6 +99,9 @@ spec:
         - name: ta-acpi-path
           hostPath:
             path: /sys/firmware/acpi/tables/TPM2
+        - name: uefi
+          hostPath:
+            path: /sys/firmware/dmi/tables/DMI
         - name: wla-config-volume
           hostPath:
             path: /etc/workload-agent

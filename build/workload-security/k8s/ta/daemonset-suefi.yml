@@ -44,20 +44,31 @@ spec:
               mountPath: /var/log/trustagent/
             - name: ta-config-volume
               mountPath: /opt/trustagent/configuration
-            - name: ta-bin-volume
-              mountPath: /opt/trustagent/bin
             - mountPath: /dev/tpmrm0
               name: tpmrm
-            - mountPath: /sys/firmware/efi
-              name: efi
             - mountPath: /etc/hostname
               name: ta-hostname-path
               readOnly: true
             - mountPath: /etc/hosts
               name: ta-hosts-path
               readOnly: true
+            - mountPath: /etc/os-release
+              name: ta-host-os-path
+              readOnly: true
+            - mountPath: /dev/mem
+              name: ta-mem-path
+              readOnly: true
+            - mountPath: /sys/firmware/acpi/tables/TPM2
+              name: ta-acpi-path
+              readOnly: true
+            - mountPath: /sys/firmware/efi
+              name: efi
+              readOnly: true
             - name: wla-config-volume
               mountPath: /etc/workload-agent/
+            - name: uefi
+              mountPath: /sys/firmware/dmi/tables/DMI
+              readOnly: true
             - mountPath: /etc/secret-volume/
               name: ta-credentials
               readOnly: true
@@ -70,16 +81,15 @@ spec:
           hostPath:
             path: /opt/trustagent/configuration
             type: DirectoryOrCreate
-        - name: ta-bin-volume
-          hostPath:
-            path: /opt/trustagent/bin
-            type: DirectoryOrCreate
         - name: tpmrm
           hostPath:
             path: /dev/tpmrm0
         - name: efi
           hostPath:
             path: /sys/firmware/efi
+        - name: uefi
+          hostPath:
+            path: /sys/firmware/dmi/tables/DMI
         - name: ta-hostname-path
           hostPath:
             path: /etc/hostname
@@ -88,10 +98,20 @@ spec:
           hostPath:
             path: /etc/hosts
             type: File
+        - name: ta-host-os-path
+          hostPath:
+            path: /etc/os-release
+            type: File
+        - name: ta-mem-path
+          hostPath:
+            path: /dev/mem
+        - name: ta-acpi-path
+          hostPath:
+            path: /sys/firmware/acpi/tables/TPM2
         - name: wla-config-volume
           hostPath:
             path: /etc/workload-agent
             type: DirectoryOrCreate
         - name: ta-credentials
           secret:
-              secretName: ta-secret
+            secretName: ta-secret
