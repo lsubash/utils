@@ -222,7 +222,7 @@
 								{
 									"key": "latestPerHost",
 									"value": "true",
-									"description": "Returns only the latest report for each host. If latestPerHost is specified in conjuction with a date filter, it will return the latest report for within the specified date range per host."
+									"description": "Returns only the latest report for each host. If latestPerHost is specified in conjunction with a date filter, it will return the latest report for within the specified date range per host."
 								},
 								{
 									"key": "limit",
@@ -314,7 +314,7 @@
 										{
 											"key": "latestPerHost",
 											"value": "true",
-											"description": "Returns only the latest report for each host. If latestPerHost is specified in conjuction with a date filter, it will return the latest report for within the specified date range per host."
+											"description": "Returns only the latest report for each host. If latestPerHost is specified in conjunction with a date filter, it will return the latest report for within the specified date range per host."
 										},
 										{
 											"key": "limit",
@@ -875,7 +875,7 @@
 					]
 				}
 			],
-			"description": "After rebooting each server after deploying the SOFTWARE Flavor manifest, a new Attestation Report must be generated to reflect the new Flavor. \nInstead of only retrieve existing automatically-generated Reports, you will create a new Report for each host. \nRepeat this step for each registered host. \n\nNote that each new Report will now contain an additional SOFTWARE Flavor, in addition to the default Trust Agent SOFTWAR Flavor. Because the default Flavor Match Policy for SOFTWARE Flavors is `all_of`, both of the SOFTWARE Flavors must match the host attestation for the host to be Trusted. ",
+			"description": "After rebooting each server after deploying the SOFTWARE Flavor manifest, a new Attestation Report must be generated to reflect the new Flavor. \nInstead of only retrieve existing automatically-generated Reports, you will create a new Report for each host. \nRepeat this step for each registered host. \n\nNote that each new Report will now contain an additional SOFTWARE Flavor, in addition to the default Trust Agent SOFTWARE Flavor. Because the default Flavor Match Policy for SOFTWARE Flavors is `all_of`, both of the SOFTWARE Flavors must match the host attestation for the host to be Trusted. ",
 			"event": [
 				{
 					"listen": "prerequest",

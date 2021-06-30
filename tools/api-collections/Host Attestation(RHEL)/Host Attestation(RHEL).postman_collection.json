@@ -906,7 +906,7 @@
 										{
 											"key": "latestPerHost",
 											"value": "true",
-											"description": "Returns only the latest report for each host. If latestPerHost is specified in conjuction with a date filter, it will return the latest report for within the specified date range per host."
+											"description": "Returns only the latest report for each host. If latestPerHost is specified in conjunction with a date filter, it will return the latest report for within the specified date range per host."
 										},
 										{
 											"key": "limit",
@@ -1392,7 +1392,7 @@
 								{
 									"key": "latestPerHost",
 									"value": "true",
-									"description": "Returns only the latest report for each host. If latestPerHost is specified in conjuction with a date filter, it will return the latest report for within the specified date range per host."
+									"description": "Returns only the latest report for each host. If latestPerHost is specified in conjunction with a date filter, it will return the latest report for within the specified date range per host."
 								},
 								{
 									"key": "limit",
@@ -1484,7 +1484,7 @@
 										{
 											"key": "latestPerHost",
 											"value": "true",
-											"description": "Returns only the latest report for each host. If latestPerHost is specified in conjuction with a date filter, it will return the latest report for within the specified date range per host."
+											"description": "Returns only the latest report for each host. If latestPerHost is specified in conjunction with a date filter, it will return the latest report for within the specified date range per host."
 										},
 										{
 											"key": "limit",
@@ -1594,7 +1594,7 @@
 										{
 											"key": "latestPerHost",
 											"value": "true",
-											"description": "Returns only the latest report for each host. If latestPerHost is specified in conjuction with a date filter, it will return the latest report for within the specified date range per host."
+											"description": "Returns only the latest report for each host. If latestPerHost is specified in conjunction with a date filter, it will return the latest report for within the specified date range per host."
 										},
 										{
 											"key": "limit",
@@ -1726,7 +1726,7 @@
 								{
 									"key": "latestPerHost",
 									"value": "true",
-									"description": "Returns only the latest report for each host. If latestPerHost is specified in conjuction with a date filter, it will return the latest report for within the specified date range per host."
+									"description": "Returns only the latest report for each host. If latestPerHost is specified in conjunction with a date filter, it will return the latest report for within the specified date range per host."
 								},
 								{
 									"key": "limit",
@@ -1818,7 +1818,7 @@
 										{
 											"key": "latestPerHost",
 											"value": "true",
-											"description": "Returns only the latest report for each host. If latestPerHost is specified in conjuction with a date filter, it will return the latest report for within the specified date range per host."
+											"description": "Returns only the latest report for each host. If latestPerHost is specified in conjunction with a date filter, it will return the latest report for within the specified date range per host."
 										},
 										{
 											"key": "limit",
@@ -1928,7 +1928,7 @@
 										{
 											"key": "latestPerHost",
 											"value": "true",
-											"description": "Returns only the latest report for each host. If latestPerHost is specified in conjuction with a date filter, it will return the latest report for within the specified date range per host."
+											"description": "Returns only the latest report for each host. If latestPerHost is specified in conjunction with a date filter, it will return the latest report for within the specified date range per host."
 										},
 										{
 											"key": "limit",
