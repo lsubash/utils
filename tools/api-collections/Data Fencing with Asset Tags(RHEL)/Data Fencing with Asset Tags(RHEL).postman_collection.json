@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "be606fd3-fb35-46b3-b10f-dd8736be4761",
+		"_postman_id": "82e5d4b7-18a5-4be2-9a93-212adc63a4fe",
 		"name": "Data Fencing with Asset Tags(RHEL)",
 		"description": "Data Fencing and Asset Tags builds on the Platform Integrity use case to allow physical\nTPMs to be written with Asset Tags containing any number of key/value pairs.\nThis use case is typically used to identify the geographic location of the\nphysical server, but can also be used to identify other attributes. For example,\nthe Asset Tags provided by the Data Fencing and Asset Tags use case could be used to\nidentify hosts that meet specific compliance requirements and can run\ncontrolled workloads.\n\n> **Note:** Ensure to follow the Hardware requirements and installation required from the [Product Guide](https://01.org/intel-secl/documentation/intel%C2%AE-secl-dc-product-guide)",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -15,7 +15,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "e90a139a-acd3-4001-a0d8-914e8b649006",
 								"exec": [
 									"pm.environment.set(\"bearerToken\", pm.response.text());"
 								],
@@ -41,10 +40,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\": \"{{globalAdminUser}}\",\n    \"password\": \"{{globalAdminPass}}\"\n}",
-							"options": {
-								"raw": {}
-							}
+							"raw": "{\n    \"username\": \"{{globalAdminUser}}\",\n    \"password\": \"{{globalAdminPass}}\"\n}"
 						},
 						"url": {
 							"raw": "https://{{aas}}:{{aasPort}}/aas/v1/token",
@@ -124,8 +120,7 @@
 					]
 				}
 			],
-			"description": "To make an API request to an Intel® SecL-DC service, an authentication\r\ntoken is now required. API requests must now include an Authorization\r\nheader with an appropriate token:\r\n\r\n```\r\nAuthorization: Bearer <token>\r\n```\r\n\r\nThe token is issued by the AAS and will expire after a set amount of time.\r\nThis token may be used with any Intel® SecL-DC service, and will carry the\r\nappropriate permissions for the role(s) assigned to the account the token was\r\ngenerated for.",
-			"protocolProfileBehavior": {}
+			"description": "To make an API request to an Intel® SecL-DC service, an authentication\r\ntoken is now required. API requests must now include an Authorization\r\nheader with an appropriate token:\r\n\r\n```\r\nAuthorization: Bearer <token>\r\n```\r\n\r\nThe token is issued by the AAS and will expire after a set amount of time.\r\nThis token may be used with any Intel® SecL-DC service, and will carry the\r\nappropriate permissions for the role(s) assigned to the account the token was\r\ngenerated for."
 		},
 		{
 			"name": "Verify that hosts are registered and Trusted",
@@ -136,7 +131,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "fe7cc206-2084-4c8f-9c3b-80e726ae541f",
 								"exec": [
 									"var report = pm.response.json();\r",
 									"pm.environment.set(\"hostHardwareUuid\",report.reports[0].host_info.hardware_uuid)\r",
@@ -148,7 +142,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "18ccfd7f-51b3-4d63-abee-eeb218ff2c44",
 								"exec": [
 									""
 								],
@@ -364,7 +357,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "6aa402fe-783c-4b19-8945-e913a313cb5e",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -374,15 +366,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "80b1535a-c92d-4c9d-96fb-adf508c92dff",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Create Asset Tag Certificates for each host",
@@ -393,7 +383,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "e453590a-8a4c-4d62-be69-4080b55f683a",
 								"exec": [
 									"var tagCertResponse = pm.response.json();\r",
 									"pm.environment.set(\"certificateId\",tagCertResponse.id)"
@@ -522,7 +511,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "d0e4df33-3ae2-4f2a-a2ec-19d1160a1997",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -532,15 +520,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "8118f016-307c-4f81-a660-022aa985686d",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Deploy Asset Tags",
@@ -668,7 +654,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "d83398ef-38fb-4b5c-8c1d-c4d4d90a5435",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -678,15 +663,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "8b99b7f0-ac9f-4de9-bccb-c78b3df24734",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Create new Attestation Reports for each host",
@@ -902,9 +885,7 @@
 					]
 				}
 			],
-			"description": "Deploying the Asset Tags does not actually create a new Attestation Report, so\r\nyou will need to create a new Report for each tagged host.\r\nInstead of only retrieve existing automatically-generated Reports, you will\r\ncreate a new Report for each host.\r\n\r\nRepeat this step for each registered host.\r\nNote that each new Report will now contain an additional Flavor section for the\r\nAsset Tag; this will show whether the Tag is Trusted (meaning the most recent\r\ncurrently valid Asset Tag certificate for that host is actually reflected in the host\r\nTPM), and will expose all of the key/value pairs used in the Asset Tag\r\nCertificate that was deployed.",
-			"protocolProfileBehavior": {}
+			"description": "Deploying the Asset Tags does not actually create a new Attestation Report, so\r\nyou will need to create a new Report for each tagged host.\r\nInstead of only retrieve existing automatically-generated Reports, you will\r\ncreate a new Report for each host.\r\n\r\nRepeat this step for each registered host.\r\nNote that each new Report will now contain an additional Flavor section for the\r\nAsset Tag; this will show whether the Tag is Trusted (meaning the most recent\r\ncurrently valid Asset Tag certificate for that host is actually reflected in the host\r\nTPM), and will expose all of the key/value pairs used in the Asset Tag\r\nCertificate that was deployed."
 		}
-	],
-	"protocolProfileBehavior": {}
+	]
 }

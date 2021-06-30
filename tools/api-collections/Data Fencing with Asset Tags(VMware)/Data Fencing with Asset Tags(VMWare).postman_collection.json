@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "66a7cc20-4478-43d3-a792-b80c46ffb97c",
+		"_postman_id": "0be3acb4-38ed-448c-91f4-c42e26116a6e",
 		"name": "Data Fencing with Asset Tags(VMWare)",
 		"description": "Data Fencing with Asset Tags builds on the Host Attestation use case to allow physical\r\nTPMs to be written with Asset Tags containing any number of key/value pairs.\r\nThis use case is typically used to identify the geographic location of the\r\nphysical server, but can also be used to identify other attributes. For example,\r\nthe Asset Tags provided by the Data Sovereignty use case could be used to\r\nidentify hosts that meet specific compliance requirements and can run\r\ncontrolled workloads.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -15,7 +15,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "8a5d4dda-f9df-43fa-bc68-8843dc5c3210",
 								"exec": [
 									"pm.environment.set(\"bearerToken\", pm.response.text());"
 								],
@@ -41,10 +40,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\": \"{{globalAdminUser}}\",\n    \"password\": \"{{globalAdminPass}}\"\n}",
-							"options": {
-								"raw": {}
-							}
+							"raw": "{\n    \"username\": \"{{globalAdminUser}}\",\n    \"password\": \"{{globalAdminPass}}\"\n}"
 						},
 						"url": {
 							"raw": "https://{{aas}}:{{aasPort}}/aas/v1/token",
@@ -124,8 +120,7 @@
 					]
 				}
 			],
-			"description": "To make an API request to an Intel® SecL-DC service, an authentication\r\ntoken is now required. API requests must now include an Authorization\r\nheader with an appropriate token:\r\n\r\n```\r\nAuthorization: Bearer <token>\r\n```\r\n\r\nThe token is issued by the AAS and will expire after a set amount of time.\r\nThis token may be used with any Intel® SecL-DC service, and will carry the\r\nappropriate permissions for the role(s) assigned to the account the token was\r\ngenerated for.",
-			"protocolProfileBehavior": {}
+			"description": "To make an API request to an Intel® SecL-DC service, an authentication\r\ntoken is now required. API requests must now include an Authorization\r\nheader with an appropriate token:\r\n\r\n```\r\nAuthorization: Bearer <token>\r\n```\r\n\r\nThe token is issued by the AAS and will expire after a set amount of time.\r\nThis token may be used with any Intel® SecL-DC service, and will carry the\r\nappropriate permissions for the role(s) assigned to the account the token was\r\ngenerated for."
 		},
 		{
 			"name": "Verify that hosts are registered and Trusted",
@@ -136,7 +131,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "7460cc04-b049-45d4-a8fd-ccac27afa6fc",
 								"exec": [
 									"var report = pm.response.json();\r",
 									"pm.environment.set(\"hostHardwareUuid\",report.reports[0].host_info.hardware_uuid)\r",
@@ -245,7 +239,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "9fea79c7-8099-43d7-a666-971a5f68a949",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -255,15 +248,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "70966e58-58f3-4e70-82da-791e955b2868",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Create Asset Tag Certificates for each host",
@@ -294,10 +285,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "  {\n    \"hardware_uuid\": \"{{hostHardwareUuid}}\",\n    \"selection_content\": [\n        {\n            \"name\": \"Country\",\n            \"value\": \"USA\"\n        },\n        {\n            \"name\": \"Department\",\n            \"value\": \"Finance\"\n        },\n        {\n            \"name\": \"Compliance\",\n            \"value\": \"PCI\"\n        }\n    ]\n}",
-							"options": {
-								"raw": {}
-							}
+							"raw": "  {\n    \"hardware_uuid\": \"{{hostHardwareUuid}}\",\n    \"selection_content\": [\n        {\n            \"name\": \"Country\",\n            \"value\": \"USA\"\n        },\n        {\n            \"name\": \"Department\",\n            \"value\": \"Finance\"\n        },\n        {\n            \"name\": \"Compliance\",\n            \"value\": \"PCI\"\n        }\n    ]\n}"
 						},
 						"url": {
 							"raw": "https://{{hvs}}:{{hvsPort}}/hvs/v2/tag-certificates",
@@ -322,7 +310,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "653a3b71-482a-4312-904d-b2429ae5178e",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -332,15 +319,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "314aff4d-03f1-4f1c-96b3-05c6b5e13d72",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Deploy Asset Tags",
@@ -353,7 +338,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "bbf4adde-11d3-4579-812d-82090711d8ff",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -363,30 +347,24 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "fd6fee64-0cce-41a9-b0ad-cade913c0f4f",
 								"type": "text/javascript",
 								"exec": [
 									""
 								]
 							}
 						}
-					],
-					"protocolProfileBehavior": {},
-					"_postman_isSubFolder": true
+					]
 				},
 				{
 					"name": "Provision the Certificate Hash to the Host TPM",
 					"item": [],
-					"description": "Starting in ESXi 6.5u2, you can now use SSH to write Asset Tags directly with no need for TPM clears, reboots, PXE or BIOS access. SSH to the ESXi host using root credentials, then use the next command: \r\n\r\n```esxcli hardware tpm tag set -d <hash> ```\r\n\r\nYou can use the following command to verify that the tag was written: \r\n\r\n```esxcli hardware tpm tag get ```\r\n\r\nReboot the host. After rebooting, the TPM PCR 22 will have the measured value of the hash. ",
-					"protocolProfileBehavior": {},
-					"_postman_isSubFolder": true
+					"description": "Starting in ESXi 6.5u2, you can now use SSH to write Asset Tags directly with no need for TPM clears, reboots, PXE or BIOS access. SSH to the ESXi host using root credentials, then use the next command: \r\n\r\n```esxcli hardware tpm tag set -d <hash> ```\r\n\r\nYou can use the following command to verify that the tag was written: \r\n\r\n```esxcli hardware tpm tag get ```\r\n\r\nReboot the host. After rebooting, the TPM PCR 22 will have the measured value of the hash. "
 				}
 			],
 			"event": [
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "a0d0e556-e578-4ea1-9fe9-226d02667480",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -396,15 +374,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "26b4eaa4-8730-453d-8af8-c2d850300c2a",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Create Asset Tag Flavor",
@@ -462,8 +438,7 @@
 					"response": []
 				}
 			],
-			"description": "For VMware ESXi hosts, the Asset Tag Flavor must be created by importing it from the host after the Tag has been provisioned. \r\n\r\nOnce the Asset Tag Flavor is imported, the host can be attested including Asset Tags as normal.",
-			"protocolProfileBehavior": {}
+			"description": "For VMware ESXi hosts, the Asset Tag Flavor must be created by importing it from the host after the Tag has been provisioned. \r\n\r\nOnce the Asset Tag Flavor is imported, the host can be attested including Asset Tags as normal."
 		},
 		{
 			"name": "Create new Attestation Reports for each host",
@@ -494,10 +469,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"host_name\": \"{{esxiHost}}\"\n}",
-							"options": {
-								"raw": {}
-							}
+							"raw": "{\n    \"host_name\": \"{{esxiHost}}\"\n}"
 						},
 						"url": {
 							"raw": "https://{{hvs}}:{{hvsPort}}/hvs/v2/reports",
@@ -522,7 +494,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "65b5659d-b585-4238-b09a-0ffefc764e94",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -532,22 +503,19 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "e24ad853-900e-4779-8438-d7e2434773cd",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		}
 	],
 	"event": [
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "fbbdbb9e-f91c-4365-ae84-8ee95d43444a",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -557,13 +525,11 @@
 		{
 			"listen": "test",
 			"script": {
-				"id": "68d06e83-efd1-4594-a176-0308d195e65f",
 				"type": "text/javascript",
 				"exec": [
 					""
 				]
 			}
 		}
-	],
-	"protocolProfileBehavior": {}
+	]
 }

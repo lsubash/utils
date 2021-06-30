@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "41935ce4-be48-4742-8b1f-e965a46b5a8e",
+		"_postman_id": "d475a9f8-ca0e-42f0-8cfe-5a1195d5525c",
 		"name": "Host Attestation(VMware)",
 		"description": "The Host Attestation use case will enable external platform integrity verification using TCG-standard practices. This feature is the foundation for other Intel® SecL – DC use cases.\n\nPlatform Attestation involves taking measurements of system components during system boot, and then cryptographically verifying that the actual measurements taken match a set of expected or approved values, ensuring that the measured components were in an acceptable or “trusted” state at the time of the last system boot. \n\nIntel® SecL – DC leverages the Trusted Compute Group specification for a trusted boot process, extending measurements of platform components to registers in a TPM, and securely generating quotes of those measurements from the TPM for remote comparison to expected values (attestation). \n\nDeployment will include only the Verification Service, which is typically installed on a Virtual Machine. \n \nPlatform Attestation for VMware ESXi* servers does not require a Trust Agent. Instead, it requires communication with vCenter Server*; vCenter* and ESXi will handle the TPM-specific functions, and the Intel® SecL – DC Verification Service will retrieve the TPM quote for a given host from a vCenter API. ",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -15,7 +15,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "dd7e5c69-63c6-45a4-8ec4-2f600475e5ea",
 								"exec": [
 									"pm.environment.set(\"bearerToken\", pm.response.text());"
 								],
@@ -41,10 +40,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\": \"{{globalAdminUser}}\",\n    \"password\": \"{{globalAdminPass}}\"\n}",
-							"options": {
-								"raw": {}
-							}
+							"raw": "{\n    \"username\": \"{{globalAdminUser}}\",\n    \"password\": \"{{globalAdminPass}}\"\n}"
 						},
 						"url": {
 							"raw": "https://{{aas}}:{{aasPort}}/aas/v1/token",
@@ -124,8 +120,7 @@
 					]
 				}
 			],
-			"description": "To make an API request to an Intel® SecL-DC service, an authentication\r\ntoken is now required. API requests must now include an Authorization\r\nheader with an appropriate token:\r\n\r\n```\r\nAuthorization: Bearer <token>\r\n```\r\n\r\nThe token is issued by the AAS and will expire after a set amount of time.\r\nThis token may be used with any Intel® SecL-DC service, and will carry the\r\nappropriate permissions for the role(s) assigned to the account the token was\r\ngenerated for.",
-			"protocolProfileBehavior": {}
+			"description": "To make an API request to an Intel® SecL-DC service, an authentication\r\ntoken is now required. API requests must now include an Authorization\r\nheader with an appropriate token:\r\n\r\n```\r\nAuthorization: Bearer <token>\r\n```\r\n\r\nThe token is issued by the AAS and will expire after a set amount of time.\r\nThis token may be used with any Intel® SecL-DC service, and will carry the\r\nappropriate permissions for the role(s) assigned to the account the token was\r\ngenerated for."
 		},
 		{
 			"name": "Import VMware TLS Certificates",
@@ -241,7 +236,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "171e19a0-490f-4404-ad3d-24233aba8482",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -251,15 +245,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "5fdc9795-4f30-486f-b95c-a3043e95567f",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Verify Services",
@@ -270,7 +262,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "0ed35ae1-d0d6-42c4-8446-5352223de868",
 								"exec": [
 									""
 								],
@@ -368,7 +359,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "b83a751b-8f30-49f7-a40a-0aadbebc1aed",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -378,15 +368,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "9403e14e-14af-473a-ada8-80193fc74c91",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Register Hosts",
@@ -417,10 +405,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"connection_string\": \"vmware:https://{{vCenter}}:{{vCenterPort}}/sdk;h={{esxiHost}};u={{vCenterUsername}};p={{vCenterPassword}}\",\n    \"description\": \" An ESXi Host\",\n    \"flavorgroup_names\": [],\n    \"host_name\": \"{{esxiHost}}\"\n}",
-							"options": {
-								"raw": {}
-							}
+							"raw": "{\n    \"connection_string\": \"vmware:https://{{vCenter}}:{{vCenterPort}}/sdk;h={{esxiHost}};u={{vCenterUsername}};p={{vCenterPassword}}\",\n    \"description\": \" An ESXi Host\",\n    \"flavorgroup_names\": [],\n    \"host_name\": \"{{esxiHost}}\"\n}"
 						},
 						"url": {
 							"raw": "https://{{hvs}}:{{hvsPort}}/hvs/v2/hosts",
@@ -461,10 +446,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"connection_string\": \"vmware:https://{{vCenter}}:{{vCenterPort}}/sdk;h={{esxiHost}};u={{vCenterUsername}};p={{vCenterPassword}}\",\n    \"description\": \" An ESXi Host\",\n    \"flavorgroup_names\": [],\n    \"host_name\": \"{{esxiHost}}\"\n}",
-									"options": {
-										"raw": {}
-									}
+									"raw": "{\n    \"connection_string\": \"vmware:https://{{vCenter}}:{{vCenterPort}}/sdk;h={{esxiHost}};u={{vCenterUsername}};p={{vCenterPassword}}\",\n    \"description\": \" An ESXi Host\",\n    \"flavorgroup_names\": [],\n    \"host_name\": \"{{esxiHost}}\"\n}"
 								},
 								"url": {
 									"raw": "https://{{hvs}}:{{hvsPort}}/hvs/v2/hosts",
@@ -508,7 +490,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "c663a706-0c13-44f0-b0aa-4ba505169318",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -518,15 +499,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "18448c04-968b-4e65-af84-a1fc542a7fb0",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "List Hosts",
@@ -686,7 +665,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "b05dea79-a096-4cff-8678-0dd3b9d9563e",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -696,15 +674,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "613a2f15-8d97-41ec-8146-138130718c4b",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Retrieve Reports (Untrusted – No Flavors)",
@@ -922,7 +898,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "f25d610e-61e0-44ce-8453-b42b90a4f166",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -932,15 +907,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "f2b24099-7f03-4d02-a48e-7710e00dcd74",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Import Flavors",
@@ -1070,7 +1043,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "6940b940-cd1f-4c22-9532-549d4da68041",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -1080,15 +1052,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "62ec914a-039c-4ab3-9506-a30a6e8f02d4",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Retrieve Reports (Trusted)",
@@ -1513,7 +1483,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "10001248-735c-4605-af6e-20aa38365ba8",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -1523,22 +1492,19 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "b250c3e8-b663-4ea2-9bea-844e6c6dafb5",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		}
 	],
 	"event": [
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "b8149512-35b2-40b1-b876-c5bfcc73f07d",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -1548,13 +1514,11 @@
 		{
 			"listen": "test",
 			"script": {
-				"id": "3ec4fcef-43fd-4c1b-bfd9-b9110897810a",
 				"type": "text/javascript",
 				"exec": [
 					""
 				]
 			}
 		}
-	],
-	"protocolProfileBehavior": {}
+	]
 }

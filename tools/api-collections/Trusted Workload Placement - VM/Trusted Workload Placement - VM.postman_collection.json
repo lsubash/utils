@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "7142e975-9138-48d1-a691-4221a60e0727",
+		"_postman_id": "51c4cba0-5ba7-4c08-b5fe-51bce8f0407f",
 		"name": "Trusted Workload Placement - VM",
 		"description": "Starting in the Rocky release, OpenStack can now use \"Traits\" to provide qualitative data about Nova Compute hosts, and to establish Trait requirements for VM instances. The updated scheduler will place VMs\nrequiring a given Trait on Nova Compute nodes that meet the Trait requirements. Currently supported Openstack release for Intel SecL-DC is Openstack Ussuri. \n\nIntel SecL-DC uses the Integration Hub to continually push platform integrity and Asset Tag information to the OpenStack Traits resources.  This means the OpenStack scheduler natively supports workload scheduling incorporating Intel SecL-DC security attributes, including attestation report Trust status and Asset Tags. The OpenStack Placement Service will automatically attempt to place images with Trait requirements on compute nodes that have those Traits.\n\n> ***NOTE***:  *This control only applies to instances launched using the\n> OpenStack scheduler, and the Traits functions will not affect\n> manually-launched instances where a specific Compute Node is defined\n> (since this does not use the scheduler at all). Intel SecL-DC uses\n> existing OpenStack interfaces and does not modify OpenStack code.  The\n> datacenter owner or OpenStack administrator is responsible for the\n> security of the OpenStack workload scheduling process in general, and\n> Intel recommends following published OpenStack security best\n> practices.*",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -15,7 +15,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "e14a8c4e-6f8d-4141-851e-8201912af893",
 								"exec": [
 									"pm.environment.set(\"bearerToken\", pm.response.text());"
 								],
@@ -41,10 +40,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\": \"{{globalAdminUser}}\",\n    \"password\": \"{{globalAdminPass}}\"\n}",
-							"options": {
-								"raw": {}
-							}
+							"raw": "{\n    \"username\": \"{{globalAdminUser}}\",\n    \"password\": \"{{globalAdminPass}}\"\n}"
 						},
 						"url": {
 							"raw": "https://{{aas}}:{{aasPort}}/aas/v1/token",
@@ -129,7 +125,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "de9fa87d-50b5-43f2-8bd2-656649da1b57",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -139,15 +134,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "f8d46169-9c82-47f8-82a1-9d9ebe3aa357",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Verify that hosts are registered and Trusted and Asset Tags are deployed",
@@ -158,7 +151,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "0736da12-b6ae-4677-920d-49d31810bce1",
 								"exec": [
 									"var report=pm.response.json()\r",
 									"pm.environment.set(\"hostId\", report.reports[0].host_id)"
@@ -169,7 +161,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "0ab62cf9-12bb-42c8-a879-03e079e1d9dc",
 								"exec": [
 									""
 								],
@@ -385,7 +376,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "aa0c98bc-d961-4c4f-9ff7-0882082db614",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -395,15 +385,13 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "de0d69a7-6733-4fe4-a501-a1916def0d7e",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Setting Image Traits",
@@ -413,7 +401,6 @@
 				{
 					"listen": "prerequest",
 					"script": {
-						"id": "00f3afdd-4b8a-45bc-a29e-16a91719bd01",
 						"type": "text/javascript",
 						"exec": [
 							""
@@ -423,28 +410,24 @@
 				{
 					"listen": "test",
 					"script": {
-						"id": "fba6cc0d-8808-4094-bdf1-5ce416510d1d",
 						"type": "text/javascript",
 						"exec": [
 							""
 						]
 					}
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Scheduling Instances",
 			"item": [],
-			"description": "Once Trait requirements are set for Images and the Integration Hub is\r\nconfigured to push attributes to OpenStack, instances can be launched in\r\nOpenStack as normal. As long as the OpenStack Nova scheduler is used to\r\nschedule the workloads, only compliant Compute Nodes will be scheduled\r\nto run instances of controlled Images.\r\n\r\n> ***NOTE***: *This control only applies to instances launched using the\r\n> OpenStack scheduler, and the Traits functions will not affect\r\n> manually-launched instances where a specific Compute Node is defined\r\n> (since this does not use the scheduler at all). Intel SecL-DC uses\r\n> existing OpenStack interfaces and does not modify OpenStack code.  The\r\n> datacenter owner or OpenStack administrator is responsible for the\r\n> security of the OpenStack workload scheduling process in general, and\r\n> Intel recommends following published OpenStack security best\r\n> practices.*",
-			"protocolProfileBehavior": {}
+			"description": "Once Trait requirements are set for Images and the Integration Hub is\r\nconfigured to push attributes to OpenStack, instances can be launched in\r\nOpenStack as normal. As long as the OpenStack Nova scheduler is used to\r\nschedule the workloads, only compliant Compute Nodes will be scheduled\r\nto run instances of controlled Images.\r\n\r\n> ***NOTE***: *This control only applies to instances launched using the\r\n> OpenStack scheduler, and the Traits functions will not affect\r\n> manually-launched instances where a specific Compute Node is defined\r\n> (since this does not use the scheduler at all). Intel SecL-DC uses\r\n> existing OpenStack interfaces and does not modify OpenStack code.  The\r\n> datacenter owner or OpenStack administrator is responsible for the\r\n> security of the OpenStack workload scheduling process in general, and\r\n> Intel recommends following published OpenStack security best\r\n> practices.*"
 		}
 	],
 	"event": [
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "e6b624bb-5f50-4870-9679-4a8633aefeaa",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -454,13 +437,11 @@
 		{
 			"listen": "test",
 			"script": {
-				"id": "c560f3d7-fd0d-40b2-819a-239305284b08",
 				"type": "text/javascript",
 				"exec": [
 					""
 				]
 			}
 		}
-	],
-	"protocolProfileBehavior": {}
+	]
 }

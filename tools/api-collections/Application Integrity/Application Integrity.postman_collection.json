@@ -1,8 +1,8 @@
 {
 	"info": {
-		"_postman_id": "55a1d1fe-e2d3-4079-af58-fa5e42b96a82",
+		"_postman_id": "fe25f9f9-9b5c-4707-814b-cf665ceec9fc",
 		"name": "Application Integrity",
-		"description": "> **Note**: This use case is not applicable for Containerized deployment with Kubernetes for Foundational Security\n\nApplication Integrity allows any files and folders on a Linux host system to be included in the Chain of Trust integrity measurements.  These measurements are attested by the Verification Service along with the other platform measurements, and are included in determining the host’s overall Trust status.  The measurements are performed by a measurement agent called tbootXM, which is built into initrd during Trust Agent installation.  Because initrd is included in other Trusted Computing measurements, this allows Intel® SecL-DC to carry the Chain of Trust all the way to the Linux filesystem.",
+		"description": "Application Integrity allows any files and folders on a Linux host system to be included in the Chain of Trust integrity measurements.  These measurements are attested by the Verification Service along with the other platform measurements, and are included in determining the host’s overall Trust status.  The measurements are performed by a measurement agent called tbootXM, which is built into initrd during Trust Agent installation.  Because initrd is included in other Trusted Computing measurements, this allows Intel® SecL-DC to carry the Chain of Trust all the way to the Linux filesystem.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
