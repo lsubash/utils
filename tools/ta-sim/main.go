@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"github.com/google/uuid"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -27,7 +28,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
 	client "github.com/intel-secl/intel-secl/v4/pkg/clients/ta"
 	"github.com/intel-secl/intel-secl/v4/pkg/lib/common/crypt"
 	tamodel "github.com/intel-secl/intel-secl/v4/pkg/model/ta"
@@ -355,6 +355,8 @@ func (ctrl controller) getQuoteSignedWithNonce(nonce []byte, tagPresent bool, as
 	fullQuote := *ctrl.tpmQuote
 	fullQuote.Quote = base64.StdEncoding.EncodeToString(newQuote)
 
+	// adding delay to simulate the TPM response time delay from an actual host
+	time.Sleep(time.Duration(ctrl.config.QuoteDelayMs) * time.Millisecond)
 	return &fullQuote, nil
 }
 
@@ -413,7 +415,7 @@ func startServers(ac *AppConfig) (err error) {
 	}
 
 	if ac.TaSimServiceMode == communicationModeHttp {
-		fmt.Println("Starting TA simulators in HTTP mode")
+		log.Info("Starting TA simulators in HTTP mode")
 		// create `ServerMux`
 		mux := http.NewServeMux()
 		// create a default route handler
@@ -434,31 +436,30 @@ func startServers(ac *AppConfig) (err error) {
 					Handler: mux,
 				}
 				server.SetKeepAlivesEnabled(false)
-				fmt.Println(server.ListenAndServeTLS(ac.sslCertPath, ac.sslKeyPath))
+				log.Info(server.ListenAndServeTLS(ac.sslCertPath, ac.sslKeyPath))
 				wg.Done()
 			}(i)
 		}
 		wg.Wait()
 	} else if ac.TaSimServiceMode == communicationModeOutbound {
-		fmt.Println("Starting TA simulators in outbound mode")
+		log.Info("Starting TA simulators in outbound mode")
 		hwUuids, err := loadNSaveHwUuidFile(ac.hwUuidMapPath, ac.PortStart, ac.Servers)
 		if err != nil {
 			return err
 		}
-
 		wg := new(sync.WaitGroup)
 		// add number of Servers to `wg` WaitGroup
-		wg.Add(ac.Servers)
+		wg.Add(100)
 		for i := 0; i < ac.Servers; i++ {
 			go func(i int) {
 				// create new server
 				hvsSubscriber, err := NewHVSSubscriber(hwUuids[i], ac, *ctrl)
 				if err != nil {
-					fmt.Println("Error getting a new HVS Subscriber")
+					log.Errorf("Error getting a new HVS Subscriber: %s", err.Error())
 				}
 				err = hvsSubscriber.Start()
 				if err != nil {
-					fmt.Printf("HVS subcriber Error : +%v", err)
+					log.Errorf("HVS subcriber Error : %s", err.Error())
 				}
 				wg.Done()
 			}(i)
@@ -468,6 +469,7 @@ func startServers(ac *AppConfig) (err error) {
 		return errors.New("Invalid TA simulator service mode, should be either http or outboud")
 	}
 
+	log.Info("Started %d servers", ac.Servers)
 	return nil
 }
 
@@ -607,7 +609,7 @@ func registerHosts(ac *AppConfig) error {
 		wg.Add(1)
 		go sendCreateHostRequest(ac.HvsApiUrl, authToken, ac.SimulatorIP, hwUuids[i-ac.PortStart], i, &client, wg, ac.TaSimServiceMode)
 		if (i+1)%ac.RequestVolume == 0 {
-			time.Sleep(time.Duration(ac.QuoteDelayMs) * time.Millisecond)
+			time.Sleep(time.Duration(ac.RequestVolumeDelayMs) * time.Millisecond)
 			wg.Wait()
 		}
 	}
@@ -625,7 +627,6 @@ func createFlavors(ac *AppConfig) error {
 	log.Info("Authentication token obtained successfully")
 
 	wg := new(sync.WaitGroup)
-	//
 	trustedHosts := ac.Servers * ac.TrustedHostsPercentage / 100
 
 	allFlavors := []string{"PLATFORM", "OS", "HOST_UNIQUE"}

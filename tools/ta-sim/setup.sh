@@ -65,9 +65,6 @@ if [ -z "$AIK_CERT_PATH" ] || [ -z  "$AIK_KEY_PATH" ]; then
 
 fi
 
-[ -z "$TA_IP" ] && read -p "Enter the TA ip (ex: 10.1.2.3) (Leave empty to use the default response files):" TA_IP
-TA_URL=https://$TA_IP:$TA_PORT
-
 [ -z "$TA_SIM_IP" ] && read -p "Enter the TA simulator ip (ex: 10.1.2.3):" TA_SIM_IP
 sed -i "s/^\(IP\.1\s*=\s*\).*\$/\1$TA_SIM_IP/" configuration/opensslSAN.conf
 sed -i "s/^\(SimulatorIP\s*:\s*\).*\$/\1$TA_SIM_IP/" configuration/config.yml
@@ -88,6 +85,9 @@ if [ "$TA_SERVICE_MODE" == "outbound" ]; then
   [ -z "$TA_HOST_ID" ] && read -p "Enter TA host ID):" TA_HOST_ID
   echo -e "NatsServers : "$NATS_SERVERS >> configuration/config.yml
   echo -e "TaHostID : "$TA_HOST_ID >> configuration/config.yml
+else
+  [ -z "$TA_IP" ] && read -p "Enter the TA ip (ex: 10.1.2.3) (Leave empty to use the default response files):" TA_IP
+  TA_URL=https://$TA_IP:$TA_PORT
 fi
 
 sed -i "s/^\(HvsApiUrl\s*:\s*\).*\$/\1https:\/\/$HVS_IP:$HVS_PORT\/hvs\/v2\//" configuration/config.yml

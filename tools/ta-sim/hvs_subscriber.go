@@ -30,11 +30,6 @@ func NewHVSSubscriber(natsHostId string, cfg *AppConfig, taSimController control
 
 }
 
-type HVSSubscriber interface {
-	Start() error
-	Stop() error
-}
-
 type hvsSubscriberImpl struct {
 	natsConnection  *nats.EncodedConn
 	cfg             *AppConfig
@@ -51,8 +46,22 @@ func (subscriber *hvsSubscriberImpl) Start() error {
 	}
 
 	conn, err := nats.Connect(strings.Join(subscriber.cfg.NatsServers, ","),
+		nats.Name(subscriber.natsHostID),
+		nats.RetryOnFailedConnect(true),
+		nats.MaxReconnects(-1),
+		nats.ReconnectWait(5*time.Second),
+		nats.Timeout(10*time.Second),
 		nats.Secure(&tlsConfig),
 		nats.UserCredentials(subscriber.cfg.natsTaSimCredentialsPath),
+		nats.DisconnectErrHandler(func(_ *nats.Conn, err error) {
+			log.Infof("NATS: Client %s disconnected: %v", subscriber.natsHostID, err)
+		}),
+		nats.ReconnectHandler(func(_ *nats.Conn) {
+			log.Infof("NATS: Client %s reconnected", subscriber.natsHostID)
+		}),
+		nats.ClosedHandler(func(_ *nats.Conn) {
+			log.Infof("NATS: Client %s closed", subscriber.natsHostID)
+		}),
 		nats.ErrorHandler(func(nc *nats.Conn, s *nats.Subscription, err error) {
 			if s != nil {
 				log.Errorf("ERROR: NATS: Could not process subscription for subject %q: %v", s.Subject, err)
@@ -71,8 +80,6 @@ func (subscriber *hvsSubscriberImpl) Start() error {
 	}
 
 	log.Infof("Successfully connected to %q", subscriber.cfg.NatsServers)
-
-	defer subscriber.natsConnection.Close()
 
 	// subscribe to quote-request messages
 	quoteSubject := taModel.CreateSubject(subscriber.natsHostID, taModel.NatsQuoteRequest)
