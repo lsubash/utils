@@ -50,7 +50,7 @@ Build PCS Simulator
 
 ``` {.shell}
 git clone https://github.com/intel-secl/utils.git && cd utils
-git checkout v3.6/develop
+git checkout v3.6.1/develop
 cd tools/skc-simulators/pcs_simulator
 ```
 
