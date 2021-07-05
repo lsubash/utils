@@ -342,6 +342,8 @@ deploy_ihub() {
     exit 1
   fi
 
+  echo "Waiting for IHub to bootstrap itself..."
+  sleep 10
   cd $HOME_DIR
 
 }
@@ -686,6 +688,9 @@ cleanup_ihub() {
 
   echo "Cleaning up INTEGRATION-HUB..."
 
+  IFS=$'\r\n' GLOBIGNORE='*' command eval 'secrets=$(kubectl get secrets -n isecl | grep ihub-k8s-certs | cut -d " " -f 1)'
+  for i in "${secrets[@]}"; do kubectl delete secret -n isecl $i >/dev/null; done
+
   $KUBECTL delete secret ihub-secret --namespace isecl
   $KUBECTL delete configmap ihub-config --namespace isecl
   $KUBECTL delete deploy ihub-deployment --namespace isecl
@@ -705,6 +710,7 @@ cleanup_isecl_controller() {
   $KUBECTL delete clusterrole isecl-controller --namespace isecl
   $KUBECTL delete clusterrolebinding isecl-controller-binding --namespace isecl
   $KUBECTL delete clusterrolebinding isecl-clusterrole --namespace isecl
+  $KUBECTL delete serviceaccount -n isecl default
 
 }
 
