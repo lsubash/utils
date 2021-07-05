@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "dfa6fd01-d60a-4193-9369-d768d67ee2e7",
+		"_postman_id": "35e78341-1015-46d8-84a2-f371a9f7ba87",
 		"name": "Secure Key Caching",
 		"description": "Key Protection is implemented by the SKC Client -- a set of libraries - which must be linked with a\ntenant workload, like Nginx, deployed in a CSP environment and the Key Broker Service (KBS)\ndeployed in the tenant's enterprise environment. The SKC Client retrieves the keys needed by the\nworkload from KBS after proving that the key can be protected in an SGX enclave.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -518,12 +518,122 @@
 								}
 							],
 							"cookie": [],
-							"body": "{\n    \"key_information\": {\n        \"id\": \"{{keyId}}\",\n        \"algorithm\": \"RSA\"\n    },\n    \"transfer_policy_id\": \"{{keyTransferPolicyId}}\",\n    \"transfer_link\": \"https://{{kbs}}:{{kbsPort}}/v1/keys/1403a86e-e75e-451e-a481-c12cbfe3bd21/transfer\",\n    \"created_at\": \"2020-11-09T10:46:23.354730925Z\"\n}"
+							"body": "{\n    \"key_information\": {\n        \"id\": \"{{keyId}}\",\n        \"algorithm\": \"RSA\",\n        \"key_length\": 3072\n    },\n    \"transfer_policy_id\": \"{{keyTransferPolicyId}}\",\n    \"transfer_link\": \"https://{{kbs}}:{{kbsPort}}/v1/keys/1403a86e-e75e-451e-a481-c12cbfe3bd21/transfer\",\n    \"created_at\": \"2020-11-09T10:46:23.354730925Z\"\n}"
+						}
+					]
+				},
+				{
+					"name": "createKeyUsingKMIPId",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+								"key": "Authorization",
+								"value": "Bearer {{bearerTokenEa}}"
+							},
+							{
+								"description": "(Required) Accept header",
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"description": "(Required) Content-Type header",
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"key_information\": {\n        \"algorithm\": \"RSA\",\n        \"key_length\": 3072,\n        \"kmip_key_id\": \"{{kmipKeyId}}\"\n    },\n    \"transfer_policy_ID\": \"{{keyTransferPolicyId}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{kbs}}:{{kbsPort}}/v1/keys",
+							"protocol": "https",
+							"host": [
+								"{{kbs}}"
+							],
+							"port": "{{kbsPort}}",
+							"path": [
+								"v1",
+								"keys"
+							]
+						},
+						"description": "Creates or Registers a key.\n\nThe serialized KeyRequest Go struct object represents the content of the request body.\n\n | Attribute          | Description |\n |--------------------|-------------|\n | key_information    | A json object having all the required information about a key. |\n | transfer_policy_id | Unique identifier of the transfer policy to apply to this key. |\n | label              | String to attach optionally a text description to the key, e.g. \"US Nginx key\". |\n | usage              | String to attach optionally a usage criteria for the key, e.g. \"Country:US,State:CA\". |\n\nThe serialized KeyInformation Go struct object represents the content of the key_information field.\n\n | Attribute   | Description |\n |-------------|-------------|\n | algorithm   | Encryption algorithm used to create or register key. Supported algorithms are AES, RSA and EC. |\n | key_length  | Key length used to create key. Supported key lengths are 128,192,256 bits for AES and 2048,3072,4096,7680,15360 bits for RSA. |\n | curve_type  | Elliptic curve used to create key. Supported curves are secp256r1, secp384r1 and secp521r1. |\n | key_string  | Base64 encoded private key to be registered. Supported only if key is created locally. |\n | kmip_key_id | Unique KMIP identifier of key to be registered. Supported only if key is created on KMIP server. |\n"
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+										"key": "Authorization",
+										"value": "Bearer {{bearerTokenEa}}"
+									},
+									{
+										"description": "(Required) Accept header",
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"description": "(Required) Content-Type header",
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"key_information\": {\n        \"algorithm\": \"RSA\",\n        \"key_length\": 3072,\n        \"kmip_key_id\": \"{{kmipKeyId}}\"\n    },\n    \"transfer_policy_ID\": \"{{keyTransferPolicyId}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://{{kbs}}:{{kbsPort}}/v1/keys",
+									"protocol": "https",
+									"host": [
+										"{{kbs}}"
+									],
+									"port": "{{kbsPort}}",
+									"path": [
+										"v1",
+										"keys"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 14 Apr 2021 07:30:39 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "324"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"key_information\": {\n        \"id\": \"{{keyId}}\",\n        \"algorithm\": \"RSA\",\n\t\t\"key_length\": 3072,\n         \"kmip_key_id\": \"{{kmipKeyId}}\"\n    },\n    \"transfer_policy_id\": \"{{keyTransferPolicyId}}\",\n    \"transfer_link\": \"https://{{kbs}}:{{kbsPort}}/v1/keys/1403a86e-e75e-451e-a481-c12cbfe3bd21/transfer\",\n    \"created_at\": \"2020-11-09T10:46:23.354730925Z\"\n}"
 						}
 					]
 				}
 			],
-			"description": "cd into /root/binaries/kbs_script folder\n\nUpdate kbs.conf with the following\n\n- Enterprise system IP address where CMS/AAS/KBS services are deployed\n- Port of CMS, AAS and KBS services deployed on enterprise system\n- AAS admin and Enterprise admin credentials\n\nUpdate sgx_enclave_measurement_anyof value in transfer_policy_request.json with enclave measurement value obtained using sgx_sign utility. Refer previous step for \"Extracting SGX Enclave values for Key Transfer Policy\".\n\nExecute the command\n\n```\n./run.sh reg\n```\n\nThe \"./run.sh reg\"  will create the Key Transfer Policy, and Asymmetric (RSA) Key by calling the following Key Broker Service (KBS) REST endpoints.\n\nCopy the generated cert file to SGX Compute node where skc_library is deployed. Also make a note of the key id generated.\n\n```\nscp <cert path> root@<SGX Compute Node>:/root/\n```",
+			"description": "**Steps to run KMIP Server**\n\nNote: Below mentioned steps are provided as script (install_pykmip.sh and pykmip.service) as part of kbs_script folder which will install KMIP Server as daemon. Refer to ‘Install KMIP Server as daemon’ section.\n\n```\n1. Install python3 and vim-common\n   # dnf -y install python3-pip vim-common (RHEL 8.2)\n   # apt -y install python3-pip vim-common (UBUNTU 18.04) \n   ln -s /usr/bin/python3 /usr/bin/python  > /dev/null 2>&1\n   ln -s /usr/bin/pip3 /usr/bin/pip  > /dev/null 2>&1\n\n2. Install pykmip\n   # pip3 install pykmip==0.9.1\n\n3. In the /etc/ directory create pykmip and policies folders\n   mkdir -p /etc/pykmip/policies\n\n4. Configure pykmip server using server.conf\n   Update hostname in the server.conf\n\n5. Copy the following to /etc/pykmip/ from kbs_script folder available under binaries directory\n   create_certificates.py, run_server.py, server.conf\n\n6. Create certificates\n   > cd /etc/pykmip\n   > python3 create_certificates.py\n\n7. Kill running KMIP Server processes and wait for 10 seconds until all the KMIP Server processes are killed. \n   > ps -ef | grep run_server.py | grep -v grep | awk '{print $2}' | xargs kill\n\n8. Run pykmip server using run_server.py script\n   > python3 run_server.py &\n\n```\n\n**Install KMIP Server as daemon**\n\n```\n1. cd into /root/binaries/kbs_script folder \n\n2. Configure pykmip server using server.conf\n   Update hostname in the server.conf\n\n3. Run the install_pykmip.sh script and KMIP server will be installed as daemon process\n   ./install_pykmip.sh\n```\n\n**Create RSA key in PyKMIP and generate certificate**\n\nNOTE: This step is required only when PyKMIP script is used as a backend KMIP server.\n\n```\n1. Update Host IP in /root/binaries/kbs_script rsa_create.py script\n2. In the kbs_script folder, Run rsa_create.py script\n    > cd /root/binaries/kbs_script\n    > python3 rsa_create.py\n\nThis script will generate “Private Key ID” and “Server certificate”, which should be provided in the kbs.conf file for “KMIP_KEY_ID” and “SERVER_CERT”.\n```\n\n**Configuration Update to create Keys in KBS**\n    \n    cd into /root/binaries/kbs_script folder\n\t\n    **To register keys with KBS KMIP**\n    \n    Update the following variables in kbs.conf:\n    \n        KMIP_KEY_ID (Private key ID registered in KMIP server)\n        \n        SERVER_CERT (Server certificate for created private key)\n\t\t\n\t\tEnterprise system IP address where CMS, AAS and KBS services are deployed\n        \n\t\tPort of CMS, AAS and KBS services deployed on enterprise system\n    \n\t    AAS admin and Enterprise admin credentials\n        \nNOTE: If KMIP_KEY_ID is not provided then RSA key register will be done with keystring.\n\nUpdate sgx_enclave_measurement_anyof value in transfer_policy_request.json with enclave measurement value obtained using sgx_sign utility. Refer to \"Extracting SGX Enclave values for Key Transfer Policy\" section.\n\n**Create RSA Key**\n\n\tExecute the command\n\t\n\t./run.sh reg\n\nCopy the generated cert file to SGX Compute node where skc_library is deployed. Also make a note of the key id generated.\n\n```\nscp <cert path> root@<SGX Compute Node>:/root/\n```",
 			"event": [
 				{
 					"listen": "prerequest",
@@ -548,7 +658,7 @@
 		{
 			"name": "Configuration for NGINX testing",
 			"item": [],
-			"description": "OpenSSL and NGINX configuration updates are provided as patches (nginx.patch and openssl.patch) as part of the skc_library deployment script.\n\n1. Update openssl configuration file /etc/pki/tls/openssl.cnf with below changes:\n```\n[openssl_def] \nengines = engine_section \n[engine_section] \npkcs11 = pkcs11_section \n[pkcs11_section]\nengine_id = pkcs11\ndynamic_path =/usr/lib64/engines-1.1/pkcs11.so\nMODULE_PATH =/opt/skc/lib/libpkcs11-api.so\ninit = 0\n```\n\n2. Update nginx configuration file /etc/nginx/nginx.conf with below changes:\n```\nuser root;\nssl_engine pkcs11;\nUpdate the location of certificate with the loaction where it was copied into the skc_library machine.\nssl_certificate \"add absolute path of crt file\";\nUpdate the fields(token, object and pin-value) with the values given in keys.txt for the KeyID corresponding to the certificate.\nssl_certificate_key \"engine:pkcs11:pkcs11:token=KMS;object=RSAKEY;pin-value=1234\";\n```\n\n3. SKC Configuration\n\nCreate keys.txt in /root folder and add the PKCS11 URL.\nToken, object and pin-value given in PKCS11 url entry in keys.txt should match with the one in nginx.conf\n\nAdd a new attribute \"preload_keys\" with its value \"keys.txt\" file path in \nthe core section of the /opt/skc/etc/pkcs11-apimodule.ini file.\n\nNOTE: 'daemon off' should not be present in nginx.conf file.",
+			"description": "**Note:** Below mentioned OpenSSL and NGINX configuration updates are provided as patches (nginx.patch and openssl.patch) as part of skc_library deployment script. Patch can be applied with default nginx and openssl file. In case nginx/openssl contains any external changes then refer manual step.\n\n**Apply Patch for Ubuntu**\n\nExecute the command with nginx version - nginx 1.14.0 (Ubuntu 18.04) and openssl version- Openssl 1.1.1 (Ubuntu 18.04)\n    \n    patch -b /etc/nginx/nginx.conf < nginx_ubuntu.patch\n    patch -b /etc/ssl/openssl.cnf < openssl_ubuntu.patch\n\n**Apply Patch for Rhel**\n\nExecute the command with nginx version - nginx 1.14.1 (Rhel 8.2) and openssl version- Openssl 1.1.1g (Rhel 8.2)\n\n    patch -b /etc/nginx/nginx.conf < nginx.patch\n    patch -b /etc/pki/tls/openssl.cnf < openssl.patch\n\n**OpenSSL**\n\nFor UBUNTU in the /etc/ssl/openssl.cnf file, look for the below line:\n[ new_oids ]\n\nJust before the line [ new_oids ], add the below section:\n\nopenssl_conf = openssl_def\n\n[openssl_def]\nengines = engine_section\noid_section = new_oids\n\n[engine_section]\npkcs11 = pkcs11_section\n\n[pkcs11_section]\nengine_id = pkcs11\ndynamic_path =/usr/lib/x86_64-linux-gnu/engines-1.1/pkcs11.so\nMODULE_PATH =/opt/skc/lib/libpkcs11-api.so \ninit = 0\n\n\n\nFor RHEL update openssl configuration file /etc/pki/tls/openssl.cnf with below changes:\n\n[openssl_def]\nengines = engine_section\n\n[engine_section]\npkcs11 = pkcs11_section\n\n[pkcs11_section]\nengine_id = pkcs11\n\ndynamic_path =/usr/lib64/engines-1.1/pkcs11.so\n\nMODULE_PATH =/opt/skc/lib/libpkcs11-api.so\n\ninit = 0\n\n**Nginx**\n\nUpdate nginx configuration file /etc/nginx/nginx.conf with below changes:\n\nssl_engine pkcs11;\n\nUpdate the location of certificate with the loaction where it was copied into the skc_library machine. \n\nssl_certificate \"add absolute path of crt file\";\n\nUpdate the fields(token, object and pin-value) with the values given in keys.txt for the KeyID corresponding to the certificate.\n\nssl_certificate_key \"engine:pkcs11:pkcs11:token=KMS;object=RSAKEY;pin-value=1234\";\n\n**SKC Configuration**\n\n Create keys.txt in /root folder. This provides key preloading functionality in skc_library.\n\n  Any number of keys can be added in keys.txt. Each PKCS11 URL should contain different Key ID which need to be transferred from KBS along with respective object tag for each key id specified\n\n  Sample PKCS11 url is as below\n  \n  pkcs11:token=KMS;id=164b41ae-be61-4c7c-a027-4a2ab1e5e4c4;object=RSAKEY;type=private;pin-value=1234;\n  \n  Token, object and pin-value given in PKCS11 url entry in keys.txt should match with the one in nginx.conf.\n\n  The keyID should match the keyID of RSA key created in KBS. File location should match with preload_keys directive in pkcs11-apimodule.ini; \n\n  Sample /opt/skc/etc/pkcs11-apimodule.ini file for UBUNTU\n\t\n\t[core]\n\tpreload_keys=/root/keys.txt\n\tkeyagent_conf=/opt/skc/etc/key-agent.ini\n\tmode=SGX\n\tdebug=true\n\t\n\t[SW]\n\tmodule=/usr/lib/softhsm/libsofthsm2.so\n\t\n\t[SGX]\n\tmodule=/opt/intel/cryptoapitoolkit/lib/libp11sgx.so\n\nSample /opt/skc/etc/pkcs11-apimodule.ini file for RHEL\n\t\n\t[core]\n\tpreload_keys=/root/keys.txt\n\tkeyagent_conf=/opt/skc/etc/key-agent.ini\n\tmode=SGX\n\tdebug=true\n\t\n\t[SW]\n\tmodule=/usr/lib64/pkcs11/libsofthsm2.so\n\t\n\t[SGX]\n\tmodule=/opt/intel/cryptoapitoolkit/lib/libp11sgx.so\n\nNOTE: 'daemon off' should not be present in nginx.conf file.",
 			"event": [
 				{
 					"listen": "prerequest",
@@ -574,7 +684,7 @@
 			"name": "KBS key-transfer flow",
 			"item": [
 				{
-					"name": "quoteVerify",
+					"name": "sgxVerifyQuote",
 					"request": {
 						"auth": {
 							"type": "noauth"
@@ -599,7 +709,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"quote\": \"<string>\",\n    \"userData\": \"<optional>\"\n}"
+							"raw": "{\n    \"quote\": \"<string>\",\n    \"userData\": \"<string>\"\n}"
 						},
 						"url": {
 							"raw": "https://{{sqvs}}:{{sqvsPort}}/svs/v1/sgx_qv_verify_quote",
@@ -684,9 +794,121 @@
 							"body": "{\n    \"Message\": \"SGX_QL_QV_RESULT_OK\",\n    \"reportData\": \"53f62c0202969dba9441905e938e3bcdfbbf6163f71446da056f437eb504320f\",\n    \"userDataMatch\": \"false\",\n    \"EnclaveIssuer\": \"cd171c56941c6ce49690b455f691d9c8a04c2e43e0a4d30f752fa5285c7ee57f\",\n    \"EnclaveMeasurement\": \"3ef4f13e42318aa5063fd740de52930488bbff8623361c686c381c44caa8793d\",\n    \"EnclaveIssuerProdID\": \"00\",\n    \"EnclaveIssuerExtProdID\": \"00000000000000000000000000000000\",\n    \"ConfigSvn\": \"00\",\n    \"IsvSvn\": \"01\",\n    \"ConfigId\": \"00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\n    \"TcbLevel\": \"OutOfDate\"\n}"
 						}
 					]
+				},
+				{
+					"name": "sgxVerifyQuoteAndSign",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/json"
+							},
+							{
+								"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+								"key": "Authorization",
+								"type": "text",
+								"value": "Bearer {{bearerTokenKbs}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"quote\": \"<string>\",\n    \"userData\": \"<string>\",\n    \"nonce\": \"<string>\",\n    \"challenge\": \"<string>\"\n}"
+						},
+						"url": {
+							"raw": "https://{{sqvs}}:{{sqvsPort}}/svs/v2/sgx_qv_verify_quote",
+							"protocol": "https",
+							"host": [
+								"{{sqvs}}"
+							],
+							"port": "{{sqvsPort}}",
+							"path": [
+								"svs",
+								"v2",
+								"sgx_qv_verify_quote"
+							]
+						},
+						"description": "Verifies the SGX ECDSA quote provided in the request body.\nQuote verifier requests SGX Quote Verification Service (SQVS) to verify quote.\nSQVS parses the quote, verifies all the parameters in the quote and returns the response.\nIt signs the quote verification response in case it is configured to do so.\n\n\nNote: KBS is not going to use this API in v3.6GA Release, it will be used in future releases."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/json"
+									},
+									{
+										"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+										"key": "Authorization",
+										"type": "text",
+										"value": "Bearer {{bearerTokenKbs}}"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"quote\": \"AwACAAAAAAAFAAoAk5pyM/ecTKmUCg2zlX8GByMqADFimUjvNnla5ELEz5AAAAAAAgIAAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQAAAAAAAADnAAAAAAAAAMEUXU9fPsSXu9VcnFDf+o0OOlDKxxXq1A9B47TK5HugAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADUEqTwfvg4kqWRX7KrWEvjHhhuWk+Vq19pUP1OuGlNewAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA2BAAAMcpaIKGq3SkXNzLrRhqjAmdIj2kNCRXwhTWgcTx+xhJew2QQHxw8AkfKwx3mloCnU6sspA8elDHqofy5AQozwcSs0GGQsADhMYYjuG0Ex3Uyylqp8MA+MJujMJfWWOhRitQe/PPdtONXpbTLPohfxB0SR7JG04DzVYXJlvVLN9dAgIAAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFQAAAAAAAADnAAAAAAAAAGDYWvKL6NHECgjZiwCdX4rME4Sjhc9GCADkeHkdGpecAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACMT1d115ZQPpYTf3fGioKaAFasje1wFAsIGwlEkMV7/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC+QaxkHLkZmIYLtuxD6wi2Ejwml2sYwklUVVn0ilgz2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAfCvbOVDHdLksINRQVMr2O4w2DH4EaEyaJCr3HTDLQUmyGSTENR6VBAnJAHXNTuxsIEfCP8jM0RPeD2gtIABhcyAAAAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8FAHAOAAAtLS0tLUJFR0lOIENFUlRJRklDQVRFLS0tLS0KTUlJRTlqQ0NCSnVnQXdJQkFnSVZBTW5hTlU0VXNxc0xQNFQ4MXhHNVY4d0xCVlJ6TUFvR0NDcUdTTTQ5QkFNQ01IQXhJakFnQmdOVgpCQU1NR1VsdWRHVnNJRk5IV0NCUVEwc2dVR3hoZEdadmNtMGdRMEV4R2pBWUJnTlZCQW9NRVVsdWRHVnNJRU52Y25CdmNtRjBhVzl1Ck1SUXdFZ1lEVlFRSERBdFRZVzUwWVNCRGJHRnlZVEVMTUFrR0ExVUVDQXdDUTBFeEN6QUpCZ05WQkFZVEFsVlRNQjRYRFRJd01USXgKTmpBNE1EY3lNMW9YRFRJM01USXhOakE0TURjeU0xb3djREVpTUNBR0ExVUVBd3daU1c1MFpXd2dVMGRZSUZCRFN5QkRaWEowYVdacApZMkYwWlRFYU1CZ0dBMVVFQ2d3UlNXNTBaV3dnUTI5eWNHOXlZWFJwYjI0eEZEQVNCZ05WQkFjTUMxTmhiblJoSUVOc1lYSmhNUXN3CkNRWURWUVFJREFKRFFURUxNQWtHQTFVRUJoTUNWVk13V1RBVEJnY3Foa2pPUFFJQkJnZ3Foa2pPUFFNQkJ3TkNBQVNnR3pJL2o5VXEKYk9hRGJnSHF2V0J3ZW80ZEhPS0M4dmRBMWh3d3BpU2hhbVJqbU9ObDdYUGtLeGptT1h1NXlHb3U5S1J5cExTVSs1RURvQm4xbm9QVwpvNElERURDQ0F3d3dId1lEVlIwakJCZ3dGb0FVV1NQVHAwcW9ZMVF1T1hDdDRBOEhLMWNrS3Jjd2J3WURWUjBmQkdnd1pqQmtvR0tnCllJWmVhSFIwY0hNNkx5OXpZbmd1WVhCcExuUnlkWE4wWldSelpYSjJhV05sY3k1cGJuUmxiQzVqYjIwdmMyZDRMMk5sY25ScFptbGoKWVhScGIyNHZkak12Y0dOclkzSnNQMk5oUFhCc1lYUm1iM0p0Sm1WdVkyOWthVzVuUFdSbGNqQWRCZ05WSFE0RUZnUVVlTkVoWXoycQplays1SjdwY3oxMjNDNHV4MzRjd0RnWURWUjBQQVFIL0JBUURBZ2JBTUF3R0ExVWRFd0VCL3dRQ01BQXdnZ0k1QmdrcWhraUcrRTBCCkRRRUVnZ0lxTUlJQ0pqQWVCZ29xaGtpRytFMEJEUUVCQkJBY2RIcXJkZ0tIQlVWRUZvajVnancrTUlJQll3WUtLb1pJaHZoTkFRMEIKQWpDQ0FWTXdFQVlMS29aSWh2aE5BUTBCQWdFQ0FRSXdFQVlMS29aSWh2aE5BUTBCQWdJQ0FRSXdFQVlMS29aSWh2aE5BUTBCQWdNQwpBUUF3RUFZTEtvWklodmhOQVEwQkFnUUNBUUF3RUFZTEtvWklodmhOQVEwQkFnVUNBUUF3RUFZTEtvWklodmhOQVEwQkFnWUNBUUF3CkVBWUxLb1pJaHZoTkFRMEJBZ2NDQVFBd0VBWUxLb1pJaHZoTkFRMEJBZ2dDQVFBd0VBWUxLb1pJaHZoTkFRMEJBZ2tDQVFBd0VBWUwKS29aSWh2aE5BUTBCQWdvQ0FRQXdFQVlMS29aSWh2aE5BUTBCQWdzQ0FRQXdFQVlMS29aSWh2aE5BUTBCQWd3Q0FRQXdFQVlMS29aSQpodmhOQVEwQkFnMENBUUF3RUFZTEtvWklodmhOQVEwQkFnNENBUUF3RUFZTEtvWklodmhOQVEwQkFnOENBUUF3RUFZTEtvWklodmhOCkFRMEJBaEFDQVFBd0VBWUxLb1pJaHZoTkFRMEJBaEVDQVFvd0h3WUxLb1pJaHZoTkFRMEJBaElFRUFJQ0FBQUFBQUFBQUFBQUFBQUEKQUFBd0VBWUtLb1pJaHZoTkFRMEJBd1FDQUFBd0ZBWUtLb1pJaHZoTkFRMEJCQVFHSUdCcUFBQUFNQThHQ2lxR1NJYjRUUUVOQVFVSwpBUUV3SGdZS0tvWklodmhOQVEwQkJnUVFrZkNIaG5mR3pranVDZ1AyaG1Mem16QkVCZ29xaGtpRytFMEJEUUVITURZd0VBWUxLb1pJCmh2aE5BUTBCQndFQkFmOHdFQVlMS29aSWh2aE5BUTBCQndJQkFRQXdFQVlMS29aSWh2aE5BUTBCQndNQkFmOHdDZ1lJS29aSXpqMEUKQXdJRFNRQXdSZ0loQUtMRWxXVEMwRzd2cmM5cGhvR01BWWRMSFl5N244YksxMjZWTWw5TG9CUmZBaUVBbWNUMXRvNWpHNVBSSW5hMApTZUZVdlIrVXFHVG5LaSthM2lkVTYraEFRL0U9Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0tLS0tLUJFR0lOIENFUlRJRklDQVRFLS0tLS0KTUlJQ21qQ0NBa0NnQXdJQkFnSVVXU1BUcDBxb1kxUXVPWEN0NEE4SEsxY2tLcmN3Q2dZSUtvWkl6ajBFQXdJdwphREVhTUJnR0ExVUVBd3dSU1c1MFpXd2dVMGRZSUZKdmIzUWdRMEV4R2pBWUJnTlZCQW9NRVVsdWRHVnNJRU52CmNuQnZjbUYwYVc5dU1SUXdFZ1lEVlFRSERBdFRZVzUwWVNCRGJHRnlZVEVMTUFrR0ExVUVDQXdDUTBFeEN6QUoKQmdOVkJBWVRBbFZUTUI0WERURTVNVEF6TVRFeU16TTBOMW9YRFRNME1UQXpNVEV5TXpNME4xb3djREVpTUNBRwpBMVVFQXd3WlNXNTBaV3dnVTBkWUlGQkRTeUJRYkdGMFptOXliU0JEUVRFYU1CZ0dBMVVFQ2d3UlNXNTBaV3dnClEyOXljRzl5WVhScGIyNHhGREFTQmdOVkJBY01DMU5oYm5SaElFTnNZWEpoTVFzd0NRWURWUVFJREFKRFFURUwKTUFrR0ExVUVCaE1DVlZNd1dUQVRCZ2NxaGtqT1BRSUJCZ2dxaGtqT1BRTUJCd05DQUFRd3ArTGMrVFVCdGcxSAorVThKSXNNc2JqSGpDa1R0WGI4alBNNnIyZGh1OXpJYmxoRFo3SU5mcXQzSXg4WGNGS0Q4azBORVhya1o2NnFKClhhMUt6TElLbzRHL01JRzhNQjhHQTFVZEl3UVlNQmFBRk9ub1JGSlRObHhMR0pvUi9FTVlMS1hjSUlCSU1GWUcKQTFVZEh3UlBNRTB3UzZCSm9FZUdSV2gwZEhCek9pOHZjMko0TFdObGNuUnBabWxqWVhSbGN5NTBjblZ6ZEdWawpjMlZ5ZG1salpYTXVhVzUwWld3dVkyOXRMMGx1ZEdWc1UwZFlVbTl2ZEVOQkxtUmxjakFkQmdOVkhRNEVGZ1FVCldTUFRwMHFvWTFRdU9YQ3Q0QThISzFja0tyY3dEZ1lEVlIwUEFRSC9CQVFEQWdFR01CSUdBMVVkRXdFQi93UUkKTUFZQkFmOENBUUF3Q2dZSUtvWkl6ajBFQXdJRFNBQXdSUUloQUoxcStGVHorZ1V1VmZCUXVDZ0pzRnJMMlRUUwplMWFCWjUzTzUyVGpGaWU2QWlBcmlQYVJhaFVYOU9hOWtHTGxBY2hXWEtUNmo0UldTUjUwQnFock4zVVQ0QT09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0KLS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUNsRENDQWptZ0F3SUJBZ0lWQU9ub1JGSlRObHhMR0pvUi9FTVlMS1hjSUlCSU1Bb0dDQ3FHU000OUJBTUMKTUdneEdqQVlCZ05WQkFNTUVVbHVkR1ZzSUZOSFdDQlNiMjkwSUVOQk1Sb3dHQVlEVlFRS0RCRkpiblJsYkNCRApiM0p3YjNKaGRHbHZiakVVTUJJR0ExVUVCd3dMVTJGdWRHRWdRMnhoY21FeEN6QUpCZ05WQkFnTUFrTkJNUXN3CkNRWURWUVFHRXdKVlV6QWVGdzB4T1RFd016RXdPVFE1TWpGYUZ3MDBPVEV5TXpFeU16VTVOVGxhTUdneEdqQVkKQmdOVkJBTU1FVWx1ZEdWc0lGTkhXQ0JTYjI5MElFTkJNUm93R0FZRFZRUUtEQkZKYm5SbGJDQkRiM0p3YjNKaApkR2x2YmpFVU1CSUdBMVVFQnd3TFUyRnVkR0VnUTJ4aGNtRXhDekFKQmdOVkJBZ01Ba05CTVFzd0NRWURWUVFHCkV3SlZVekJaTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEEwSUFCRS82RC8xV0hOcld3UG1OTUl5QktNVzUKSjZKek1zam82eFAydmtLMWNkWkdiMVBHUlAvQy84RUNnaURrbWtsbXp3THpMaSswMDBtN0xMcnRLSkEzb0MyagpnYjh3Z2J3d0h3WURWUjBqQkJnd0ZvQVU2ZWhFVWxNMlhFc1ltaEg4UXhnc3Bkd2dnRWd3VmdZRFZSMGZCRTh3ClRUQkxvRW1nUjRaRmFIUjBjSE02THk5elluZ3RZMlZ5ZEdsbWFXTmhkR1Z6TG5SeWRYTjBaV1J6WlhKMmFXTmwKY3k1cGJuUmxiQzVqYjIwdlNXNTBaV3hUUjFoU2IyOTBRMEV1WkdWeU1CMEdBMVVkRGdRV0JCVHA2RVJTVXpaYwpTeGlhRWZ4REdDeWwzQ0NBU0RBT0JnTlZIUThCQWY4RUJBTUNBUVl3RWdZRFZSMFRBUUgvQkFnd0JnRUIvd0lCCkFUQUtCZ2dxaGtqT1BRUURBZ05KQURCR0FpRUF6dzl6ZFVpVUhQTVVkMEM0bXg0MWpsRlprck0zeTVmMWxnblYKTzdGYmpPb0NJUUNvR3RVbVQ0Y1h0N1YreVNIYko4SG9iOUFhbnB2WE5IMUVSKy9nWkYrb3BRPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=\",\n    \"userData\": \"\",\n    \"challenge\": \"abcd\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://{{sqvs}}:{{sqvsPort}}/svs/v2/sgx_qv_verify_quote",
+									"protocol": "https",
+									"host": [
+										"{{sqvs}}"
+									],
+									"port": "{{sqvsPort}}",
+									"path": [
+										"svs",
+										"v2",
+										"sgx_qv_verify_quote"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Date",
+									"value": "Fri, 30 Apr 2021 10:39:52 GMT"
+								},
+								{
+									"key": "Transfer-Encoding",
+									"value": "chunked"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"quoteData\": {\n        \"Message\": \"SGX_QL_QV_RESULT_OK\",\n        \"reportData\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n        \"EnclaveIssuer\": \"d412a4f07ef83892a5915fb2ab584be31e186e5a4f95ab5f6950fd4eb8694d7b\",\n        \"EnclaveMeasurement\": \"c1145d4f5f3ec497bbd55c9c50dffa8d0e3a50cac715ead40f41e3b4cae47ba0\",\n        \"EnclaveIssuerProdID\": \"00\",\n        \"EnclaveIssuerExtProdID\": \"00000000000000000000000000000000\",\n        \"ConfigSvn\": \"00\",\n        \"IsvSvn\": \"00\",\n        \"ConfigID\": \"00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\n        \"TcbLevel\": \"OutOfDate\",\n        \"Quote\": \"<quote in request>\",\n        \"Challenge\": \"<challenge in request>\"\n    },\n    \"signature\": \"<Digital Signature of the content of response field>\",\n    \"certificateChain\": \"<Chain of leaf and intermediate certs>\"\n}"
+						}
+					]
 				}
 			],
-			"description": "1. Nginx will initiate a Key Transfer with the new Key id by calling Key Broker Service (KBS) REST endpoint (GET /v1/keys/:keyId/dhsm2-transfer) and will get a 401 HTTP response from KBS since the session is not established. \n2. Nginx will create a new session key by calling the KBS REST endpoint (POST /v1/session).\n3. SKC Client will send the SGX Quote to KBS, then KBS will verify the quote by calling SGX Quote Verification Service(SQVS) REST endpoint (POST /v1/sgx_qv_verify_quote).\n4. SQVS checks whether the quote signature and PCK Certificate are valid checks other parameters in the quote and returns the verification result. SQVS contacts SGX Caching service (SCS) to make sure that PCKCRL, TCBInfo, and QEIdentity in the quote are correct. \n5. Once the session is successfully established, Again Nginx will initiate a Key Transfer with the key id by calling KBS REST endpoint (GET /v1/keys/:keyId/dhsm2-transfer) and will get the response as key transfer successful.\n\nOn SGX Compute node, Execute below commands for KBS key-transfer:\n\n```\npkill nginx\n```\n \nRemove any existing pkcs11 token.\n\n```\nrm -rf /opt/intel/cryptoapitoolkit/tokens/*\n```\n\nInitiate Key transfer from KBS.\n\n```\nsystemctl restart nginx\n```\n\nChanging group ownership and permissions of pkcs11 token\n\n```\nchown -R root:intel /opt/intel/cryptoapitoolkit/tokens/ \n```\n```\nchmod -R 770 /opt/intel/cryptoapitoolkit/tokens/\n```\n\nEstablish a tls session with the nginx using the key transferred inside the enclave.\n\n```\nwget -k -v https://localhost:2443 --no-check-certificate\n```",
+			"description": "1. Nginx will initiate a Key Transfer with the new Key id by calling Key Broker Service (KBS) REST endpoint (GET /v1/keys/:keyId/dhsm2-transfer) and will get a 401 HTTP response from KBS since the session is not established. \n2. Nginx will create a new session key by calling the KBS REST endpoint (POST /v1/session).\n3. SKC Client will send the SGX Quote to KBS, then KBS will verify the quote by calling SGX Quote Verification Service(SQVS) REST endpoint (POST /v1/sgx_qv_verify_quote).\n4. SQVS checks whether the quote signature and PCK Certificate are valid checks other parameters in the quote and returns the verification result. SQVS contacts SGX Caching service (SCS) to make sure that PCKCRL, TCBInfo, and QEIdentity in the quote are correct. \n5. Once the session is successfully established, Again Nginx will initiate a Key Transfer with the key id by calling KBS REST endpoint (GET /v1/keys/:keyId/dhsm2-transfer) and will get the response as key transfer successful.\n\nOn SGX Compute node, Execute below commands for KBS key-transfer:\n\n\nNote: Before initiating key transfer make sure, PYKMIP server is running.\n\n```\n    pkill nginx\n```\n\nRemove any existing pkcs11 token\n\n```\n    rm -rf /opt/intel/cryptoapitoolkit/tokens/*\n```\n\nInitiate Key transfer from KBS\n\n```\n    systemctl restart nginx\n```\n\nChanging group ownership and permissions of pkcs11 token\n\n```\n    chown -R root:intel /opt/intel/cryptoapitoolkit/tokens/\n```\n\n```\n    chmod -R 770 /opt/intel/cryptoapitoolkit/tokens/\n```\n\nEstablish a tls session with the nginx using the key transferred inside the enclave\n\n```\n    wget https://localhost:2443 --no-check-certificate\n```",
 			"event": [
 				{
 					"listen": "prerequest",
