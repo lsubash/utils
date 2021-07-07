@@ -24,7 +24,7 @@ KUBECTL=${KUBECTL:-"microk8s.kubectl"}
 deploy_authservice_db() {
 
   echo "-----------------------------------------------------------------------"
-  echo "|    DEPLOY:AUTHENTICATION-AUTHORIZATION-SERVICE DATABASE INSTANCE    |"
+  echo "|    DEPLOY: AUTHENTICATION-AUTHORIZATION-SERVICE DATABASE INSTANCE   |"
   echo "-----------------------------------------------------------------------"
 
   cd aas-db/
@@ -62,8 +62,8 @@ deploy_authservice_db() {
 deploy_wls_db() {
 
   echo "---------------------------------------------------------------------"
-  echo "|            DEPLOY: WORKLOAD-SERVICE DATABASE INSTANCE            |"
-  echo "----------------------------------------------------------------------"
+  echo "|            DEPLOY: WORKLOAD-SERVICE DATABASE INSTANCE             |"
+  echo "---------------------------------------------------------------------"
 
   cd wls-db/
   mkdir -p secrets
@@ -98,9 +98,9 @@ deploy_wls_db() {
 
 deploy_hvs_db() {
 
-  echo "-------------------------------------------------------------"
-  echo "|            DEPLOY:   HOST VERIFICATION SERVICE            |"
-  echo "-------------------------------------------------------------"
+  echo "-----------------------------------------------------------"
+  echo "|            DEPLOY: HOST VERIFICATION SERVICE            |"
+  echo "-----------------------------------------------------------"
 
   cd hvs-db/
   mkdir -p secrets
