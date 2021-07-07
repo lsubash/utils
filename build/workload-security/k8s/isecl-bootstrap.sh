@@ -46,7 +46,7 @@ check_mandatory_variables() {
 deploy_cms() {
 
   echo "----------------------------------------------------"
-  echo "|      DEPLOY:CERTIFICATE-MANAGEMENT-SERVICE       |"
+  echo "|      DEPLOY: CERTIFICATE-MANAGEMENT-SERVICE      |"
   echo "----------------------------------------------------"
 
   cd cms/
@@ -89,7 +89,7 @@ deploy_authservice() {
   get_cms_tls_cert_sha384
   get_aas_bootstrap_token
   echo "----------------------------------------------------"
-  echo "|    DEPLOY:AUTHENTICATION-AUTHORIZATION-SERVICE   |"
+  echo "|    DEPLOY: AUTHENTICATION-AUTHORIZATION-SERVICE  |"
   echo "----------------------------------------------------"
 
   required_variables="AAS_ADMIN_USERNAME,AAS_ADMIN_PASSWORD,AAS_DB_HOSTNAME,AAS_DB_NAME,AAS_DB_PORT,AAS_DB_SSLMODE,AAS_DB_SSLCERT,AAS_BOOTSTRAP_TOKEN,AAS_SAN_LIST"
@@ -202,7 +202,7 @@ deploy_hvs() {
   cd $HOME_DIR/hvs
 
   echo "-------------------------------------------------------------"
-  echo "|            DEPLOY: HOST VERIFICATION SERVICE            |"
+  echo "|            DEPLOY: HOST-VERIFICATION-SERVICE              |"
   echo "-------------------------------------------------------------"
 
   # The variables BEARER_TOKEN and CMS_TLS_CERT_SHA384 get loaded with below functions, this required if we want to deploy individual hvs service
@@ -256,7 +256,7 @@ deploy_hvs() {
 deploy_custom_controller() {
 
   echo "----------------------------------------------------"
-  echo "|            DEPLOY: K8S-CONTROLLER                |"
+  echo "|            DEPLOY: ISECL-K8S-CONTROLLER          |"
   echo "----------------------------------------------------"
 
   cd k8s-extensions-controller/
@@ -284,7 +284,7 @@ deploy_custom_controller() {
 deploy_ihub() {
 
   echo "----------------------------------------------------"
-  echo "|             DEPLOY:INTEGRATION-HUB               |"
+  echo "|             DEPLOY: INTEGRATION-HUB              |"
   echo "----------------------------------------------------"
 
   required_variables="IHUB_SERVICE_USERNAME,IHUB_SERVICE_PASSWORD,K8S_API_SERVER_CERT,HVS_BASE_URL"
@@ -352,7 +352,7 @@ deploy_extended_scheduler() {
 
   #K8s SCHEDULER
   echo "----------------------------------------------------"
-  echo "|            DEPLOY: K8S-SCHEDULER                 |"
+  echo "|            DEPLOY: ISECL-K8S-SCHEDULER            |"
   echo "----------------------------------------------------"
 
   required_variables="K8S_CA_CERT,K8S_CA_KEY"
@@ -400,7 +400,7 @@ deploy_kbs() {
 
   #KBS
   echo "----------------------------------------------------"
-  echo "|            DEPLOY:KBS                            |"
+  echo "|            DEPLOY: KEY-BROKER-SERVICE            |"
   echo "----------------------------------------------------"
 
   required_variables="ENDPOINT_URL,KBS_CERT_SAN_LIST,KMIP_SERVER_IP,KMIP_SERVER_PORT,KMIP_CLIENT_CERT_NAME,KMIP_CLIENT_KEY_NAME,KMIP_ROOT_CERT_NAME,KMIP_HOSTNAME"
@@ -459,7 +459,7 @@ deploy_kbs() {
 deploy_wls() {
   #WLS
   echo "----------------------------------------------------"
-  echo "|            DEPLOY:WORKLOAD-SERVICE           |"
+  echo "|            DEPLOY: WORKLOAD-SERVICE               |"
   echo "----------------------------------------------------"
 
   cd wls/
@@ -504,6 +504,10 @@ deploy_wls() {
 
 deploy_tagent() {
 
+  echo "----------------------------------------------"
+  echo "|            DEPLOY: TRUST-AGENT             |"
+  echo "----------------------------------------------"
+
   # get latest bearer_token and cms tls cert digest
   get_bearer_token
   get_cms_tls_cert_sha384
@@ -544,6 +548,10 @@ deploy_tagent() {
 }
 
 deploy_nats() {
+
+  echo "-------------------------------------------------"
+  echo "|            DEPLOY: NATS-SERVICE               |"
+  echo "-------------------------------------------------"
 
   cd $HOME_DIR/nats/
   get_bearer_token
@@ -586,6 +594,10 @@ deploy_nats() {
 }
 
 deploy_wlagent() {
+
+  echo "----------------------------------------------"
+  echo "|            DEPLOY: WORKLOAD-AGENT          |"
+  echo "----------------------------------------------"
 
   # get latest bearer_token and cms tls cert digest
   get_bearer_token
@@ -651,6 +663,8 @@ cleanup_nats() {
 }
 
 cleanup_tagent() {
+  echo "Cleaning up TRUST-AGENT..."
+
   $KUBECTL delete configmap ta-config --namespace isecl
   $KUBECTL delete secret ta-secret --namespace isecl
 
@@ -659,6 +673,8 @@ cleanup_tagent() {
 }
 
 cleanup_wlagent() {
+  echo "Cleaning up WORKLOAD-AGENT..."
+
   $KUBECTL delete configmap wla-config --namespace isecl
   $KUBECTL delete secret wla-secret --namespace isecl
   $KUBECTL delete daemonset wla-daemonset --namespace isecl
@@ -666,7 +682,7 @@ cleanup_wlagent() {
 
 cleanup_kbs() {
 
-  echo "Cleaning up KBS..."
+  echo "Cleaning up KEY-BROKER-SERVICE..."
 
   $KUBECTL delete secret kbs-secret --namespace isecl
   $KUBECTL delete configmap kbs-config --namespace isecl
@@ -705,6 +721,8 @@ cleanup_ihub() {
 
 cleanup_isecl_controller() {
 
+  echo "Cleaning up ISECL-K8S-CONTROLLER..."
+
   $KUBECTL delete deploy isecl-controller-deployment --namespace isecl
   $KUBECTL delete crd hostattributes.crd.isecl.intel.com --namespace isecl
   $KUBECTL delete clusterrole isecl-controller --namespace isecl
@@ -716,6 +734,7 @@ cleanup_isecl_controller() {
 
 cleanup_isecl_scheduler() {
 
+  echo "Cleaning up ISECL-K8S-SCHEDULER..."
   cd k8s-extensions-scheduler/
 
   $KUBECTL delete deploy isecl-scheduler-deployment --namespace isecl
@@ -766,7 +785,7 @@ cleanup_authservice() {
 
 cleanup_cms() {
 
-  echo "Cleaning up CERTIIFCATION-MANAGEMENT-SERVICE..."
+  echo "Cleaning up CERTIFICATE-MANAGEMENT-SERVICE..."
 
   $KUBECTL delete configmap cms-config --namespace isecl
   $KUBECTL delete deploy cms-deployment --namespace isecl

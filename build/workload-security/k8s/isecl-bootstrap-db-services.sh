@@ -61,9 +61,9 @@ deploy_authservice_db() {
 
 deploy_wls_db() {
 
-  echo "---------------------------------------------------------------------"
-  echo "|            DEPLOY: WORKLOAD-SERVICE DATABASE INSTANCE             |"
-  echo "---------------------------------------------------------------------"
+  echo "-------------------------------------------------------------"
+  echo "|            DEPLOY: WORKLOAD-SERVICE DATABASE              |"
+  echo "-------------------------------------------------------------"
 
   cd wls-db/
   mkdir -p secrets
@@ -98,9 +98,9 @@ deploy_wls_db() {
 
 deploy_hvs_db() {
 
-  echo "-----------------------------------------------------------"
-  echo "|            DEPLOY: HOST VERIFICATION SERVICE            |"
-  echo "-----------------------------------------------------------"
+  echo "--------------------------------------------------------------------"
+  echo "|            DEPLOY: HOST-VERIFICATION-SERVICE DATABASE            |"
+  echo "--------------------------------------------------------------------"
 
   cd hvs-db/
   mkdir -p secrets
