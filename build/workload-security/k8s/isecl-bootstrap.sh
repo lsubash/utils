@@ -343,7 +343,7 @@ deploy_ihub() {
   fi
 
   echo "Waiting for IHub to bootstrap itself..."
-  sleep 10
+  sleep 20
   cd $HOME_DIR
 
 }
