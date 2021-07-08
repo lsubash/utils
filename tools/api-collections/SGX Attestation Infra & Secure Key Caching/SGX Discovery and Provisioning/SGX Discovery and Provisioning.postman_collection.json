@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "3ed13885-338c-44d4-af58-5caed81bd68f",
+		"_postman_id": "1a7f33c5-eba8-4c84-8e63-9b39fda905cb",
 		"name": "SGX Discovery and Provisioning",
 		"description": "For the secrets to be provisioned securely to SGX compute nodes in public clouds, the owner of the secret needs to ensure that the secrets will be protected in SGX enclaves by performing an SGX Attestation.\r\n\r\nSGX Attestation involves provisioning SGX nodes with Platform Certification Key (PCK) certificates. PCK certificates for SGX nodes are obtained by providing the node SGX data to the Intel SGX Provisioning Certificate Service (PCS), a cloud hosted service. PCS also returns SGX collateral such as CRLs, TCB information and QE Identity.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -821,78 +821,289 @@
 			]
 		},
 		{
-			"name": "Verify Quote",
+			"name": "SGX Sample Apps Flow",
 			"item": [
 				{
-					"name": "sgxVerifyQuote",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Accept",
-								"type": "text",
-								"value": "application/json"
-							},
-							{
-								"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
-								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer {{bearerTokenKbs}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"quote\": \"<string>\",\n    \"userData\": \"<string>\"\n}"
-						},
-						"url": {
-							"raw": "https://{{sqvs}}:{{sqvsPort}}/svs/v1/sgx_qv_verify_quote",
-							"protocol": "https",
-							"host": [
-								"{{sqvs}}"
-							],
-							"port": "{{sqvsPort}}",
-							"path": [
-								"svs",
-								"v1",
-								"sgx_qv_verify_quote"
-							]
-						},
-						"description": "Verifies the quote provided in the request body by checking whether the quote is ECDSA. Quote verifier requests SGX Quote Verification Service (SQVS) to verify a quote. SQVS parses the quote, verifies all the parameters in the quote and returns the response."
-					},
-					"response": [
+					"name": "Configuring Sample Apps",
+					"item": [],
+					"description": "```\n1. Clone the github repo for sample apps\n\n   git clone https://github.com/intel-secl/utils.git\n\n   #Switch to specific release-version of choice\n   cd utils/\n   git checkout <release-version of choice>\n   \n   #Build sample apps code as per README.md\n   cd tools/sample-sgx-attestation\n\n   #Generated binaries will be present in out/ folder\n   cd out/\n\n2. Download CA Certificate from CMS\n\nNote : If the deployment is CSP and Enterprise model, use the Enterprise CMS.\n\n       curl --insecure --location --request GET 'https://<cms.server:port>/cms/v1/ca- \ncertificates' --header 'Accept: application/x-pem-file' > rootca.pem\n\n3. Update the configuration file config.yml\n\n       attestedapp-host: 127.0.0.1\n       attestedapp-port: 9999\n       sqvs-url: https://<sqvs>:<port>/svs/v1\n\n4. Updating attesting App's policy file\nThe MREnclave value changes when there is a change in the Enclave. After every change and a build this might need to be updated.\n\nUpdate the policy file at sgx-quote-policy.txt with the following fields:\n\n       MREnclave:\n       MRSigner:\n       CPU_SVN:\n\nMake sure your environment is set: $ source ${sgx-sdk-install-path}/environment\n\nRun the sgx_sign utility to get values of MR Enclave and MR Signer needed by the policy file.\n\n       sgx_sign dump -enclave ./attestedApp/libenclave/enclave.signed.so -dumpfile info.txt\n\nIn info.txt, search for \"mrsigner->value\" and add this to \"MRSigner:\" in sgx-quote-policy.txt.\n\nIn info.txt, search for \"metadata->enclave_css.body.enclave_hash.m:\" and add this to \"MREnclave:\" in sgx-quote-policy.txt\n\nE.g : In info.txt mrsigner->value: \"0x83 0xd7 0x19 0xe7 0x7d 0xea 0xca 0x14 0x70 0xf6 0xba 0xf6 0x2a 0x4d 0x77 0x43 0x03 0xc8 0x99 0xdb 0x69 0x02 0x0f 0x9c 0x70 0xee 0x1d 0xfc 0x08 0xc7 0xce 0x9e\" needs to be added as \"MRSigner:83d719e77deaca1470f6baf62a4d774303c899db69020f9c70ee1dfc08c7ce9e\" in sgx-quote-policy.txt . Remove '0x' and spaces. \nSame applies for MREnclave.\n\nContents of a good sgx-quote-policy.txt file would look like :\n\n       MREnclave:c80de12554feb664496c59f708954aca1572a8cf60f2184f99857081b6314bb8\n       MRSigner:83d719e77deaca1470f6baf62a4d774303c899db69020f9c70ee1dfc08c7ce9e\n       CPU_SVN:00\n\n5. Update /etc/sgx_default_qcnl.conf \n\n       Set PCCS_URL with SCS IP and Port. E.g \n       PCCS_URL=https://<SCS_IP/Host>:9000/scs/sgx/certification/v1/\n       Set USE_SECURE_CERT=FALSE\n\n6. Set includetoken=false in SQVS config.yaml and restart SQVS.\n```",
+					"event": [
 						{
-							"name": "Success",
-							"originalRequest": {
-								"method": "POST",
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Quote Verification and Secret Provisioning Workflow",
+					"item": [
+						{
+							"name": "Verify Quote",
+							"item": [
+								{
+									"name": "sgxVerifyQuote",
+									"request": {
+										"auth": {
+											"type": "noauth"
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											},
+											{
+												"key": "Accept",
+												"type": "text",
+												"value": "application/json"
+											},
+											{
+												"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+												"key": "Authorization",
+												"type": "text",
+												"value": "Bearer {{bearerTokenKbs}}"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"quote\": \"<string>\",\n    \"userData\": \"<string>\"\n}"
+										},
+										"url": {
+											"raw": "https://{{sqvs}}:{{sqvsPort}}/svs/v1/sgx_qv_verify_quote",
+											"protocol": "https",
+											"host": [
+												"{{sqvs}}"
+											],
+											"port": "{{sqvsPort}}",
+											"path": [
+												"svs",
+												"v1",
+												"sgx_qv_verify_quote"
+											]
+										},
+										"description": "Verifies the quote provided in the request body by checking whether the quote is ECDSA. Quote verifier requests SGX Quote Verification Service (SQVS) to verify a quote. SQVS parses the quote, verifies all the parameters in the quote and returns the response."
+									},
+									"response": [
+										{
+											"name": "Success",
+											"originalRequest": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Content-Type",
+														"name": "Content-Type",
+														"value": "application/json",
+														"type": "text"
+													},
+													{
+														"key": "Accept",
+														"type": "text",
+														"value": "application/json"
+													},
+													{
+														"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+														"key": "Authorization",
+														"type": "text",
+														"value": "Bearer {{bearerTokenKbs}}"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n    \"quote\": \"AwACAAAAAAAFAAoAk5pyM/ecTKmUCg2zlX8GByMqADFimUjvNnla5ELEz5AAAAAAAgIAAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQAAAAAAAADnAAAAAAAAAMEUXU9fPsSXu9VcnFDf+o0OOlDKxxXq1A9B47TK5HugAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADUEqTwfvg4kqWRX7KrWEvjHhhuWk+Vq19pUP1OuGlNewAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA2BAAAMcpaIKGq3SkXNzLrRhqjAmdIj2kNCRXwhTWgcTx+xhJew2QQHxw8AkfKwx3mloCnU6sspA8elDHqofy5AQozwcSs0GGQsADhMYYjuG0Ex3Uyylqp8MA+MJujMJfWWOhRitQe/PPdtONXpbTLPohfxB0SR7JG04DzVYXJlvVLN9dAgIAAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFQAAAAAAAADnAAAAAAAAAGDYWvKL6NHECgjZiwCdX4rME4Sjhc9GCADkeHkdGpecAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACMT1d115ZQPpYTf3fGioKaAFasje1wFAsIGwlEkMV7/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC+QaxkHLkZmIYLtuxD6wi2Ejwml2sYwklUVVn0ilgz2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAfCvbOVDHdLksINRQVMr2O4w2DH4EaEyaJCr3HTDLQUmyGSTENR6VBAnJAHXNTuxsIEfCP8jM0RPeD2gtIABhcyAAAAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8FAHAOAAAtLS0tLUJFR0lOIENFUlRJRklDQVRFLS0tLS0KTUlJRTlqQ0NCSnVnQXdJQkFnSVZBTW5hTlU0VXNxc0xQNFQ4MXhHNVY4d0xCVlJ6TUFvR0NDcUdTTTQ5QkFNQ01IQXhJakFnQmdOVgpCQU1NR1VsdWRHVnNJRk5IV0NCUVEwc2dVR3hoZEdadmNtMGdRMEV4R2pBWUJnTlZCQW9NRVVsdWRHVnNJRU52Y25CdmNtRjBhVzl1Ck1SUXdFZ1lEVlFRSERBdFRZVzUwWVNCRGJHRnlZVEVMTUFrR0ExVUVDQXdDUTBFeEN6QUpCZ05WQkFZVEFsVlRNQjRYRFRJd01USXgKTmpBNE1EY3lNMW9YRFRJM01USXhOakE0TURjeU0xb3djREVpTUNBR0ExVUVBd3daU1c1MFpXd2dVMGRZSUZCRFN5QkRaWEowYVdacApZMkYwWlRFYU1CZ0dBMVVFQ2d3UlNXNTBaV3dnUTI5eWNHOXlZWFJwYjI0eEZEQVNCZ05WQkFjTUMxTmhiblJoSUVOc1lYSmhNUXN3CkNRWURWUVFJREFKRFFURUxNQWtHQTFVRUJoTUNWVk13V1RBVEJnY3Foa2pPUFFJQkJnZ3Foa2pPUFFNQkJ3TkNBQVNnR3pJL2o5VXEKYk9hRGJnSHF2V0J3ZW80ZEhPS0M4dmRBMWh3d3BpU2hhbVJqbU9ObDdYUGtLeGptT1h1NXlHb3U5S1J5cExTVSs1RURvQm4xbm9QVwpvNElERURDQ0F3d3dId1lEVlIwakJCZ3dGb0FVV1NQVHAwcW9ZMVF1T1hDdDRBOEhLMWNrS3Jjd2J3WURWUjBmQkdnd1pqQmtvR0tnCllJWmVhSFIwY0hNNkx5OXpZbmd1WVhCcExuUnlkWE4wWldSelpYSjJhV05sY3k1cGJuUmxiQzVqYjIwdmMyZDRMMk5sY25ScFptbGoKWVhScGIyNHZkak12Y0dOclkzSnNQMk5oUFhCc1lYUm1iM0p0Sm1WdVkyOWthVzVuUFdSbGNqQWRCZ05WSFE0RUZnUVVlTkVoWXoycQplays1SjdwY3oxMjNDNHV4MzRjd0RnWURWUjBQQVFIL0JBUURBZ2JBTUF3R0ExVWRFd0VCL3dRQ01BQXdnZ0k1QmdrcWhraUcrRTBCCkRRRUVnZ0lxTUlJQ0pqQWVCZ29xaGtpRytFMEJEUUVCQkJBY2RIcXJkZ0tIQlVWRUZvajVnancrTUlJQll3WUtLb1pJaHZoTkFRMEIKQWpDQ0FWTXdFQVlMS29aSWh2aE5BUTBCQWdFQ0FRSXdFQVlMS29aSWh2aE5BUTBCQWdJQ0FRSXdFQVlMS29aSWh2aE5BUTBCQWdNQwpBUUF3RUFZTEtvWklodmhOQVEwQkFnUUNBUUF3RUFZTEtvWklodmhOQVEwQkFnVUNBUUF3RUFZTEtvWklodmhOQVEwQkFnWUNBUUF3CkVBWUxLb1pJaHZoTkFRMEJBZ2NDQVFBd0VBWUxLb1pJaHZoTkFRMEJBZ2dDQVFBd0VBWUxLb1pJaHZoTkFRMEJBZ2tDQVFBd0VBWUwKS29aSWh2aE5BUTBCQWdvQ0FRQXdFQVlMS29aSWh2aE5BUTBCQWdzQ0FRQXdFQVlMS29aSWh2aE5BUTBCQWd3Q0FRQXdFQVlMS29aSQpodmhOQVEwQkFnMENBUUF3RUFZTEtvWklodmhOQVEwQkFnNENBUUF3RUFZTEtvWklodmhOQVEwQkFnOENBUUF3RUFZTEtvWklodmhOCkFRMEJBaEFDQVFBd0VBWUxLb1pJaHZoTkFRMEJBaEVDQVFvd0h3WUxLb1pJaHZoTkFRMEJBaElFRUFJQ0FBQUFBQUFBQUFBQUFBQUEKQUFBd0VBWUtLb1pJaHZoTkFRMEJBd1FDQUFBd0ZBWUtLb1pJaHZoTkFRMEJCQVFHSUdCcUFBQUFNQThHQ2lxR1NJYjRUUUVOQVFVSwpBUUV3SGdZS0tvWklodmhOQVEwQkJnUVFrZkNIaG5mR3pranVDZ1AyaG1Mem16QkVCZ29xaGtpRytFMEJEUUVITURZd0VBWUxLb1pJCmh2aE5BUTBCQndFQkFmOHdFQVlMS29aSWh2aE5BUTBCQndJQkFRQXdFQVlMS29aSWh2aE5BUTBCQndNQkFmOHdDZ1lJS29aSXpqMEUKQXdJRFNRQXdSZ0loQUtMRWxXVEMwRzd2cmM5cGhvR01BWWRMSFl5N244YksxMjZWTWw5TG9CUmZBaUVBbWNUMXRvNWpHNVBSSW5hMApTZUZVdlIrVXFHVG5LaSthM2lkVTYraEFRL0U9Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0tLS0tLUJFR0lOIENFUlRJRklDQVRFLS0tLS0KTUlJQ21qQ0NBa0NnQXdJQkFnSVVXU1BUcDBxb1kxUXVPWEN0NEE4SEsxY2tLcmN3Q2dZSUtvWkl6ajBFQXdJdwphREVhTUJnR0ExVUVBd3dSU1c1MFpXd2dVMGRZSUZKdmIzUWdRMEV4R2pBWUJnTlZCQW9NRVVsdWRHVnNJRU52CmNuQnZjbUYwYVc5dU1SUXdFZ1lEVlFRSERBdFRZVzUwWVNCRGJHRnlZVEVMTUFrR0ExVUVDQXdDUTBFeEN6QUoKQmdOVkJBWVRBbFZUTUI0WERURTVNVEF6TVRFeU16TTBOMW9YRFRNME1UQXpNVEV5TXpNME4xb3djREVpTUNBRwpBMVVFQXd3WlNXNTBaV3dnVTBkWUlGQkRTeUJRYkdGMFptOXliU0JEUVRFYU1CZ0dBMVVFQ2d3UlNXNTBaV3dnClEyOXljRzl5WVhScGIyNHhGREFTQmdOVkJBY01DMU5oYm5SaElFTnNZWEpoTVFzd0NRWURWUVFJREFKRFFURUwKTUFrR0ExVUVCaE1DVlZNd1dUQVRCZ2NxaGtqT1BRSUJCZ2dxaGtqT1BRTUJCd05DQUFRd3ArTGMrVFVCdGcxSAorVThKSXNNc2JqSGpDa1R0WGI4alBNNnIyZGh1OXpJYmxoRFo3SU5mcXQzSXg4WGNGS0Q4azBORVhya1o2NnFKClhhMUt6TElLbzRHL01JRzhNQjhHQTFVZEl3UVlNQmFBRk9ub1JGSlRObHhMR0pvUi9FTVlMS1hjSUlCSU1GWUcKQTFVZEh3UlBNRTB3UzZCSm9FZUdSV2gwZEhCek9pOHZjMko0TFdObGNuUnBabWxqWVhSbGN5NTBjblZ6ZEdWawpjMlZ5ZG1salpYTXVhVzUwWld3dVkyOXRMMGx1ZEdWc1UwZFlVbTl2ZEVOQkxtUmxjakFkQmdOVkhRNEVGZ1FVCldTUFRwMHFvWTFRdU9YQ3Q0QThISzFja0tyY3dEZ1lEVlIwUEFRSC9CQVFEQWdFR01CSUdBMVVkRXdFQi93UUkKTUFZQkFmOENBUUF3Q2dZSUtvWkl6ajBFQXdJRFNBQXdSUUloQUoxcStGVHorZ1V1VmZCUXVDZ0pzRnJMMlRUUwplMWFCWjUzTzUyVGpGaWU2QWlBcmlQYVJhaFVYOU9hOWtHTGxBY2hXWEtUNmo0UldTUjUwQnFock4zVVQ0QT09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0KLS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUNsRENDQWptZ0F3SUJBZ0lWQU9ub1JGSlRObHhMR0pvUi9FTVlMS1hjSUlCSU1Bb0dDQ3FHU000OUJBTUMKTUdneEdqQVlCZ05WQkFNTUVVbHVkR1ZzSUZOSFdDQlNiMjkwSUVOQk1Sb3dHQVlEVlFRS0RCRkpiblJsYkNCRApiM0p3YjNKaGRHbHZiakVVTUJJR0ExVUVCd3dMVTJGdWRHRWdRMnhoY21FeEN6QUpCZ05WQkFnTUFrTkJNUXN3CkNRWURWUVFHRXdKVlV6QWVGdzB4T1RFd016RXdPVFE1TWpGYUZ3MDBPVEV5TXpFeU16VTVOVGxhTUdneEdqQVkKQmdOVkJBTU1FVWx1ZEdWc0lGTkhXQ0JTYjI5MElFTkJNUm93R0FZRFZRUUtEQkZKYm5SbGJDQkRiM0p3YjNKaApkR2x2YmpFVU1CSUdBMVVFQnd3TFUyRnVkR0VnUTJ4aGNtRXhDekFKQmdOVkJBZ01Ba05CTVFzd0NRWURWUVFHCkV3SlZVekJaTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEEwSUFCRS82RC8xV0hOcld3UG1OTUl5QktNVzUKSjZKek1zam82eFAydmtLMWNkWkdiMVBHUlAvQy84RUNnaURrbWtsbXp3THpMaSswMDBtN0xMcnRLSkEzb0MyagpnYjh3Z2J3d0h3WURWUjBqQkJnd0ZvQVU2ZWhFVWxNMlhFc1ltaEg4UXhnc3Bkd2dnRWd3VmdZRFZSMGZCRTh3ClRUQkxvRW1nUjRaRmFIUjBjSE02THk5elluZ3RZMlZ5ZEdsbWFXTmhkR1Z6TG5SeWRYTjBaV1J6WlhKMmFXTmwKY3k1cGJuUmxiQzVqYjIwdlNXNTBaV3hUUjFoU2IyOTBRMEV1WkdWeU1CMEdBMVVkRGdRV0JCVHA2RVJTVXpaYwpTeGlhRWZ4REdDeWwzQ0NBU0RBT0JnTlZIUThCQWY4RUJBTUNBUVl3RWdZRFZSMFRBUUgvQkFnd0JnRUIvd0lCCkFUQUtCZ2dxaGtqT1BRUURBZ05KQURCR0FpRUF6dzl6ZFVpVUhQTVVkMEM0bXg0MWpsRlprck0zeTVmMWxnblYKTzdGYmpPb0NJUUNvR3RVbVQ0Y1h0N1YreVNIYko4SG9iOUFhbnB2WE5IMUVSKy9nWkYrb3BRPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=\",\n    \"userData\": \"\"\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "https://{{sqvs}}:{{sqvsPort}}/svs/v1/sgx_qv_verify_quote",
+													"protocol": "https",
+													"host": [
+														"{{sqvs}}"
+													],
+													"port": "{{sqvsPort}}",
+													"path": [
+														"svs",
+														"v1",
+														"sgx_qv_verify_quote"
+													]
+												}
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Type",
+													"value": "application/json"
+												},
+												{
+													"key": "Date",
+													"value": "Wed, 16 Dec 2020 10:00:33 GMT"
+												},
+												{
+													"key": "Content-Length",
+													"value": "567"
+												}
+											],
+											"cookie": [],
+											"body": "{\n    \"Message\": \"SGX_QL_QV_RESULT_OK\",\n    \"reportData\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n    \"EnclaveIssuer\": \"d412a4f07ef83892a5915fb2ab584be31e186e5a4f95ab5f6950fd4eb8694d7b\",\n    \"EnclaveMeasurement\": \"c1145d4f5f3ec497bbd55c9c50dffa8d0e3a50cac715ead40f41e3b4cae47ba0\",\n    \"EnclaveIssuerProdID\": \"00\",\n    \"EnclaveIssuerExtProdID\": \"00000000000000000000000000000000\",\n    \"ConfigSvn\": \"00\",\n    \"IsvSvn\": \"00\",\n    \"ConfigId\": \"00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\n    \"TcbLevel\": \"OutOfDate\"\n}"
+										}
+									]
+								},
+								{
+									"name": "sgxVerifyQuoteAndSign",
+									"request": {
+										"auth": {
+											"type": "noauth"
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											},
+											{
+												"key": "Accept",
+												"type": "text",
+												"value": "application/json"
+											},
+											{
+												"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+												"key": "Authorization",
+												"type": "text",
+												"value": "Bearer {{bearerTokenKbs}}"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"quote\": \"<string>\",\n    \"userData\": \"<string>\",\n    \"nonce\": \"<string>\",\n    \"challenge\": \"<string>\"\n}"
+										},
+										"url": {
+											"raw": "https://{{sqvs}}:{{sqvsPort}}/svs/v2/sgx_qv_verify_quote",
+											"protocol": "https",
+											"host": [
+												"{{sqvs}}"
+											],
+											"port": "{{sqvsPort}}",
+											"path": [
+												"svs",
+												"v2",
+												"sgx_qv_verify_quote"
+											]
+										},
+										"description": "Verifies the quote provided in the request body by checking whether the quote is ECDSA.\r\nQuote verifier requests SGX Quote Verification Service (SQVS) to verify a quote.\r\nSQVS parses the quote, verifies all the parameters in the quote and returns the response.\r\nIt signs the quote verification response in case it is configured to do so.\r\n\r\n\r\nNote: Tenant App is not going to use this API in v3.6GA Release, it will be used in future releases."
+									},
+									"response": [
+										{
+											"name": "Success",
+											"originalRequest": {
+												"method": "POST",
+												"header": [
+													{
+														"key": "Content-Type",
+														"name": "Content-Type",
+														"value": "application/json",
+														"type": "text"
+													},
+													{
+														"key": "Accept",
+														"type": "text",
+														"value": "application/json"
+													},
+													{
+														"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+														"key": "Authorization",
+														"type": "text",
+														"value": "Bearer {{bearerTokenKbs}}"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n    \"quote\": \"AwACAAAAAAAFAAoAk5pyM/ecTKmUCg2zlX8GByMqADFimUjvNnla5ELEz5AAAAAAAgIAAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQAAAAAAAADnAAAAAAAAAMEUXU9fPsSXu9VcnFDf+o0OOlDKxxXq1A9B47TK5HugAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADUEqTwfvg4kqWRX7KrWEvjHhhuWk+Vq19pUP1OuGlNewAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA2BAAAMcpaIKGq3SkXNzLrRhqjAmdIj2kNCRXwhTWgcTx+xhJew2QQHxw8AkfKwx3mloCnU6sspA8elDHqofy5AQozwcSs0GGQsADhMYYjuG0Ex3Uyylqp8MA+MJujMJfWWOhRitQe/PPdtONXpbTLPohfxB0SR7JG04DzVYXJlvVLN9dAgIAAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFQAAAAAAAADnAAAAAAAAAGDYWvKL6NHECgjZiwCdX4rME4Sjhc9GCADkeHkdGpecAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACMT1d115ZQPpYTf3fGioKaAFasje1wFAsIGwlEkMV7/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC+QaxkHLkZmIYLtuxD6wi2Ejwml2sYwklUVVn0ilgz2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAfCvbOVDHdLksINRQVMr2O4w2DH4EaEyaJCr3HTDLQUmyGSTENR6VBAnJAHXNTuxsIEfCP8jM0RPeD2gtIABhcyAAAAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8FAHAOAAAtLS0tLUJFR0lOIENFUlRJRklDQVRFLS0tLS0KTUlJRTlqQ0NCSnVnQXdJQkFnSVZBTW5hTlU0VXNxc0xQNFQ4MXhHNVY4d0xCVlJ6TUFvR0NDcUdTTTQ5QkFNQ01IQXhJakFnQmdOVgpCQU1NR1VsdWRHVnNJRk5IV0NCUVEwc2dVR3hoZEdadmNtMGdRMEV4R2pBWUJnTlZCQW9NRVVsdWRHVnNJRU52Y25CdmNtRjBhVzl1Ck1SUXdFZ1lEVlFRSERBdFRZVzUwWVNCRGJHRnlZVEVMTUFrR0ExVUVDQXdDUTBFeEN6QUpCZ05WQkFZVEFsVlRNQjRYRFRJd01USXgKTmpBNE1EY3lNMW9YRFRJM01USXhOakE0TURjeU0xb3djREVpTUNBR0ExVUVBd3daU1c1MFpXd2dVMGRZSUZCRFN5QkRaWEowYVdacApZMkYwWlRFYU1CZ0dBMVVFQ2d3UlNXNTBaV3dnUTI5eWNHOXlZWFJwYjI0eEZEQVNCZ05WQkFjTUMxTmhiblJoSUVOc1lYSmhNUXN3CkNRWURWUVFJREFKRFFURUxNQWtHQTFVRUJoTUNWVk13V1RBVEJnY3Foa2pPUFFJQkJnZ3Foa2pPUFFNQkJ3TkNBQVNnR3pJL2o5VXEKYk9hRGJnSHF2V0J3ZW80ZEhPS0M4dmRBMWh3d3BpU2hhbVJqbU9ObDdYUGtLeGptT1h1NXlHb3U5S1J5cExTVSs1RURvQm4xbm9QVwpvNElERURDQ0F3d3dId1lEVlIwakJCZ3dGb0FVV1NQVHAwcW9ZMVF1T1hDdDRBOEhLMWNrS3Jjd2J3WURWUjBmQkdnd1pqQmtvR0tnCllJWmVhSFIwY0hNNkx5OXpZbmd1WVhCcExuUnlkWE4wWldSelpYSjJhV05sY3k1cGJuUmxiQzVqYjIwdmMyZDRMMk5sY25ScFptbGoKWVhScGIyNHZkak12Y0dOclkzSnNQMk5oUFhCc1lYUm1iM0p0Sm1WdVkyOWthVzVuUFdSbGNqQWRCZ05WSFE0RUZnUVVlTkVoWXoycQplays1SjdwY3oxMjNDNHV4MzRjd0RnWURWUjBQQVFIL0JBUURBZ2JBTUF3R0ExVWRFd0VCL3dRQ01BQXdnZ0k1QmdrcWhraUcrRTBCCkRRRUVnZ0lxTUlJQ0pqQWVCZ29xaGtpRytFMEJEUUVCQkJBY2RIcXJkZ0tIQlVWRUZvajVnancrTUlJQll3WUtLb1pJaHZoTkFRMEIKQWpDQ0FWTXdFQVlMS29aSWh2aE5BUTBCQWdFQ0FRSXdFQVlMS29aSWh2aE5BUTBCQWdJQ0FRSXdFQVlMS29aSWh2aE5BUTBCQWdNQwpBUUF3RUFZTEtvWklodmhOQVEwQkFnUUNBUUF3RUFZTEtvWklodmhOQVEwQkFnVUNBUUF3RUFZTEtvWklodmhOQVEwQkFnWUNBUUF3CkVBWUxLb1pJaHZoTkFRMEJBZ2NDQVFBd0VBWUxLb1pJaHZoTkFRMEJBZ2dDQVFBd0VBWUxLb1pJaHZoTkFRMEJBZ2tDQVFBd0VBWUwKS29aSWh2aE5BUTBCQWdvQ0FRQXdFQVlMS29aSWh2aE5BUTBCQWdzQ0FRQXdFQVlMS29aSWh2aE5BUTBCQWd3Q0FRQXdFQVlMS29aSQpodmhOQVEwQkFnMENBUUF3RUFZTEtvWklodmhOQVEwQkFnNENBUUF3RUFZTEtvWklodmhOQVEwQkFnOENBUUF3RUFZTEtvWklodmhOCkFRMEJBaEFDQVFBd0VBWUxLb1pJaHZoTkFRMEJBaEVDQVFvd0h3WUxLb1pJaHZoTkFRMEJBaElFRUFJQ0FBQUFBQUFBQUFBQUFBQUEKQUFBd0VBWUtLb1pJaHZoTkFRMEJBd1FDQUFBd0ZBWUtLb1pJaHZoTkFRMEJCQVFHSUdCcUFBQUFNQThHQ2lxR1NJYjRUUUVOQVFVSwpBUUV3SGdZS0tvWklodmhOQVEwQkJnUVFrZkNIaG5mR3pranVDZ1AyaG1Mem16QkVCZ29xaGtpRytFMEJEUUVITURZd0VBWUxLb1pJCmh2aE5BUTBCQndFQkFmOHdFQVlMS29aSWh2aE5BUTBCQndJQkFRQXdFQVlMS29aSWh2aE5BUTBCQndNQkFmOHdDZ1lJS29aSXpqMEUKQXdJRFNRQXdSZ0loQUtMRWxXVEMwRzd2cmM5cGhvR01BWWRMSFl5N244YksxMjZWTWw5TG9CUmZBaUVBbWNUMXRvNWpHNVBSSW5hMApTZUZVdlIrVXFHVG5LaSthM2lkVTYraEFRL0U9Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0tLS0tLUJFR0lOIENFUlRJRklDQVRFLS0tLS0KTUlJQ21qQ0NBa0NnQXdJQkFnSVVXU1BUcDBxb1kxUXVPWEN0NEE4SEsxY2tLcmN3Q2dZSUtvWkl6ajBFQXdJdwphREVhTUJnR0ExVUVBd3dSU1c1MFpXd2dVMGRZSUZKdmIzUWdRMEV4R2pBWUJnTlZCQW9NRVVsdWRHVnNJRU52CmNuQnZjbUYwYVc5dU1SUXdFZ1lEVlFRSERBdFRZVzUwWVNCRGJHRnlZVEVMTUFrR0ExVUVDQXdDUTBFeEN6QUoKQmdOVkJBWVRBbFZUTUI0WERURTVNVEF6TVRFeU16TTBOMW9YRFRNME1UQXpNVEV5TXpNME4xb3djREVpTUNBRwpBMVVFQXd3WlNXNTBaV3dnVTBkWUlGQkRTeUJRYkdGMFptOXliU0JEUVRFYU1CZ0dBMVVFQ2d3UlNXNTBaV3dnClEyOXljRzl5WVhScGIyNHhGREFTQmdOVkJBY01DMU5oYm5SaElFTnNZWEpoTVFzd0NRWURWUVFJREFKRFFURUwKTUFrR0ExVUVCaE1DVlZNd1dUQVRCZ2NxaGtqT1BRSUJCZ2dxaGtqT1BRTUJCd05DQUFRd3ArTGMrVFVCdGcxSAorVThKSXNNc2JqSGpDa1R0WGI4alBNNnIyZGh1OXpJYmxoRFo3SU5mcXQzSXg4WGNGS0Q4azBORVhya1o2NnFKClhhMUt6TElLbzRHL01JRzhNQjhHQTFVZEl3UVlNQmFBRk9ub1JGSlRObHhMR0pvUi9FTVlMS1hjSUlCSU1GWUcKQTFVZEh3UlBNRTB3UzZCSm9FZUdSV2gwZEhCek9pOHZjMko0TFdObGNuUnBabWxqWVhSbGN5NTBjblZ6ZEdWawpjMlZ5ZG1salpYTXVhVzUwWld3dVkyOXRMMGx1ZEdWc1UwZFlVbTl2ZEVOQkxtUmxjakFkQmdOVkhRNEVGZ1FVCldTUFRwMHFvWTFRdU9YQ3Q0QThISzFja0tyY3dEZ1lEVlIwUEFRSC9CQVFEQWdFR01CSUdBMVVkRXdFQi93UUkKTUFZQkFmOENBUUF3Q2dZSUtvWkl6ajBFQXdJRFNBQXdSUUloQUoxcStGVHorZ1V1VmZCUXVDZ0pzRnJMMlRUUwplMWFCWjUzTzUyVGpGaWU2QWlBcmlQYVJhaFVYOU9hOWtHTGxBY2hXWEtUNmo0UldTUjUwQnFock4zVVQ0QT09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0KLS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUNsRENDQWptZ0F3SUJBZ0lWQU9ub1JGSlRObHhMR0pvUi9FTVlMS1hjSUlCSU1Bb0dDQ3FHU000OUJBTUMKTUdneEdqQVlCZ05WQkFNTUVVbHVkR1ZzSUZOSFdDQlNiMjkwSUVOQk1Sb3dHQVlEVlFRS0RCRkpiblJsYkNCRApiM0p3YjNKaGRHbHZiakVVTUJJR0ExVUVCd3dMVTJGdWRHRWdRMnhoY21FeEN6QUpCZ05WQkFnTUFrTkJNUXN3CkNRWURWUVFHRXdKVlV6QWVGdzB4T1RFd016RXdPVFE1TWpGYUZ3MDBPVEV5TXpFeU16VTVOVGxhTUdneEdqQVkKQmdOVkJBTU1FVWx1ZEdWc0lGTkhXQ0JTYjI5MElFTkJNUm93R0FZRFZRUUtEQkZKYm5SbGJDQkRiM0p3YjNKaApkR2x2YmpFVU1CSUdBMVVFQnd3TFUyRnVkR0VnUTJ4aGNtRXhDekFKQmdOVkJBZ01Ba05CTVFzd0NRWURWUVFHCkV3SlZVekJaTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEEwSUFCRS82RC8xV0hOcld3UG1OTUl5QktNVzUKSjZKek1zam82eFAydmtLMWNkWkdiMVBHUlAvQy84RUNnaURrbWtsbXp3THpMaSswMDBtN0xMcnRLSkEzb0MyagpnYjh3Z2J3d0h3WURWUjBqQkJnd0ZvQVU2ZWhFVWxNMlhFc1ltaEg4UXhnc3Bkd2dnRWd3VmdZRFZSMGZCRTh3ClRUQkxvRW1nUjRaRmFIUjBjSE02THk5elluZ3RZMlZ5ZEdsbWFXTmhkR1Z6TG5SeWRYTjBaV1J6WlhKMmFXTmwKY3k1cGJuUmxiQzVqYjIwdlNXNTBaV3hUUjFoU2IyOTBRMEV1WkdWeU1CMEdBMVVkRGdRV0JCVHA2RVJTVXpaYwpTeGlhRWZ4REdDeWwzQ0NBU0RBT0JnTlZIUThCQWY4RUJBTUNBUVl3RWdZRFZSMFRBUUgvQkFnd0JnRUIvd0lCCkFUQUtCZ2dxaGtqT1BRUURBZ05KQURCR0FpRUF6dzl6ZFVpVUhQTVVkMEM0bXg0MWpsRlprck0zeTVmMWxnblYKTzdGYmpPb0NJUUNvR3RVbVQ0Y1h0N1YreVNIYko4SG9iOUFhbnB2WE5IMUVSKy9nWkYrb3BRPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=\",\n    \"userData\": \"\",\n    \"challenge\": \"abcd\"\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "https://{{sqvs}}:{{sqvsPort}}/svs/v2/sgx_qv_verify_quote",
+													"protocol": "https",
+													"host": [
+														"{{sqvs}}"
+													],
+													"port": "{{sqvsPort}}",
+													"path": [
+														"svs",
+														"v2",
+														"sgx_qv_verify_quote"
+													]
+												}
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Type",
+													"value": "application/json"
+												},
+												{
+													"key": "Date",
+													"value": "Fri, 30 Apr 2021 10:18:40 GMT"
+												},
+												{
+													"key": "Transfer-Encoding",
+													"value": "chunked"
+												}
+											],
+											"cookie": [],
+											"body": "{\n    \"quoteData\": {\n        \"Message\": \"SGX_QL_QV_RESULT_OK\",\n        \"reportData\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n        \"EnclaveIssuer\": \"d412a4f07ef83892a5915fb2ab584be31e186e5a4f95ab5f6950fd4eb8694d7b\",\n        \"EnclaveMeasurement\": \"c1145d4f5f3ec497bbd55c9c50dffa8d0e3a50cac715ead40f41e3b4cae47ba0\",\n        \"EnclaveIssuerProdID\": \"00\",\n        \"EnclaveIssuerExtProdID\": \"00000000000000000000000000000000\",\n        \"ConfigSvn\": \"00\",\n        \"IsvSvn\": \"00\",\n        \"ConfigID\": \"00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\n        \"TcbLevel\": \"OutOfDate\",\n        \"Quote\": \"<quote in request>\",\n        \"Challenge\": \"<challenge in request>\"\n    },\n    \"signature\": \"<Digital Signature of the content of response field>\",\n    \"certificateChain\": \"<Chain of leaf and intermediate certs>\"\n}"
+										}
+									]
+								}
+							],
+							"description": "SGX Quote Verification service (SQVS) resource is used to verify the sgx ecdsa quote provided by the Quote verifier.\r\nSQVS checks whether the quote signature and PCK Certificate are valid, checks other parameters in the quote and returns the verification result.\r\n\r\nSQVS contacts SGX Caching service (SCS) to make sure that PCKCRL, TCBInfo, and QEIdentity in the quote are correct.\r\nSQVS listening port is user-configurable."
+						},
+						{
+							"name": "getIdentity",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
 								"header": [
 									{
-										"key": "Content-Type",
-										"name": "Content-Type",
+										"key": "Accept",
 										"value": "application/json",
 										"type": "text"
 									},
 									{
-										"key": "Accept",
-										"type": "text",
-										"value": "application/json"
-									},
-									{
-										"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
 										"key": "Authorization",
-										"type": "text",
-										"value": "Bearer {{bearerTokenKbs}}"
+										"value": "Bearer {{bearerTokenAttestedApp}}",
+										"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+										"type": "text"
 									}
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"quote\": \"AwACAAAAAAAFAAoAk5pyM/ecTKmUCg2zlX8GByMqADFimUjvNnla5ELEz5AAAAAAAgIAAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQAAAAAAAADnAAAAAAAAAMEUXU9fPsSXu9VcnFDf+o0OOlDKxxXq1A9B47TK5HugAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADUEqTwfvg4kqWRX7KrWEvjHhhuWk+Vq19pUP1OuGlNewAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA2BAAAMcpaIKGq3SkXNzLrRhqjAmdIj2kNCRXwhTWgcTx+xhJew2QQHxw8AkfKwx3mloCnU6sspA8elDHqofy5AQozwcSs0GGQsADhMYYjuG0Ex3Uyylqp8MA+MJujMJfWWOhRitQe/PPdtONXpbTLPohfxB0SR7JG04DzVYXJlvVLN9dAgIAAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFQAAAAAAAADnAAAAAAAAAGDYWvKL6NHECgjZiwCdX4rME4Sjhc9GCADkeHkdGpecAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACMT1d115ZQPpYTf3fGioKaAFasje1wFAsIGwlEkMV7/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC+QaxkHLkZmIYLtuxD6wi2Ejwml2sYwklUVVn0ilgz2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAfCvbOVDHdLksINRQVMr2O4w2DH4EaEyaJCr3HTDLQUmyGSTENR6VBAnJAHXNTuxsIEfCP8jM0RPeD2gtIABhcyAAAAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8FAHAOAAAtLS0tLUJFR0lOIENFUlRJRklDQVRFLS0tLS0KTUlJRTlqQ0NCSnVnQXdJQkFnSVZBTW5hTlU0VXNxc0xQNFQ4MXhHNVY4d0xCVlJ6TUFvR0NDcUdTTTQ5QkFNQ01IQXhJakFnQmdOVgpCQU1NR1VsdWRHVnNJRk5IV0NCUVEwc2dVR3hoZEdadmNtMGdRMEV4R2pBWUJnTlZCQW9NRVVsdWRHVnNJRU52Y25CdmNtRjBhVzl1Ck1SUXdFZ1lEVlFRSERBdFRZVzUwWVNCRGJHRnlZVEVMTUFrR0ExVUVDQXdDUTBFeEN6QUpCZ05WQkFZVEFsVlRNQjRYRFRJd01USXgKTmpBNE1EY3lNMW9YRFRJM01USXhOakE0TURjeU0xb3djREVpTUNBR0ExVUVBd3daU1c1MFpXd2dVMGRZSUZCRFN5QkRaWEowYVdacApZMkYwWlRFYU1CZ0dBMVVFQ2d3UlNXNTBaV3dnUTI5eWNHOXlZWFJwYjI0eEZEQVNCZ05WQkFjTUMxTmhiblJoSUVOc1lYSmhNUXN3CkNRWURWUVFJREFKRFFURUxNQWtHQTFVRUJoTUNWVk13V1RBVEJnY3Foa2pPUFFJQkJnZ3Foa2pPUFFNQkJ3TkNBQVNnR3pJL2o5VXEKYk9hRGJnSHF2V0J3ZW80ZEhPS0M4dmRBMWh3d3BpU2hhbVJqbU9ObDdYUGtLeGptT1h1NXlHb3U5S1J5cExTVSs1RURvQm4xbm9QVwpvNElERURDQ0F3d3dId1lEVlIwakJCZ3dGb0FVV1NQVHAwcW9ZMVF1T1hDdDRBOEhLMWNrS3Jjd2J3WURWUjBmQkdnd1pqQmtvR0tnCllJWmVhSFIwY0hNNkx5OXpZbmd1WVhCcExuUnlkWE4wWldSelpYSjJhV05sY3k1cGJuUmxiQzVqYjIwdmMyZDRMMk5sY25ScFptbGoKWVhScGIyNHZkak12Y0dOclkzSnNQMk5oUFhCc1lYUm1iM0p0Sm1WdVkyOWthVzVuUFdSbGNqQWRCZ05WSFE0RUZnUVVlTkVoWXoycQplays1SjdwY3oxMjNDNHV4MzRjd0RnWURWUjBQQVFIL0JBUURBZ2JBTUF3R0ExVWRFd0VCL3dRQ01BQXdnZ0k1QmdrcWhraUcrRTBCCkRRRUVnZ0lxTUlJQ0pqQWVCZ29xaGtpRytFMEJEUUVCQkJBY2RIcXJkZ0tIQlVWRUZvajVnancrTUlJQll3WUtLb1pJaHZoTkFRMEIKQWpDQ0FWTXdFQVlMS29aSWh2aE5BUTBCQWdFQ0FRSXdFQVlMS29aSWh2aE5BUTBCQWdJQ0FRSXdFQVlMS29aSWh2aE5BUTBCQWdNQwpBUUF3RUFZTEtvWklodmhOQVEwQkFnUUNBUUF3RUFZTEtvWklodmhOQVEwQkFnVUNBUUF3RUFZTEtvWklodmhOQVEwQkFnWUNBUUF3CkVBWUxLb1pJaHZoTkFRMEJBZ2NDQVFBd0VBWUxLb1pJaHZoTkFRMEJBZ2dDQVFBd0VBWUxLb1pJaHZoTkFRMEJBZ2tDQVFBd0VBWUwKS29aSWh2aE5BUTBCQWdvQ0FRQXdFQVlMS29aSWh2aE5BUTBCQWdzQ0FRQXdFQVlMS29aSWh2aE5BUTBCQWd3Q0FRQXdFQVlMS29aSQpodmhOQVEwQkFnMENBUUF3RUFZTEtvWklodmhOQVEwQkFnNENBUUF3RUFZTEtvWklodmhOQVEwQkFnOENBUUF3RUFZTEtvWklodmhOCkFRMEJBaEFDQVFBd0VBWUxLb1pJaHZoTkFRMEJBaEVDQVFvd0h3WUxLb1pJaHZoTkFRMEJBaElFRUFJQ0FBQUFBQUFBQUFBQUFBQUEKQUFBd0VBWUtLb1pJaHZoTkFRMEJBd1FDQUFBd0ZBWUtLb1pJaHZoTkFRMEJCQVFHSUdCcUFBQUFNQThHQ2lxR1NJYjRUUUVOQVFVSwpBUUV3SGdZS0tvWklodmhOQVEwQkJnUVFrZkNIaG5mR3pranVDZ1AyaG1Mem16QkVCZ29xaGtpRytFMEJEUUVITURZd0VBWUxLb1pJCmh2aE5BUTBCQndFQkFmOHdFQVlMS29aSWh2aE5BUTBCQndJQkFRQXdFQVlMS29aSWh2aE5BUTBCQndNQkFmOHdDZ1lJS29aSXpqMEUKQXdJRFNRQXdSZ0loQUtMRWxXVEMwRzd2cmM5cGhvR01BWWRMSFl5N244YksxMjZWTWw5TG9CUmZBaUVBbWNUMXRvNWpHNVBSSW5hMApTZUZVdlIrVXFHVG5LaSthM2lkVTYraEFRL0U9Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0tLS0tLUJFR0lOIENFUlRJRklDQVRFLS0tLS0KTUlJQ21qQ0NBa0NnQXdJQkFnSVVXU1BUcDBxb1kxUXVPWEN0NEE4SEsxY2tLcmN3Q2dZSUtvWkl6ajBFQXdJdwphREVhTUJnR0ExVUVBd3dSU1c1MFpXd2dVMGRZSUZKdmIzUWdRMEV4R2pBWUJnTlZCQW9NRVVsdWRHVnNJRU52CmNuQnZjbUYwYVc5dU1SUXdFZ1lEVlFRSERBdFRZVzUwWVNCRGJHRnlZVEVMTUFrR0ExVUVDQXdDUTBFeEN6QUoKQmdOVkJBWVRBbFZUTUI0WERURTVNVEF6TVRFeU16TTBOMW9YRFRNME1UQXpNVEV5TXpNME4xb3djREVpTUNBRwpBMVVFQXd3WlNXNTBaV3dnVTBkWUlGQkRTeUJRYkdGMFptOXliU0JEUVRFYU1CZ0dBMVVFQ2d3UlNXNTBaV3dnClEyOXljRzl5WVhScGIyNHhGREFTQmdOVkJBY01DMU5oYm5SaElFTnNZWEpoTVFzd0NRWURWUVFJREFKRFFURUwKTUFrR0ExVUVCaE1DVlZNd1dUQVRCZ2NxaGtqT1BRSUJCZ2dxaGtqT1BRTUJCd05DQUFRd3ArTGMrVFVCdGcxSAorVThKSXNNc2JqSGpDa1R0WGI4alBNNnIyZGh1OXpJYmxoRFo3SU5mcXQzSXg4WGNGS0Q4azBORVhya1o2NnFKClhhMUt6TElLbzRHL01JRzhNQjhHQTFVZEl3UVlNQmFBRk9ub1JGSlRObHhMR0pvUi9FTVlMS1hjSUlCSU1GWUcKQTFVZEh3UlBNRTB3UzZCSm9FZUdSV2gwZEhCek9pOHZjMko0TFdObGNuUnBabWxqWVhSbGN5NTBjblZ6ZEdWawpjMlZ5ZG1salpYTXVhVzUwWld3dVkyOXRMMGx1ZEdWc1UwZFlVbTl2ZEVOQkxtUmxjakFkQmdOVkhRNEVGZ1FVCldTUFRwMHFvWTFRdU9YQ3Q0QThISzFja0tyY3dEZ1lEVlIwUEFRSC9CQVFEQWdFR01CSUdBMVVkRXdFQi93UUkKTUFZQkFmOENBUUF3Q2dZSUtvWkl6ajBFQXdJRFNBQXdSUUloQUoxcStGVHorZ1V1VmZCUXVDZ0pzRnJMMlRUUwplMWFCWjUzTzUyVGpGaWU2QWlBcmlQYVJhaFVYOU9hOWtHTGxBY2hXWEtUNmo0UldTUjUwQnFock4zVVQ0QT09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0KLS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUNsRENDQWptZ0F3SUJBZ0lWQU9ub1JGSlRObHhMR0pvUi9FTVlMS1hjSUlCSU1Bb0dDQ3FHU000OUJBTUMKTUdneEdqQVlCZ05WQkFNTUVVbHVkR1ZzSUZOSFdDQlNiMjkwSUVOQk1Sb3dHQVlEVlFRS0RCRkpiblJsYkNCRApiM0p3YjNKaGRHbHZiakVVTUJJR0ExVUVCd3dMVTJGdWRHRWdRMnhoY21FeEN6QUpCZ05WQkFnTUFrTkJNUXN3CkNRWURWUVFHRXdKVlV6QWVGdzB4T1RFd016RXdPVFE1TWpGYUZ3MDBPVEV5TXpFeU16VTVOVGxhTUdneEdqQVkKQmdOVkJBTU1FVWx1ZEdWc0lGTkhXQ0JTYjI5MElFTkJNUm93R0FZRFZRUUtEQkZKYm5SbGJDQkRiM0p3YjNKaApkR2x2YmpFVU1CSUdBMVVFQnd3TFUyRnVkR0VnUTJ4aGNtRXhDekFKQmdOVkJBZ01Ba05CTVFzd0NRWURWUVFHCkV3SlZVekJaTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEEwSUFCRS82RC8xV0hOcld3UG1OTUl5QktNVzUKSjZKek1zam82eFAydmtLMWNkWkdiMVBHUlAvQy84RUNnaURrbWtsbXp3THpMaSswMDBtN0xMcnRLSkEzb0MyagpnYjh3Z2J3d0h3WURWUjBqQkJnd0ZvQVU2ZWhFVWxNMlhFc1ltaEg4UXhnc3Bkd2dnRWd3VmdZRFZSMGZCRTh3ClRUQkxvRW1nUjRaRmFIUjBjSE02THk5elluZ3RZMlZ5ZEdsbWFXTmhkR1Z6TG5SeWRYTjBaV1J6WlhKMmFXTmwKY3k1cGJuUmxiQzVqYjIwdlNXNTBaV3hUUjFoU2IyOTBRMEV1WkdWeU1CMEdBMVVkRGdRV0JCVHA2RVJTVXpaYwpTeGlhRWZ4REdDeWwzQ0NBU0RBT0JnTlZIUThCQWY4RUJBTUNBUVl3RWdZRFZSMFRBUUgvQkFnd0JnRUIvd0lCCkFUQUtCZ2dxaGtqT1BRUURBZ05KQURCR0FpRUF6dzl6ZFVpVUhQTVVkMEM0bXg0MWpsRlprck0zeTVmMWxnblYKTzdGYmpPb0NJUUNvR3RVbVQ0Y1h0N1YreVNIYko4SG9iOUFhbnB2WE5IMUVSKy9nWkYrb3BRPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=\",\n    \"userData\": \"\"\n}",
+									"raw": "{\r\n    \"nonce\": \"12345678901234567890123456789012\"\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -900,111 +1111,97 @@
 									}
 								},
 								"url": {
-									"raw": "https://{{sqvs}}:{{sqvsPort}}/svs/v1/sgx_qv_verify_quote",
+									"raw": "https://{{attestedApp}}:{{attestedAppPort}}/id",
 									"protocol": "https",
 									"host": [
-										"{{sqvs}}"
+										"{{attestedApp}}"
 									],
-									"port": "{{sqvsPort}}",
+									"port": "{{attestedAppPort}}",
 									"path": [
-										"svs",
-										"v1",
-										"sgx_qv_verify_quote"
+										"id"
 									]
-								}
-							},
-							"status": "OK",
-							"code": 200,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
 								},
+								"description": "Attesting App generates a cryptographically worthy 32 byte unsigned int (1 >= n <= 2^32) nonce and calls this API endpoint. Attested app extracts the nonce given in the request body, passes the nonce to the enclave, generates a public/private key pair inside the enclave and a quote is generated using DCAP API configured with SCS. A report is generated inside the enclave with the hash of enclave's public key + nonce as UserData. Attested app returns the generated quote and public key in the response. A Hardcoded Bearer token is required to authorize this REST call."
+							},
+							"response": [
 								{
-									"key": "Date",
-									"value": "Wed, 16 Dec 2020 10:00:33 GMT"
-								},
-								{
-									"key": "Content-Length",
-									"value": "567"
+									"name": "Success",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Authorization",
+												"value": "Bearer {{bearerTokenAttestedApp}}",
+												"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "https://{{attestedApp}}:{{attestedAppPort}}/id",
+											"protocol": "https",
+											"host": [
+												"{{attestedApp}}"
+											],
+											"port": "{{attestedAppPort}}",
+											"path": [
+												"id"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Date",
+											"value": "Thu, 01 Jul 2021 17:50:39 GMT"
+										},
+										{
+											"key": "Transfer-Encoding",
+											"value": "chunked"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"quote\": \"AwACAAAAAAAGAAsAk5pyM/ecTKmUCg2zlX8GB88dByWaSZaYQ3yHDr3o2+cAAAAAAgIAAgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABwAAAAAAAADnAAAAAAAAAGY1kjmo2EcI/jvhoYpH8V8ysN78adUWz3sQqUmtjQHoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACD1xnnferKFHD2uvYqTXdDA8iZ22kCD5xw7h38CMfOngAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACnKYwGPaO6QsnP2b6Gog/+sCSgbvR5X6GJI1dXsalfHQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA2BAAAKbRhBh6plhshq723OeWlFOtQjEdtiW0OJyE7E5dzm9TzKH16cqiHbmaqMZj7gOLr+RODUGE6zAe6G41FNR9pNl5KD8DfnUR/XI67bdLGWO1x6I02ri0/PS5H2W/sifXz0NxyIomS4CIXUumUlD/IoQQhYGoosIpRA70sDWlhdbcAgIAAgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFQAAAAAAAADnAAAAAAAAAFxgaTuTglIDbWPPgJ2tBdKqHc0aTg3f+RFRMLraJCY+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACMT1d115ZQPpYTf3fGioKaAFasje1wFAsIGwlEkMV7/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEABgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADU+YALfGIsVNoF0CYt7+KaWdUWigjCGC7eifsuIvJvQQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACd1wAhM9WwZVoMCjBTzSjJc4xpBb6CXlyjj/Z9X3GSpMNe6UQHRX3n8DNeNEOY9eR2bli2LEUplkUqK1ntbXtyAAAAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8FAHAOAAAtLS0tLUJFR0lOIENFUlRJRklDQVRFLS0tLS0KTUlJRTlUQ0NCSnFnQXdJQkFnSVVMNE5XVXBKeWpPOEozYXdLeGpncEhQYnExemd3Q2dZSUtvWkl6ajBFQXdJd2NERWlNQ0FHQTFVRQpBd3daU1c1MFpXd2dVMGRZSUZCRFN5QlFiR0YwWm05eWJTQkRRVEVhTUJnR0ExVUVDZ3dSU1c1MFpXd2dRMjl5Y0c5eVlYUnBiMjR4CkZEQVNCZ05WQkFjTUMxTmhiblJoSUVOc1lYSmhNUXN3Q1FZRFZRUUlEQUpEUVRFTE1Ba0dBMVVFQmhNQ1ZWTXdIaGNOTWpFd056QXgKTVRFME5ETXdXaGNOTWpnd056QXhNVEUwTkRNd1dqQndNU0l3SUFZRFZRUUREQmxKYm5SbGJDQlRSMWdnVUVOTElFTmxjblJwWm1sagpZWFJsTVJvd0dBWURWUVFLREJGSmJuUmxiQ0JEYjNKd2IzSmhkR2x2YmpFVU1CSUdBMVVFQnd3TFUyRnVkR0VnUTJ4aGNtRXhDekFKCkJnTlZCQWdNQWtOQk1Rc3dDUVlEVlFRR0V3SlZVekJaTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEEwSUFCSGEzY0tZemZraFUKOEdWa29WTURmUnByaFFmRXZySDFSSVE4aWowMWJGQlVGZFpwMVo1MXUyT3JTZW1SUnNwTncrbHVKd2ZVL01jVXhGQW1xOGhQMlRhagpnZ01RTUlJREREQWZCZ05WSFNNRUdEQVdnQlJaSTlPblNxaGpWQzQ1Y0szZ0R3Y3JWeVFxdHpCdkJnTlZIUjhFYURCbU1HU2dZcUJnCmhsNW9kSFJ3Y3pvdkwzTmllQzVoY0drdWRISjFjM1JsWkhObGNuWnBZMlZ6TG1sdWRHVnNMbU52YlM5elozZ3ZZMlZ5ZEdsbWFXTmgKZEdsdmJpOTJNeTl3WTJ0amNtdy9ZMkU5Y0d4aGRHWnZjbTBtWlc1amIyUnBibWM5WkdWeU1CMEdBMVVkRGdRV0JCVGJrWllkNlhZVwpnaHVSdG40d1FoT1pDclRSZHpBT0JnTlZIUThCQWY4RUJBTUNCc0F3REFZRFZSMFRBUUgvQkFJd0FEQ0NBamtHQ1NxR1NJYjRUUUVOCkFRU0NBaW93Z2dJbU1CNEdDaXFHU0liNFRRRU5BUUVFRUxZaXhJVlZmZVdwS09qanVDb0dOOGt3Z2dGakJnb3Foa2lHK0UwQkRRRUMKTUlJQlV6QVFCZ3NxaGtpRytFMEJEUUVDQVFJQkFqQVFCZ3NxaGtpRytFMEJEUUVDQWdJQkFqQVFCZ3NxaGtpRytFMEJEUUVDQXdJQgpBREFRQmdzcWhraUcrRTBCRFFFQ0JBSUJBREFRQmdzcWhraUcrRTBCRFFFQ0JRSUJBREFRQmdzcWhraUcrRTBCRFFFQ0JnSUJBREFRCkJnc3Foa2lHK0UwQkRRRUNCd0lCQURBUUJnc3Foa2lHK0UwQkRRRUNDQUlCQURBUUJnc3Foa2lHK0UwQkRRRUNDUUlCQURBUUJnc3EKaGtpRytFMEJEUUVDQ2dJQkFEQVFCZ3NxaGtpRytFMEJEUUVDQ3dJQkFEQVFCZ3NxaGtpRytFMEJEUUVDREFJQkFEQVFCZ3NxaGtpRworRTBCRFFFQ0RRSUJBREFRQmdzcWhraUcrRTBCRFFFQ0RnSUJBREFRQmdzcWhraUcrRTBCRFFFQ0R3SUJBREFRQmdzcWhraUcrRTBCCkRRRUNFQUlCQURBUUJnc3Foa2lHK0UwQkRRRUNFUUlCQ2pBZkJnc3Foa2lHK0UwQkRRRUNFZ1FRQWdJQUFBQUFBQUFBQUFBQUFBQUEKQURBUUJnb3Foa2lHK0UwQkRRRURCQUlBQURBVUJnb3Foa2lHK0UwQkRRRUVCQVlRWUdvQUFBQXdEd1lLS29aSWh2aE5BUTBCQlFvQgpBVEFlQmdvcWhraUcrRTBCRFFFR0JCQWlUN0ozMldraHZlMXVZV3NFUDFObk1FUUdDaXFHU0liNFRRRU5BUWN3TmpBUUJnc3Foa2lHCitFMEJEUUVIQVFFQi96QVFCZ3NxaGtpRytFMEJEUUVIQWdFQkFEQVFCZ3NxaGtpRytFMEJEUUVIQXdFQi96QUtCZ2dxaGtqT1BRUUQKQWdOSkFEQkdBaUVBZ1BDbzcra1l5ejJ5MHFrSUIvVXF4RVdRU0JyMVdtSEE4cGRFZkJvdmxwc0NJUUNCK0lqdGVtcUZHeHJYcWFieQpvYTBUSmtoQXlNYW1DYWE2bGNDVWVaRHJyZz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0tLS0tLUJFR0lOIENFUlRJRklDQVRFLS0tLS0KTUlJQ21qQ0NBa0NnQXdJQkFnSVVXU1BUcDBxb1kxUXVPWEN0NEE4SEsxY2tLcmN3Q2dZSUtvWkl6ajBFQXdJdwphREVhTUJnR0ExVUVBd3dSU1c1MFpXd2dVMGRZSUZKdmIzUWdRMEV4R2pBWUJnTlZCQW9NRVVsdWRHVnNJRU52CmNuQnZjbUYwYVc5dU1SUXdFZ1lEVlFRSERBdFRZVzUwWVNCRGJHRnlZVEVMTUFrR0ExVUVDQXdDUTBFeEN6QUoKQmdOVkJBWVRBbFZUTUI0WERURTVNVEF6TVRFeU16TTBOMW9YRFRNME1UQXpNVEV5TXpNME4xb3djREVpTUNBRwpBMVVFQXd3WlNXNTBaV3dnVTBkWUlGQkRTeUJRYkdGMFptOXliU0JEUVRFYU1CZ0dBMVVFQ2d3UlNXNTBaV3dnClEyOXljRzl5WVhScGIyNHhGREFTQmdOVkJBY01DMU5oYm5SaElFTnNZWEpoTVFzd0NRWURWUVFJREFKRFFURUwKTUFrR0ExVUVCaE1DVlZNd1dUQVRCZ2NxaGtqT1BRSUJCZ2dxaGtqT1BRTUJCd05DQUFRd3ArTGMrVFVCdGcxSAorVThKSXNNc2JqSGpDa1R0WGI4alBNNnIyZGh1OXpJYmxoRFo3SU5mcXQzSXg4WGNGS0Q4azBORVhya1o2NnFKClhhMUt6TElLbzRHL01JRzhNQjhHQTFVZEl3UVlNQmFBRk9ub1JGSlRObHhMR0pvUi9FTVlMS1hjSUlCSU1GWUcKQTFVZEh3UlBNRTB3UzZCSm9FZUdSV2gwZEhCek9pOHZjMko0TFdObGNuUnBabWxqWVhSbGN5NTBjblZ6ZEdWawpjMlZ5ZG1salpYTXVhVzUwWld3dVkyOXRMMGx1ZEdWc1UwZFlVbTl2ZEVOQkxtUmxjakFkQmdOVkhRNEVGZ1FVCldTUFRwMHFvWTFRdU9YQ3Q0QThISzFja0tyY3dEZ1lEVlIwUEFRSC9CQVFEQWdFR01CSUdBMVVkRXdFQi93UUkKTUFZQkFmOENBUUF3Q2dZSUtvWkl6ajBFQXdJRFNBQXdSUUloQUoxcStGVHorZ1V1VmZCUXVDZ0pzRnJMMlRUUwplMWFCWjUzTzUyVGpGaWU2QWlBcmlQYVJhaFVYOU9hOWtHTGxBY2hXWEtUNmo0UldTUjUwQnFock4zVVQ0QT09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0KLS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUNsRENDQWptZ0F3SUJBZ0lWQU9ub1JGSlRObHhMR0pvUi9FTVlMS1hjSUlCSU1Bb0dDQ3FHU000OUJBTUMKTUdneEdqQVlCZ05WQkFNTUVVbHVkR1ZzSUZOSFdDQlNiMjkwSUVOQk1Sb3dHQVlEVlFRS0RCRkpiblJsYkNCRApiM0p3YjNKaGRHbHZiakVVTUJJR0ExVUVCd3dMVTJGdWRHRWdRMnhoY21FeEN6QUpCZ05WQkFnTUFrTkJNUXN3CkNRWURWUVFHRXdKVlV6QWVGdzB4T1RFd016RXdPVFE1TWpGYUZ3MDBPVEV5TXpFeU16VTVOVGxhTUdneEdqQVkKQmdOVkJBTU1FVWx1ZEdWc0lGTkhXQ0JTYjI5MElFTkJNUm93R0FZRFZRUUtEQkZKYm5SbGJDQkRiM0p3YjNKaApkR2x2YmpFVU1CSUdBMVVFQnd3TFUyRnVkR0VnUTJ4aGNtRXhDekFKQmdOVkJBZ01Ba05CTVFzd0NRWURWUVFHCkV3SlZVekJaTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEEwSUFCRS82RC8xV0hOcld3UG1OTUl5QktNVzUKSjZKek1zam82eFAydmtLMWNkWkdiMVBHUlAvQy84RUNnaURrbWtsbXp3THpMaSswMDBtN0xMcnRLSkEzb0MyagpnYjh3Z2J3d0h3WURWUjBqQkJnd0ZvQVU2ZWhFVWxNMlhFc1ltaEg4UXhnc3Bkd2dnRWd3VmdZRFZSMGZCRTh3ClRUQkxvRW1nUjRaRmFIUjBjSE02THk5elluZ3RZMlZ5ZEdsbWFXTmhkR1Z6TG5SeWRYTjBaV1J6WlhKMmFXTmwKY3k1cGJuUmxiQzVqYjIwdlNXNTBaV3hUUjFoU2IyOTBRMEV1WkdWeU1CMEdBMVVkRGdRV0JCVHA2RVJTVXpaYwpTeGlhRWZ4REdDeWwzQ0NBU0RBT0JnTlZIUThCQWY4RUJBTUNBUVl3RWdZRFZSMFRBUUgvQkFnd0JnRUIvd0lCCkFUQUtCZ2dxaGtqT1BRUURBZ05KQURCR0FpRUF6dzl6ZFVpVUhQTVVkMEM0bXg0MWpsRlprck0zeTVmMWxnblYKTzdGYmpPb0NJUUNvR3RVbVQ0Y1h0N1YreVNIYko4SG9iOUFhbnB2WE5IMUVSKy9nWkYrb3BRPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=\",\n    \"user-data\": {\n        \"public-key\": \"AQABAFPh1ROg9Y5OVyGtAyUhZhAaNb5NPbLWNo/Np/lbfwW7XacXHpaTwKy+pcvY2f4t7usz5NuGoBibzKsJdjgeD6gbrSPTaFuhvhEv2YqV35Gc4s6vAsR8GXDHDA2IuXNRZAfNMYlwCg8tVV16DJ1Q6dpEvIVUhh68cwuj8BPscdlsjnfMEO1yp7isLJa/gLd9FRhGgW/JSoKgrj3aT4KovTpovOgyX3ug/Tu7V7i/2KemPtAs1DkMqU9BbgwwZrKLlrdSgAA7VTVsFjv0oZld0RL/B4YU3O1zBkCXvFiWD/U+f4L3oZAwqZzN1N3DDlCVy7z300hlpkYUi8hSaM+yz2ukhDTqY4O/nfwb9Z/AD/J4NvEUd9rWdVRlNBg0miwZwjfgi+xcFL7uC8ENmVDdSZ/egOPZgmgrLywJNJwYxP5mwfn9NmZc8SoGwKCjQRuCMD8Q1csyCoVTWfnT8QoWto1/PAXRyZs9skBny600Lo9QIRE5VWa37nP+lsf3/tCKlA==\"\n    }\n}"
 								}
-							],
-							"cookie": [],
-							"body": "{\n    \"Message\": \"SGX_QL_QV_RESULT_OK\",\n    \"reportData\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n    \"EnclaveIssuer\": \"d412a4f07ef83892a5915fb2ab584be31e186e5a4f95ab5f6950fd4eb8694d7b\",\n    \"EnclaveMeasurement\": \"c1145d4f5f3ec497bbd55c9c50dffa8d0e3a50cac715ead40f41e3b4cae47ba0\",\n    \"EnclaveIssuerProdID\": \"00\",\n    \"EnclaveIssuerExtProdID\": \"00000000000000000000000000000000\",\n    \"ConfigSvn\": \"00\",\n    \"IsvSvn\": \"00\",\n    \"ConfigId\": \"00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\n    \"TcbLevel\": \"OutOfDate\"\n}"
-						}
-					]
-				},
-				{
-					"name": "sgxVerifyQuoteAndSign",
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Accept",
-								"type": "text",
-								"value": "application/json"
-							},
-							{
-								"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
-								"key": "Authorization",
-								"type": "text",
-								"value": "Bearer {{bearerTokenKbs}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"quote\": \"<string>\",\n    \"userData\": \"<string>\",\n    \"nonce\": \"<string>\",\n    \"challenge\": \"<string>\"\n}"
-						},
-						"url": {
-							"raw": "https://{{sqvs}}:{{sqvsPort}}/svs/v2/sgx_qv_verify_quote",
-							"protocol": "https",
-							"host": [
-								"{{sqvs}}"
-							],
-							"port": "{{sqvsPort}}",
-							"path": [
-								"svs",
-								"v2",
-								"sgx_qv_verify_quote"
 							]
 						},
-						"description": "Verifies the quote provided in the request body by checking whether the quote is ECDSA.\r\nQuote verifier requests SGX Quote Verification Service (SQVS) to verify a quote.\r\nSQVS parses the quote, verifies all the parameters in the quote and returns the response.\r\nIt signs the quote verification response in case it is configured to do so.\r\n\r\n\r\nNote: Tenant App is not going to use this API in v3.6GA Release, it will be used in future releases."
-					},
-					"response": [
 						{
-							"name": "Success",
-							"originalRequest": {
+							"name": "shareWrappedSwk",
+							"protocolProfileBehavior": {
+								"disabledSystemHeaders": {}
+							},
+							"request": {
 								"method": "POST",
 								"header": [
 									{
 										"key": "Content-Type",
-										"name": "Content-Type",
 										"value": "application/json",
 										"type": "text"
 									},
 									{
 										"key": "Accept",
-										"type": "text",
-										"value": "application/json"
+										"value": "application/json",
+										"type": "text"
 									},
 									{
-										"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
 										"key": "Authorization",
-										"type": "text",
-										"value": "Bearer {{bearerTokenKbs}}"
+										"value": "Bearer {{bearerTokenAttestedApp}}",
+										"type": "text"
 									}
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"quote\": \"AwACAAAAAAAFAAoAk5pyM/ecTKmUCg2zlX8GByMqADFimUjvNnla5ELEz5AAAAAAAgIAAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQAAAAAAAADnAAAAAAAAAMEUXU9fPsSXu9VcnFDf+o0OOlDKxxXq1A9B47TK5HugAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADUEqTwfvg4kqWRX7KrWEvjHhhuWk+Vq19pUP1OuGlNewAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA2BAAAMcpaIKGq3SkXNzLrRhqjAmdIj2kNCRXwhTWgcTx+xhJew2QQHxw8AkfKwx3mloCnU6sspA8elDHqofy5AQozwcSs0GGQsADhMYYjuG0Ex3Uyylqp8MA+MJujMJfWWOhRitQe/PPdtONXpbTLPohfxB0SR7JG04DzVYXJlvVLN9dAgIAAQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFQAAAAAAAADnAAAAAAAAAGDYWvKL6NHECgjZiwCdX4rME4Sjhc9GCADkeHkdGpecAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACMT1d115ZQPpYTf3fGioKaAFasje1wFAsIGwlEkMV7/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEABQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC+QaxkHLkZmIYLtuxD6wi2Ejwml2sYwklUVVn0ilgz2AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAfCvbOVDHdLksINRQVMr2O4w2DH4EaEyaJCr3HTDLQUmyGSTENR6VBAnJAHXNTuxsIEfCP8jM0RPeD2gtIABhcyAAAAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8FAHAOAAAtLS0tLUJFR0lOIENFUlRJRklDQVRFLS0tLS0KTUlJRTlqQ0NCSnVnQXdJQkFnSVZBTW5hTlU0VXNxc0xQNFQ4MXhHNVY4d0xCVlJ6TUFvR0NDcUdTTTQ5QkFNQ01IQXhJakFnQmdOVgpCQU1NR1VsdWRHVnNJRk5IV0NCUVEwc2dVR3hoZEdadmNtMGdRMEV4R2pBWUJnTlZCQW9NRVVsdWRHVnNJRU52Y25CdmNtRjBhVzl1Ck1SUXdFZ1lEVlFRSERBdFRZVzUwWVNCRGJHRnlZVEVMTUFrR0ExVUVDQXdDUTBFeEN6QUpCZ05WQkFZVEFsVlRNQjRYRFRJd01USXgKTmpBNE1EY3lNMW9YRFRJM01USXhOakE0TURjeU0xb3djREVpTUNBR0ExVUVBd3daU1c1MFpXd2dVMGRZSUZCRFN5QkRaWEowYVdacApZMkYwWlRFYU1CZ0dBMVVFQ2d3UlNXNTBaV3dnUTI5eWNHOXlZWFJwYjI0eEZEQVNCZ05WQkFjTUMxTmhiblJoSUVOc1lYSmhNUXN3CkNRWURWUVFJREFKRFFURUxNQWtHQTFVRUJoTUNWVk13V1RBVEJnY3Foa2pPUFFJQkJnZ3Foa2pPUFFNQkJ3TkNBQVNnR3pJL2o5VXEKYk9hRGJnSHF2V0J3ZW80ZEhPS0M4dmRBMWh3d3BpU2hhbVJqbU9ObDdYUGtLeGptT1h1NXlHb3U5S1J5cExTVSs1RURvQm4xbm9QVwpvNElERURDQ0F3d3dId1lEVlIwakJCZ3dGb0FVV1NQVHAwcW9ZMVF1T1hDdDRBOEhLMWNrS3Jjd2J3WURWUjBmQkdnd1pqQmtvR0tnCllJWmVhSFIwY0hNNkx5OXpZbmd1WVhCcExuUnlkWE4wWldSelpYSjJhV05sY3k1cGJuUmxiQzVqYjIwdmMyZDRMMk5sY25ScFptbGoKWVhScGIyNHZkak12Y0dOclkzSnNQMk5oUFhCc1lYUm1iM0p0Sm1WdVkyOWthVzVuUFdSbGNqQWRCZ05WSFE0RUZnUVVlTkVoWXoycQplays1SjdwY3oxMjNDNHV4MzRjd0RnWURWUjBQQVFIL0JBUURBZ2JBTUF3R0ExVWRFd0VCL3dRQ01BQXdnZ0k1QmdrcWhraUcrRTBCCkRRRUVnZ0lxTUlJQ0pqQWVCZ29xaGtpRytFMEJEUUVCQkJBY2RIcXJkZ0tIQlVWRUZvajVnancrTUlJQll3WUtLb1pJaHZoTkFRMEIKQWpDQ0FWTXdFQVlMS29aSWh2aE5BUTBCQWdFQ0FRSXdFQVlMS29aSWh2aE5BUTBCQWdJQ0FRSXdFQVlMS29aSWh2aE5BUTBCQWdNQwpBUUF3RUFZTEtvWklodmhOQVEwQkFnUUNBUUF3RUFZTEtvWklodmhOQVEwQkFnVUNBUUF3RUFZTEtvWklodmhOQVEwQkFnWUNBUUF3CkVBWUxLb1pJaHZoTkFRMEJBZ2NDQVFBd0VBWUxLb1pJaHZoTkFRMEJBZ2dDQVFBd0VBWUxLb1pJaHZoTkFRMEJBZ2tDQVFBd0VBWUwKS29aSWh2aE5BUTBCQWdvQ0FRQXdFQVlMS29aSWh2aE5BUTBCQWdzQ0FRQXdFQVlMS29aSWh2aE5BUTBCQWd3Q0FRQXdFQVlMS29aSQpodmhOQVEwQkFnMENBUUF3RUFZTEtvWklodmhOQVEwQkFnNENBUUF3RUFZTEtvWklodmhOQVEwQkFnOENBUUF3RUFZTEtvWklodmhOCkFRMEJBaEFDQVFBd0VBWUxLb1pJaHZoTkFRMEJBaEVDQVFvd0h3WUxLb1pJaHZoTkFRMEJBaElFRUFJQ0FBQUFBQUFBQUFBQUFBQUEKQUFBd0VBWUtLb1pJaHZoTkFRMEJBd1FDQUFBd0ZBWUtLb1pJaHZoTkFRMEJCQVFHSUdCcUFBQUFNQThHQ2lxR1NJYjRUUUVOQVFVSwpBUUV3SGdZS0tvWklodmhOQVEwQkJnUVFrZkNIaG5mR3pranVDZ1AyaG1Mem16QkVCZ29xaGtpRytFMEJEUUVITURZd0VBWUxLb1pJCmh2aE5BUTBCQndFQkFmOHdFQVlMS29aSWh2aE5BUTBCQndJQkFRQXdFQVlMS29aSWh2aE5BUTBCQndNQkFmOHdDZ1lJS29aSXpqMEUKQXdJRFNRQXdSZ0loQUtMRWxXVEMwRzd2cmM5cGhvR01BWWRMSFl5N244YksxMjZWTWw5TG9CUmZBaUVBbWNUMXRvNWpHNVBSSW5hMApTZUZVdlIrVXFHVG5LaSthM2lkVTYraEFRL0U9Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0tLS0tLUJFR0lOIENFUlRJRklDQVRFLS0tLS0KTUlJQ21qQ0NBa0NnQXdJQkFnSVVXU1BUcDBxb1kxUXVPWEN0NEE4SEsxY2tLcmN3Q2dZSUtvWkl6ajBFQXdJdwphREVhTUJnR0ExVUVBd3dSU1c1MFpXd2dVMGRZSUZKdmIzUWdRMEV4R2pBWUJnTlZCQW9NRVVsdWRHVnNJRU52CmNuQnZjbUYwYVc5dU1SUXdFZ1lEVlFRSERBdFRZVzUwWVNCRGJHRnlZVEVMTUFrR0ExVUVDQXdDUTBFeEN6QUoKQmdOVkJBWVRBbFZUTUI0WERURTVNVEF6TVRFeU16TTBOMW9YRFRNME1UQXpNVEV5TXpNME4xb3djREVpTUNBRwpBMVVFQXd3WlNXNTBaV3dnVTBkWUlGQkRTeUJRYkdGMFptOXliU0JEUVRFYU1CZ0dBMVVFQ2d3UlNXNTBaV3dnClEyOXljRzl5WVhScGIyNHhGREFTQmdOVkJBY01DMU5oYm5SaElFTnNZWEpoTVFzd0NRWURWUVFJREFKRFFURUwKTUFrR0ExVUVCaE1DVlZNd1dUQVRCZ2NxaGtqT1BRSUJCZ2dxaGtqT1BRTUJCd05DQUFRd3ArTGMrVFVCdGcxSAorVThKSXNNc2JqSGpDa1R0WGI4alBNNnIyZGh1OXpJYmxoRFo3SU5mcXQzSXg4WGNGS0Q4azBORVhya1o2NnFKClhhMUt6TElLbzRHL01JRzhNQjhHQTFVZEl3UVlNQmFBRk9ub1JGSlRObHhMR0pvUi9FTVlMS1hjSUlCSU1GWUcKQTFVZEh3UlBNRTB3UzZCSm9FZUdSV2gwZEhCek9pOHZjMko0TFdObGNuUnBabWxqWVhSbGN5NTBjblZ6ZEdWawpjMlZ5ZG1salpYTXVhVzUwWld3dVkyOXRMMGx1ZEdWc1UwZFlVbTl2ZEVOQkxtUmxjakFkQmdOVkhRNEVGZ1FVCldTUFRwMHFvWTFRdU9YQ3Q0QThISzFja0tyY3dEZ1lEVlIwUEFRSC9CQVFEQWdFR01CSUdBMVVkRXdFQi93UUkKTUFZQkFmOENBUUF3Q2dZSUtvWkl6ajBFQXdJRFNBQXdSUUloQUoxcStGVHorZ1V1VmZCUXVDZ0pzRnJMMlRUUwplMWFCWjUzTzUyVGpGaWU2QWlBcmlQYVJhaFVYOU9hOWtHTGxBY2hXWEtUNmo0UldTUjUwQnFock4zVVQ0QT09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0KLS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUNsRENDQWptZ0F3SUJBZ0lWQU9ub1JGSlRObHhMR0pvUi9FTVlMS1hjSUlCSU1Bb0dDQ3FHU000OUJBTUMKTUdneEdqQVlCZ05WQkFNTUVVbHVkR1ZzSUZOSFdDQlNiMjkwSUVOQk1Sb3dHQVlEVlFRS0RCRkpiblJsYkNCRApiM0p3YjNKaGRHbHZiakVVTUJJR0ExVUVCd3dMVTJGdWRHRWdRMnhoY21FeEN6QUpCZ05WQkFnTUFrTkJNUXN3CkNRWURWUVFHRXdKVlV6QWVGdzB4T1RFd016RXdPVFE1TWpGYUZ3MDBPVEV5TXpFeU16VTVOVGxhTUdneEdqQVkKQmdOVkJBTU1FVWx1ZEdWc0lGTkhXQ0JTYjI5MElFTkJNUm93R0FZRFZRUUtEQkZKYm5SbGJDQkRiM0p3YjNKaApkR2x2YmpFVU1CSUdBMVVFQnd3TFUyRnVkR0VnUTJ4aGNtRXhDekFKQmdOVkJBZ01Ba05CTVFzd0NRWURWUVFHCkV3SlZVekJaTUJNR0J5cUdTTTQ5QWdFR0NDcUdTTTQ5QXdFSEEwSUFCRS82RC8xV0hOcld3UG1OTUl5QktNVzUKSjZKek1zam82eFAydmtLMWNkWkdiMVBHUlAvQy84RUNnaURrbWtsbXp3THpMaSswMDBtN0xMcnRLSkEzb0MyagpnYjh3Z2J3d0h3WURWUjBqQkJnd0ZvQVU2ZWhFVWxNMlhFc1ltaEg4UXhnc3Bkd2dnRWd3VmdZRFZSMGZCRTh3ClRUQkxvRW1nUjRaRmFIUjBjSE02THk5elluZ3RZMlZ5ZEdsbWFXTmhkR1Z6TG5SeWRYTjBaV1J6WlhKMmFXTmwKY3k1cGJuUmxiQzVqYjIwdlNXNTBaV3hUUjFoU2IyOTBRMEV1WkdWeU1CMEdBMVVkRGdRV0JCVHA2RVJTVXpaYwpTeGlhRWZ4REdDeWwzQ0NBU0RBT0JnTlZIUThCQWY4RUJBTUNBUVl3RWdZRFZSMFRBUUgvQkFnd0JnRUIvd0lCCkFUQUtCZ2dxaGtqT1BRUURBZ05KQURCR0FpRUF6dzl6ZFVpVUhQTVVkMEM0bXg0MWpsRlprck0zeTVmMWxnblYKTzdGYmpPb0NJUUNvR3RVbVQ0Y1h0N1YreVNIYko4SG9iOUFhbnB2WE5IMUVSKy9nWkYrb3BRPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=\",\n    \"userData\": \"\",\n    \"challenge\": \"abcd\"\n}",
+									"raw": "{\r\n    \"swk\": \"{{wrappedSwk}}\"\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -1012,61 +1209,240 @@
 									}
 								},
 								"url": {
-									"raw": "https://{{sqvs}}:{{sqvsPort}}/svs/v2/sgx_qv_verify_quote",
+									"raw": "https://{{attestedApp}}:{{attestedAppPort}}/wrapped_swk",
 									"protocol": "https",
 									"host": [
-										"{{sqvs}}"
+										"{{attestedApp}}"
 									],
-									"port": "{{sqvsPort}}",
+									"port": "{{attestedAppPort}}",
 									"path": [
-										"svs",
-										"v2",
-										"sgx_qv_verify_quote"
+										"wrapped_swk"
 									]
-								}
+								},
+								"description": "AttestingApp generates a symmetric wrapping key (SWK) and wraps the SWK using the public key and calls this API endpoint. AttestedApp unwraps the SWK using its private key inside the enclave. A Hardcoded Bearer token is required to authorize this REST call."
 							},
-							"status": "OK",
-							"code": 200,
-							"_postman_previewlanguage": "json",
-							"header": [
+							"response": [
 								{
-									"key": "Content-Type",
-									"value": "application/json"
-								},
-								{
-									"key": "Date",
-									"value": "Fri, 30 Apr 2021 10:18:40 GMT"
-								},
-								{
-									"key": "Transfer-Encoding",
-									"value": "chunked"
+									"name": "Success",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Authorization",
+												"value": "Bearer {{bearerTokenAttestedApp}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"swk\": \"{{wrappedSwk}}\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://{{attestedApp}}:{{attestedAppPort}}/wrapped_swk",
+											"protocol": "https",
+											"host": [
+												"{{attestedApp}}"
+											],
+											"port": "{{attestedAppPort}}",
+											"path": [
+												"wrapped_swk"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Date",
+											"value": "Thu, 01 Jul 2021 18:04:47 GMT"
+										},
+										{
+											"key": "Content-Length",
+											"value": "0"
+										}
+									],
+									"cookie": [],
+									"body": ""
 								}
-							],
-							"cookie": [],
-							"body": "{\n    \"quoteData\": {\n        \"Message\": \"SGX_QL_QV_RESULT_OK\",\n        \"reportData\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n        \"EnclaveIssuer\": \"d412a4f07ef83892a5915fb2ab584be31e186e5a4f95ab5f6950fd4eb8694d7b\",\n        \"EnclaveMeasurement\": \"c1145d4f5f3ec497bbd55c9c50dffa8d0e3a50cac715ead40f41e3b4cae47ba0\",\n        \"EnclaveIssuerProdID\": \"00\",\n        \"EnclaveIssuerExtProdID\": \"00000000000000000000000000000000\",\n        \"ConfigSvn\": \"00\",\n        \"IsvSvn\": \"00\",\n        \"ConfigID\": \"00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\n        \"TcbLevel\": \"OutOfDate\",\n        \"Quote\": \"<quote in request>\",\n        \"Challenge\": \"<challenge in request>\"\n    },\n    \"signature\": \"<Digital Signature of the content of response field>\",\n    \"certificateChain\": \"<Chain of leaf and intermediate certs>\"\n}"
+							]
+						},
+						{
+							"name": "shareWrappedMessage",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{bearerTokenAttestedApp}}",
+										"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"message\": \"{{wrappedMessage}}\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://{{attestedApp}}:{{attestedAppPort}}/wrapped_message",
+									"protocol": "https",
+									"host": [
+										"{{attestedApp}}"
+									],
+									"port": "{{attestedAppPort}}",
+									"path": [
+										"wrapped_message"
+									]
+								},
+								"description": "AttestingApp wraps the message with the SWK and calls this API endpoint. AttestedApp unwraps the message using the SWK inside the enclave. A Hardcoded Bearer token is required to authorize this REST call."
+							},
+							"response": [
+								{
+									"name": "Success",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json",
+												"type": "text"
+											},
+											{
+												"key": "Authorization",
+												"value": "Bearer {{bearerTokenAttestedApp}}",
+												"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"message\": \"{{wrappedMessage}}\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "https://{{attestedApp}}:{{attestedAppPort}}/wrapped_message",
+											"protocol": "https",
+											"host": [
+												"{{attestedApp}}"
+											],
+											"port": "{{attestedAppPort}}",
+											"path": [
+												"wrapped_message"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Date",
+											"value": "Thu, 01 Jul 2021 18:10:50 GMT"
+										},
+										{
+											"key": "Content-Length",
+											"value": "0"
+										}
+									],
+									"cookie": [],
+									"body": ""
+								}
+							]
+						}
+					],
+					"description": "```\n1. The attestedApp hosts three HTTPs APIs:\n    1. GET /id\n    2. POST /wrapped_swk\n    3. POST /wrapped_message\n\n2. The attestingApp generates a 256 bit nonce.\n\n3. The attestingApp calls the HTTPs GET /id of the attestedApp with the nonce (generated in step 2) in the request body.\n\n    1. The attestedApp extracts the nonce by parsing the request body.\n    2. The attestedApp passes the nonce to the enclave.\n    3. A public/private key pair is generated inside the enclave.\n    4. A report is generated inside the enclave with the hash of enclave's public key + nonce (from step 3.2) as UserData.\n    5. A quote is generated using DCAP API configured with SCS.\n    6. The quote and public key is added in the HTTP response body.\n\n4. The attestingApp parses the response.\n\n    1. Extracts the quote and public key.\n    2. Sends the quote and uses public key + nonce (from step 2) as user data field to SQVS for verification.\n    3. SQVS responds with quote verification status, user data match status and a subset of the fields extracted from the quote which is verified against those in a quote policy file.\n\n5. The attestingApp generates a symmetric wrapping key (SWK) and wraps the SWK using the public key from step 3.\n\n6. The attestingApp shares the SWK (from step 6) to the attestedApp by calling HTTPs POST /wrapped_swk\n\n7. The attestedApp unwraps the SWK shared in step 6 using its private key inside the enclave.\n\n8. The attestingApp wraps the message with the SWK generated in step 4 and shares it with the attestedApp by POST /wrapped_message\n\n9. The attestedApp unwraps the message using the SWK from step 6 inside the enclave.\n```\n",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
 						}
 					]
-				}
-			],
-			"description": "SGX Quote Verification service (SQVS) resource is used to verify the sgx ecdsa quote provided by the Quote verifier.\r\nSQVS checks whether the quote signature and PCK Certificate are valid, checks other parameters in the quote and returns the verification result.\r\n\r\nSQVS contacts SGX Caching service (SCS) to make sure that PCKCRL, TCBInfo, and QEIdentity in the quote are correct.\r\nSQVS listening port is user-configurable.",
-			"event": [
-				{
-					"listen": "prerequest",
-					"script": {
-						"type": "text/javascript",
-						"exec": [
-							""
-						]
-					}
 				},
 				{
-					"listen": "test",
-					"script": {
-						"type": "text/javascript",
-						"exec": [
-							""
-						]
-					}
+					"name": "Running the Sample Apps",
+					"item": [],
+					"description": "```\r\n1. Make sure your environment is set: $ source ${sgx-sdk-install-path}/environment\r\n\r\n2. Run the Attested App binary first in a new terminal:\r\n\r\n       cd <source folder>/out/\r\n\r\n       ./sgx-attested-app run\r\n \r\n\r\nThis initializes the enclave inside the Attested App and starts the TCP listener on the configured port.\r\n\r\n3. Run the Attesting App binary in a new terminal:\r\n\r\n       cd <source folder>/out/\r\n\r\n       ./sgx-attesting-app run\r\n```\r\n",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					]
 				}
 			]
 		}
