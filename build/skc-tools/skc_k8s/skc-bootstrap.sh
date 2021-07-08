@@ -1058,7 +1058,7 @@ dispatch_works() {
       ;;
     "sgx-attestation")
       deploy_common_components
-      deploy_sqvs
+      deploy_ihub
       ;;
     "sgx-orchestration-k8s")
       deploy_common_components
@@ -1135,8 +1135,7 @@ dispatch_works() {
       ;;
     "sgx-attestation")
       cleanup_common_components
-      cleanup_sqvs
-
+      cleanup_ihub
       ;;
     "sgx-orchestration-k8s")
       cleanup_common_components
