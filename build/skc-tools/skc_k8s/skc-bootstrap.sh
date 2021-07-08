@@ -452,6 +452,9 @@ deploy_ihub() {
     exit 1
   fi
 
+  echo "Waiting for IHUB to bootstrap itself..."
+  sleep 20
+
   cd ../
 
 }
