@@ -23,5 +23,5 @@ build_prerequisites.sh 		Install RHEL or UBUNTU package dependecies required for
 download_dcap_driver.sh 	Download SGX dcap driver pre-built binary and adds to the tar file
 install_sgxsdk.sh 		Downloads SGX SDK pre-built binary and installs it on build machine
 install_sgxrpms.sh 		Downloads SGX PSW/QGL RPMS and installs them
-install_ctk.sh		 	Downloads Crypto Api Toolkit repo, builds it and adds dynamic libraries to the tar file
+install_sgxssl.sh		Downloads Crypto Api Toolkit repo, builds sgxssl and adds it to the tar file
 build_sampleapps.sh		Downloads Sample Apps repo, builds it and adds it to the tar file

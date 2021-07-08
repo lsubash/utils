@@ -1,5 +1,5 @@
 #!/bin/bash
-SKCLIB_BIN=bin
+SAMPLEAPPS_BIN=bin
 SGX_DRIVER_VERSION=1.41
 SGX_INSTALL_DIR=/opt/intel
 
@@ -62,11 +62,11 @@ install_prerequisites()
 
 install_dcap_driver()
 {
-	chmod u+x $SKCLIB_BIN/sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin
+	chmod u+x $SAMPLEAPPS_BIN/sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin
         if [[ "$INKERNEL_SGX" -eq 1 ]]; then
                 if [[ "$DRIVER_VERSION" == ""  || "$DRIVER_VERSION" != "$SGX_DRIVER_VERSION" ]]; then
 			echo "Installing sgx dcap driver...."
-			./$SKCLIB_BIN/sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin -prefix=$SGX_INSTALL_DIR || exit 1
+			./$SAMPLEAPPS_BIN/sgx_linux_x64_driver_${SGX_DRIVER_VERSION}.bin -prefix=$SGX_INSTALL_DIR || exit 1
 			echo "${green} sgx dcap driver installed successfully ${reset}"
 		elif [ "$DRIVER_VERSION" != "$SGX_DRIVER_VERSION" ]; then
 			echo "${red} incompatible sgx dcap driver loaded, uninstall the existing driver before proceeding ${reset}"
@@ -80,7 +80,7 @@ install_dcap_driver()
 install_psw_qgl()
 {
 	if [ "$OS" == "rhel" ]; then
-		tar -xf $SKCLIB_BIN/sgx_rpm_local_repo.tgz || exit 1
+		tar -xf $SAMPLEAPPS_BIN/sgx_rpm_local_repo.tgz || exit 1
 		yum-config-manager --add-repo file://$PWD/sgx_rpm_local_repo || exit 1
 		dnf install -qy --nogpgcheck libsgx-launch libsgx-uae-service libsgx-urts libsgx-ae-qve libsgx-dcap-ql libsgx-dcap-ql-devel libsgx-dcap-default-qpl-devel libsgx-dcap-default-qpl || exit 1
 		rm -rf sgx_rpm_local_repo /etc/yum.repos.d/*sgx_rpm_local_repo.repo

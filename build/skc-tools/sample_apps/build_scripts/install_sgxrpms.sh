@@ -1,5 +1,7 @@
 #!/bin/bash
 SGX_VERSION=2.13.3
+SAMPLEAPPS_DIR=sample_apps
+SAMPLEAPPS_BIN_DIR=$SAMPLEAPPS_DIR/bin
 
 # Check OS and VERSION
 OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
@@ -15,6 +17,7 @@ install_psw_qpl_qgl()
 {
 	if [ "$OS" == "rhel" ]; then
 		wget -q $SGX_URL/sgx_rpm_local_repo.tgz || exit 1
+                \cp -pf sgx_rpm_local_repo.tgz $SAMPLEAPPS_BIN_DIR
 		tar -xf sgx_rpm_local_repo.tgz || exit 1
 		yum-config-manager --add-repo file://$PWD/sgx_rpm_local_repo || exit 1
 		dnf install -qy --nogpgcheck libsgx-launch libsgx-uae-service libsgx-urts libsgx-dcap-ql-devel || exit 1

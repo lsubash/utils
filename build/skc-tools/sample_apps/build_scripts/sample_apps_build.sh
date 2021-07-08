@@ -26,7 +26,6 @@ create_sample_apps_tar()
 	\cp -pf ../deploy_scripts/*.sh $SAMPLEAPPS_DIR
         \cp -rpf ../../../../../utils/tools/sample-sgx-attestation/out/ $SAMPLEAPPS_DIR
         rm -f $SAMPLEAPPS_DIR/out/rootca.pem
-	rm -rf $SAMPLEAPPS_BIN_DIR
 	tar -cf $TAR_NAME.tar -C $SAMPLEAPPS_DIR . --remove-files || exit 1
 	sha256sum $TAR_NAME.tar > $TAR_NAME.sha2
         chmod 755 $TAR_NAME.sha2
@@ -60,11 +59,11 @@ install_sgxrpm()
 	fi
 }
 	
-install_ctk()
+install_sgxssl()
 {
-	source install_ctk.sh
+	source install_sgxssl.sh
 	if [ $? -ne 0 ]; then
-		echo "cryptoapitoolkit installation failed"
+		echo "sgxssl installation failed"
 		exit 1
 	fi
 }
@@ -89,6 +88,6 @@ install_prerequisites
 download_dcap_driver
 install_sgxsdk
 install_sgxrpm
-install_ctk
+install_sgxssl
 build_sample_apps
 create_sample_apps_tar
