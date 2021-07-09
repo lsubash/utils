@@ -15,12 +15,12 @@ if [ -f ./iseclpgdb.env ]; then
 	if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
 fi
 
+# Variables Section. Please edit the default value as appropriate or use the iseclpgdb.env file
 DEFAULT_CERTSUBJECT="/CN=ISecl Self Sign Cert"
 DEFAULT_CIPHERSUITES="ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256"
 DEFAULT_CERT_DNS="localhost"
 DEFAULT_CERT_IP="127.0.0.1"
-DEFAULT_MAX_CONNECTIONS=400
-# Variables Section. Please edit the default value as appropriate or use the iseclpgdb.env file
+DEFAULT_DB_INSTANCE_SIZE="small"
 
 ISECL_PGDB_IP_INTERFACES="${ISECL_PGDB_IP_INTERFACES:-localhost}"    # network interfaces to listen for connection
 ISECL_PGDB_PORT="${ISECL_PGDB_PORT:-5432}"
@@ -34,7 +34,22 @@ ISECL_PGDB_CIPHERSUITES="${ISECL_PGDB_CIPHERSUITES:-$DEFAULT_CIPHERSUITES}"
 
 ISECL_PGDB_CERT_DNS="${ISECL_PGDB_CERT_DNS:-$DEFAULT_CERT_DNS}"
 ISECL_PGDB_CERT_IP="${ISECL_PGDB_CERT_IP:-$DEFAULT_CERT_IP}"
-ISECL_PGDB_MAX_CONNECTIONS="${ISECL_PGDB_MAX_CONNECTIONS:-$DEFAULT_MAX_CONNECTIONS}"
+ISECL_PGDB_INSTANCE_SIZE="${ISECL_PGDB_INSTANCE_SIZE:-$DEFAULT_DB_INSTANCE_SIZE}"
+
+isecl_pgdb_max_connections=""
+isecl_pgdb_shared_buffers=""
+
+# Based on the DB instance size, set max_connections and shared_buffers values
+if [[ "$ISECL_PGDB_INSTANCE_SIZE" == "small" ]]; then
+   isecl_pgdb_max_connections=100
+   isecl_pgdb_shared_buffers=1024MB
+elif [[ "$ISECL_PGDB_INSTANCE_SIZE" == "medium" ]]; then
+   isecl_pgdb_max_connections=200
+   isecl_pgdb_shared_buffers=2048MB
+elif [[ "$ISECL_PGDB_INSTANCE_SIZE" == "large" ]]; then
+   isecl_pgdb_max_connections=400
+   isecl_pgdb_shared_buffers=6144MB
+fi
 
 pgdb_cert_dns=""
 for dns in $(echo $ISECL_PGDB_CERT_DNS | tr "," "\n")
@@ -126,7 +141,8 @@ if [ ! -f $PGDATA/pg_hba.conf ] ; then
 	echo "ssl_cert_file = 'server.crt'" >> $PGDATA/postgresql.conf
 	echo "ssl_key_file = 'server.key'" >> $PGDATA/postgresql.conf
 	echo "ssl_ciphers = '$ISECL_PGDB_CIPHERSUITES'" >> $PGDATA/postgresql.conf
-	echo "max_connections = $ISECL_PGDB_MAX_CONNECTIONS" >> $PGDATA/postgresql.conf
+	echo "max_connections = $isecl_pgdb_max_connections" >> $PGDATA/postgresql.conf
+	echo "shared_buffers = $isecl_pgdb_shared_buffers" >> $PGDATA/postgresql.conf
 
 	mv $PGDATA/pg_hba.conf $PGDATA/pg_hba-template.conf
 	echo "local all postgres peer" >> $PGDATA/pg_hba.conf
