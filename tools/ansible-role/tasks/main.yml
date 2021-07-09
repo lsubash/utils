@@ -113,8 +113,8 @@
       - setup == 'trusted-workload-placement-containers' or setup == 'trusted-workload-placement-vm'
 
 
-# os: Redhat and setup: workload-conf-vm/workload-conf-containers-docker and isecl_role: csp
-- name: ISECL - SETUP PREREQUISITES | Set required CSP facts for workload-conf-vm/workload-conf-containers-docker/all usecase
+# os: Redhat and setup: workload-conf-vm and isecl_role: csp
+- name: ISECL - SETUP PREREQUISITES | Set required CSP facts for workload-conf-vm/all usecase
   set_fact:
     cms: "{{ ansible_default_ipv4.address }}"
     cms_hostname: "{{ ansible_fqdn }}"
@@ -133,10 +133,10 @@
       - "'CSP' in groups"
       - (ansible_default_ipv4.address or ansible_fqdn in groups['CSP'])
       - isecl_role == 'csp'
-      - (setup == 'workload-conf-vm' or setup == 'workload-conf-containers-docker' or setup == 'workload-conf-containers-crio')
+      - (setup == 'workload-conf-vm' or setup == 'workload-conf-containers-crio')
 
 
-# os: Redhat and setup: workload-conf-vm/workload-conf-containers-docker and isecl_role: enterprise
+# os: Redhat and setup: workload-conf-vm and isecl_role: enterprise
 - name: ISECL - SETUP PREREQUISITES | Set required Enterprise facts for workload-confidentiality-vm/workload-confidentiality-containers/all usecase
   set_fact:
     kbs: "{{ ansible_default_ipv4.address }}"
@@ -148,10 +148,10 @@
       - "'Enterprise' in groups"
       - (ansible_default_ipv4.address or ansible_fqdn in groups['Enterprise'])
       - isecl_role == 'enterprise'
-      - (setup == 'workload-conf-vm' or setup == 'workload-conf-containers-docker' or setup == 'workload-conf-containers-crio')
+      - (setup == 'workload-conf-vm' or setup == 'workload-conf-containers-crio')
 
       
-# os: Redhat and setup: workload-conf-vm/workload-conf-containers-docker and isecl_role: csp
+# os: Redhat and setup: workload-conf-vm/workload-conf-containers-crio and isecl_role: csp
 - name: ISECL - SETUP | Install CSP services for workload-confidentiality-vm/workload-confidentiality-containers/all usecase
   include: "{{ item }}"
   loop:
@@ -167,22 +167,7 @@
       - (ansible_default_ipv4.address or ansible_fqdn in groups['CSP'])
       - ansible_os_family == 'RedHat'
       - isecl_role == 'csp'
-      - (setup == 'workload-conf-vm' or setup == 'workload-conf-containers-docker' or setup == 'workload-conf-containers-crio')
-
-
-# os: Redhat and setup: workload-conf-containers-docker and isecl_role: enterprise
-- name: ISECL - SETUP | Install Enterprise services for workload-conf-containers-docker usecase
-  include: "{{ item }}"
-  loop:
-      - install_kbs.yml
-      - install_docker.yml
-      - install_wpm.yml
-  when:
-      - "'Enterprise' in groups"
-      - (ansible_default_ipv4.address or ansible_fqdn in groups['Enterprise'])
-      - ansible_os_family == 'RedHat'
-      - isecl_role == 'enterprise'
-      - setup == 'workload-conf-containers-docker'
+      - (setup == 'workload-conf-vm' or setup == 'workload-conf-containers-crio')
 
 
 # os: Redhat and setup: workload-conf-containers-crio and isecl_role: enterprise
@@ -224,20 +209,7 @@
       - (ansible_default_ipv4.address or ansible_fqdn in groups['Node']) 
       - ansible_os_family == 'RedHat' 
       - isecl_role == 'node'
-      - (setup == 'host-attestation' or setup == 'application-integrity' or setup == 'workload-conf-vm' or setup == 'workload-conf-containers-docker' or setup == 'workload-conf-containers-crio' or setup == 'trusted-workload-placement-containers' or setup == 'trusted-workload-placement-vm' or setup == 'data-fencing') 
-
-
-# os: Redhat and setup: workload-conf-containers-docker and isecl_role: node
-- include: "{{ item }}"
-  loop:
-      - install_docker.yml
-      - install_wla.yml
-  when: 
-      - "'Node' in groups"
-      - (ansible_default_ipv4.address or ansible_fqdn in groups['Node'])
-      - ansible_os_family == 'RedHat' 
-      - isecl_role == 'node'
-      - setup == 'workload-conf-containers-docker'
+      - (setup == 'host-attestation' or setup == 'application-integrity' or setup == 'workload-conf-vm' or setup == 'workload-conf-containers-crio' or setup == 'trusted-workload-placement-containers' or setup == 'trusted-workload-placement-vm' or setup == 'data-fencing') 
 
 
 # os: Redhat and setup: workload-conf-containers-crio and isecl_role: node

@@ -104,7 +104,7 @@
   args:
     chdir: /root
     executable: /bin/bash
-  when: setup == 'workload-conf-vm' or setup == 'workload-conf-containers-docker' or setup == 'workload-conf-containers-crio'
+  when: setup == 'workload-conf-vm' or setup == 'workload-conf-containers-crio'
 
 
 - name: ISECL - BOOTSTRAP DB | Create DB for SGX Caching Service
