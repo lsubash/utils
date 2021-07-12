@@ -24,8 +24,15 @@ attestedapp: attestedapplib certs
 	cp attestedApp/libenclave/untrusted.so out/untrusted.so
 	cp attestedApp/libenclave/enclave.signed.so out/enclave.signed.so
 
+swagger:
+	mkdir -p out/swagger
+	swagger generate spec -w ./swagger/$* -o ./out/swagger/openapi.yml
+	swagger validate ./out/swagger/openapi.yml
+
+.PHONY: all clean swagger
+
 clean:
 	make -C attestedApp/libenclave/ clean
 	rm -rf go.sum out/ cover.*
 
-all: clean  attestingapp attestedapplib attestedapp
+all: clean  attestingapp attestedapplib attestedapp swagger
