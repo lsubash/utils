@@ -92,7 +92,7 @@ deploy_authservice() {
   echo "|    DEPLOY: AUTHENTICATION-AUTHORIZATION-SERVICE  |"
   echo "----------------------------------------------------"
 
-  required_variables="AAS_ADMIN_USERNAME,AAS_ADMIN_PASSWORD,AAS_DB_HOSTNAME,AAS_DB_NAME,AAS_DB_PORT,AAS_DB_SSLMODE,AAS_DB_SSLCERT,AAS_BOOTSTRAP_TOKEN,AAS_SAN_LIST"
+  required_variables="AAS_ADMIN_USERNAME,AAS_ADMIN_PASSWORD,AAS_DB_HOSTNAME,AAS_DB_NAME,AAS_DB_PORT,AAS_DB_SSLMODE,AAS_BOOTSTRAP_TOKEN,AAS_SAN_LIST"
   check_mandatory_variables $AAS $required_variables
 
   cd aas/
@@ -106,7 +106,6 @@ deploy_authservice() {
   sed -i "s/AAS_DB_NAME:.*/AAS_DB_NAME: $AAS_DB_NAME/g" configMap.yml
   sed -i "s/AAS_DB_PORT:.*/AAS_DB_PORT: \"$AAS_DB_PORT\"/g" configMap.yml
   sed -i "s/AAS_DB_SSLMODE:.*/AAS_DB_SSLMODE: $AAS_DB_SSLMODE/g" configMap.yml
-  sed -i "s#AAS_DB_SSLCERT:.*#AAS_DB_SSLCERT: $AAS_DB_SSLCERT#g" configMap.yml
   nats_account_name_exists=$(grep "NATS_ACCOUNT_NAME" configMap.yml)
   if [ ! -z "${NATS_ACCOUNT_NAME}" ] && [ -z "$nats_account_name_exists" ]; then
     echo "  NATS_ACCOUNT_NAME: $NATS_ACCOUNT_NAME" >>configMap.yml
@@ -209,7 +208,7 @@ deploy_hvs() {
   get_bearer_token
   get_cms_tls_cert_sha384
 
-  required_variables="BEARER_TOKEN,CMS_TLS_CERT_SHA384,HVS_SERVICE_USERNAME,HVS_SERVICE_PASSWORD,HVS_CERT_SAN_LIST,AAS_API_URL,CMS_BASE_URL,HVS_DB_HOSTNAME,HVS_DB_SSLCERTSRC,HVS_DB_PORT,HVS_DB_NAME"
+  required_variables="BEARER_TOKEN,CMS_TLS_CERT_SHA384,HVS_SERVICE_USERNAME,HVS_SERVICE_PASSWORD,HVS_CERT_SAN_LIST,AAS_API_URL,CMS_BASE_URL,HVS_DB_HOSTNAME,HVS_DB_PORT,HVS_DB_NAME"
   check_mandatory_variables $SHVS $required_variables
 
   # update hvs configMap & secrets
@@ -232,7 +231,6 @@ deploy_hvs() {
   sed -i "s#AAS_API_URL:.*#AAS_API_URL: ${AAS_API_URL}#g" configMap.yml
   sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: ${CMS_BASE_URL}#g" configMap.yml
   sed -i "s/HVS_DB_HOSTNAME:.*/HVS_DB_HOSTNAME: ${HVS_DB_HOSTNAME}/g" configMap.yml
-  sed -i "s#HVS_DB_SSLCERTSRC:.*#HVS_DB_SSLCERTSRC: ${HVS_DB_SSLCERTSRC}#g" configMap.yml
 
   $KUBECTL create secret generic hvs-secret --from-file=secrets.txt --namespace=isecl
 

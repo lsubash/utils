@@ -44,6 +44,9 @@ spec:
         - name: wla-upgrade
           image: <image-name>:<tag>
           imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: wla-config
           command: ["/container_upgrade.sh"]
           securityContext:
             privileged: true
@@ -57,6 +60,8 @@ spec:
               mountPath: /var/log/workload-agent/
             - name: wla-config-volume
               mountPath: /etc/workload-agent
+            - name: ta-volume
+              mountPath: /opt/trustagent
             - name: tpmrm
               mountPath: /dev/tpmrm0
             - name: wla-credentials
@@ -69,13 +74,21 @@ spec:
           hostPath:
             path: /etc/workload-agent
             type: Directory
+        - name: wla-logs-volume
+          hostPath:
+            path: /var/log/workload-agent
+            type: Directory
+        - name: ta-volume
+          hostPath:
+            path: /opt/trustagent
+            type: Directory
         - name: wla-backup-volume
           hostPath:
             path: /tmp/wlagent_backup
             type: DirectoryOrCreate
         - name: tpmrm
-            hostPath:
-              path: /dev/tpmrm0
+          hostPath:
+            path: /dev/tpmrm0
         - name: wla-credentials
           secret:
             secretName: wla-secret
