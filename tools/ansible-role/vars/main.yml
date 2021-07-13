@@ -3,8 +3,8 @@
 # The below variables are required to be modified by user based on UEFI Mode or UEFI Mode + SecureBoot enabled/
 # Refer Additional Workflow Examples section for more details
 
-# Legacy mode or UEFI SecureBoot mode
-# ['no' - Legacy mode, 'yes' - UEFI SecureBoot mode]
+# UEFI mode or UEFI SecureBoot mode
+# ['no' - UEFI mode, 'yes' - UEFI SecureBoot mode]
 uefi_secureboot: 'no'
 
 # The grub file path for Legacy mode & UEFI Mode. 
@@ -20,29 +20,13 @@ grub_default_option: "tboot 1.10.1"
 
 # -------------------------- WORKLOAD SECURITY - LAUNCH TIME PROTECTION FOR DOCKER/CRIO CONTAINERS-------------------------------#
 
-# Workload Policy Manager installation with container security for Docker runtime or CRIO runtime
-# [ 'yes' - Container Confidentiality with Docker/CRIO Containers, can be left as is for other usecases]
+# Workload Policy Manager installation with container security for CRIO runtime
+# [ 'yes' - Container Confidentiality with CRIO Containers, can be left as is for other usecases]
 wpm_container_security: 'yes'
 
-# Workload Agent installation with container security for Docker runtime or CRIO runtime
-# ['yes' - Launch Time Protection with Docker/CRIO Containers, can be left as is for other usecases]
-wa_with_container_security: 'yes'
-
-# Skip Secure Docker Daemon installation when using CRIO runtime
+# Workload Agent installation with container security for CRIO runtime
 # ['yes' - Launch Time Protection with CRIO Containers, can be left as is for other usecases]
-skip_secure_docker_daemon: 'yes'
-
-# Container Image Registry configuration
-# [TRUE - when configured with http , FALSE - when configured with http]
-insecure_skip_verify: "{{insecure_verify | default('')}}"
-
-# The registry IP for the Docker registry from where container images are pulled
-registry_ip: "{{registry_ipaddr | default('')}}"
-
-# The registry protocol for talking to the remote registry 
-# [http - When registry is configured with http , https - When registry is configured with https]
-registry_scheme_type: "{{registry_scheme | default('')}}"
-
+wa_with_container_security: 'yes'
 
 # --------------------------------------- PROXY SETTINGS ------------------------------- #
 #The below variables are required to be modified by user if running behind proxy

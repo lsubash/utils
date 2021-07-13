@@ -80,7 +80,6 @@ Usecase and Playbook Support on RHEL
 | Trusted Workload Placement                         | Yes(partial*)    |
 | Application Integrity                              | Yes              |
 | Launch Time Protection - VM Confidentiality        | Yes(partial*)    |
-| Launch Time Protection - Container Confidentiality with Docker runtime | Yes(partial*)    |
 | Launch Time Protection - Container Confidentiality with CRIO runtime | Yes(partial*)    |
 | Secure Key Caching                                 | Yes              |
 | SGX Orchestration Kubernetes                                | Yes(partial*)    |
@@ -117,10 +116,6 @@ Packages & Repos Installed by Role on RHEL
 * tar
 * dnf-plugins-core
 * https://download.postgresql.org/pub/repos/yum/11/redhat/rhel-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
-
-
-The below is installed for only `Launch Time Protection - Container Confidentiality with Docker Runtime` Usecase on Enterprise and Compute Node
-* docker-ce-19.03.13
 
 
 The below is installed for only `Launch Time Protection - Container Confidentiality with CRIO Runtime` Usecase on Enterprise and Compute Node
@@ -237,26 +232,6 @@ The ISecL services and scripts required w.r.t each use case is as follows. The b
     The playbook will place the `integration-hub` installer and configure the env except for `Openstack` configuration in the `ihub.env`. 
     Once `Openstack` is installed and running, `ihub.env` can be updated for `tenant` configuration and installed. 
     Please refer product guide for supported versions of Openstack and installation of `integration-hub`<br>
-
-**Launch Time Protection - Container Confidentiality with Docker Runtime**
-
-1. Certificate Management Service
-2. Bootstrap Database (scripts)
-3. Authentication & Authorization Service
-4. Populate Users (scripts)
-5. Host Verification Service
-6. Workload Service
-7. Key Broker Service
-8. Workload Policy Manager
-9. Docker(runtime)
-10.  Trust Agent
-11. Workload Agent
-> **Note**: `Launch Time Protection - Container Confidentiality with Docker Runtime` requires `Kubernetes` orchestrator .
-    In addition to this, it also requires the installation of `integration-hub` to talk to the orchestrator. 
-    The playbook will place the `integration-hub` installer and configure the env except for `kubernetes` configuration in the `ihub.env`.  
-    Once `Kubernetes`  is installed and running, `ihub.env` can be updated for `tenant` configuration and installed.
-    Please refer product guide for supported versions of orchestrator and setup details for installing `integration-hub` 
-
 > **Note:** In addition to this `isecl-k8s-extensions` need to be installed on Kubernetes control-plane. 
     Please refer product guide for supported versions of orchestrator and setup details for installing `isecl-k8s-extensions`<br>
 
@@ -568,39 +543,6 @@ uefi_secureboot: 'no'
 # The grub file path for Legacy mode & UEFI Mode. 
 # [/boot/grub2/grub.cfg - Legacy mode, /boot/efi/EFI/redhat/grub.cfg - UEFI Mode]
 grub_file_path: /boot/grub2/grub.cfg
-```
-
-#### Using Docker Notary
-
-If using Docker notary when working with `Launch Time Protection - Workload Confidentiality with Docker Runtime`, following options can be provided during runtime in the playbook
-
-```shell
-ansible-playbook <playbook-name> \
---extra-vars setup=<setup var from supported usecases> \
---extra-vars binaries_path=<path where built binaries are copied to> \
---extra-vars insecure_verify=<insecure_verify[TRUE/FALSE]> \
---extra-vars registry_ipaddr=<registry ipaddr> \
---extra-vars registry_scheme=<registry scheme[http/https]>
---extra-vars https_proxy=<https_proxy[To be set only if running behind a proxy]>
-```
-or
-
-Update the following vars in `vars/main.yml`
-
-```yaml
-# [TRUE/FALSE based on registry configured with http/https respectively]
-# Required for Workload Integrity with containers
-insecure_skip_verify: <insecure_skip_verify>
-
-# The registry IP for the Docker registry from where container images are pulled
-registry_ip: <registry_ipaddr>
-
-# Proxy details if running behind a proxy
-https_proxy: <https_proxy>
-
-# The registry protocol for talking to the remote registry 
-# [http - When registry is configured with http , https - When registry is configured with https]
-registry_scheme_type: <registry_scheme>
 ```
 
 #### In case of Misconfigurations 
