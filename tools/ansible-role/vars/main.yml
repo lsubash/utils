@@ -9,14 +9,14 @@ uefi_secureboot: 'no'
 
 # The grub file path for Legacy mode & UEFI Mode. 
 # [/boot/grub2/grub.cfg - Legacy mode, /boot/efi/EFI/redhat/grub.cfg - UEFI Mode]
-grub_file_path: /boot/grub2/grub.cfg
+grub_file_path: /boot/efi/EFI/redhat/grub.cfg
 
 # The TPM Storage Root Key(SRK) Password to be used if TPM is already owned
 tpm_owner_secret: "{{tpm_secret | default('')}}"
 
 # The grub option to be selected for booting into TBOOT/MLE mode, use grubby --info <option:0/1...> to determine which one
 # has no boot menu assigned to it.
-grub_default_option: "3"
+grub_default_option: "tboot 1.10.1"
 
 # -------------------------- WORKLOAD SECURITY - LAUNCH TIME PROTECTION FOR DOCKER/CRIO CONTAINERS-------------------------------#
 
@@ -55,3 +55,5 @@ https_proxy: ""
 
 # The no_proxy (comma separated) for setting up Intel® SecL-DC libraries
 no_proxy: ""
+
+
