@@ -87,6 +87,7 @@ Usecase and Playbook Support on RHEL
 | SGX Orchestration Openstack                                  | Yes(partial*)    |
 | SGX Attestation Openstack                                    | Yes(partial*)    |
 | SKC No Orchestration                               | Yes              |
+| SGX Attestation No Orchestration                   | Yes              |
    > **Note:** *partial means orchestrator installation is not bundled with the role and need to be done independently. Also, components dependent on the orchestrator like `isecl-k8s-extensions` and `integration-hub` are installed either partially or not installed
 
 Usecase and Playbook Support on Ubuntu
@@ -155,6 +156,7 @@ The following usecases are supported and the respective variables can be provide
 | SGX Orchestration Openstack                       | `setup: sgx-orchestration-openstack` in playbook or via `--extra-vars` as `setup=sgx-orchestration-openstack`in CLI |
 | SGX Attestation Openstack                         | `setup: sgx-attestation-openstack` in playbook or via `--extra-vars` as `setup=sgx-attestation-openstack`in CLI |
 | SKC No Orchestration                              | `setup: skc-no-orchestration` in playbook or via `--extra-vars` as `setup=skc-no-orchestration`in CLI |
+| SGX Attestation No Orchestration                  | `setup: sgx-attestation-no-orchestration` in playbook or via `--extra-vars` as `setup=sgx-attestation-no-orchestration`in CLI |
 
 
 The ISecL services and scripts required w.r.t each use case is as follows. The binaries and scripts are generated when Intel® SecL-DC repositories are built.
@@ -346,6 +348,15 @@ The ISecL services and scripts required w.r.t each use case is as follows. The b
 6. Key Broker Service
 7. SGX Agent
 8. SKC Library
+
+**SGX Attestation No Orchestration**
+1. Certificate Management Service
+2. Bootstrap Database (scripts)
+3. Authentication & Authorization Service
+4. SGX Caching Service
+5. SGX Quote Verfication Service
+6. SGX Agent
+7. SGX Dependencies
 
 Example Inventory and Vars
 --------------------------
