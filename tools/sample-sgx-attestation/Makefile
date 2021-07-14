@@ -26,7 +26,7 @@ attestedapp: attestedapplib certs
 
 swagger:
 	mkdir -p out/swagger
-	swagger generate spec -w ./swagger/$* -o ./out/swagger/openapi.yml
+	env GOOS=linux GOSUMDB=off GOPROXY=direct swagger generate spec -w ./swagger/$* -o ./out/swagger/openapi.yml
 	swagger validate ./out/swagger/openapi.yml
 
 .PHONY: all clean swagger
@@ -35,4 +35,4 @@ clean:
 	make -C attestedApp/libenclave/ clean
 	rm -rf go.sum out/ cover.*
 
-all: clean  attestingapp attestedapplib attestedapp swagger
+all: clean  attestingapp attestedapplib attestedapp
