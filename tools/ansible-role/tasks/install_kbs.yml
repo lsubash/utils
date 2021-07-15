@@ -13,7 +13,7 @@
     dest: /root/kbs.env
 
 
-- name: ISECL - KEY BROKER SERVICE | Copy KBS binary installler
+- name: ISECL - KEY BROKER SERVICE | Copy KBS binary installer
   copy:
     src: "{{ kbs_installer_file_src }}"
     dest: "/root/{{ kbs_installer_file_name }}"
