@@ -1,21 +1,10 @@
 ---
-
-- name: ISECL - TRUST AGENT | Copy tboot rpm file
-  copy:
-    src: "{{tboot_rpm_file}}"
-    dest: /root/tboot.rpm
-  when: uefi_secureboot == 'no'
-
-- name: ISECL - TRUST AGENT | Install tboot
+- name: ISECL - TRUST AGENT | Install tboot from the repo
   dnf:
-    name: /root/tboot.rpm
+    name: tboot
     state: present
   when: uefi_secureboot == 'no'
-
-- name: ISECL - TRUST AGENT | Delete tboot rpm file
-  file:
-    path: tboot.rpm
-    state: absent
+  
 
 - name: ISECL - TRUST AGENT | Install grub2-efi-x64-modules
   dnf:
@@ -55,7 +44,6 @@
     - uefi_secureboot == 'no'
     - "'TXT measured launch: TRUE' not in pre_mle_state.stdout"
 
-
 - name: ISECL - TRUST AGENT | Verify and update /etc/default/grub to use GRUB_DEFAULT=saved
   lineinfile:
     path: /etc/default/grub
@@ -72,6 +60,21 @@
     - uefi_secureboot == 'no'
     - "'TXT measured launch: TRUE' not in pre_mle_state.stdout"
 
+- name: ISECL - TRUST AGENT | Copy tboot.gz file
+  copy:
+    src: "{{tboot_gz_file}}"
+    dest: /boot/tboot.gz
+  when:
+    - uefi_secureboot == 'no'
+    - "'TXT measured launch: TRUE' not in pre_mle_state.stdout"
+
+- name: ISECL - TRUST AGENT | Copy tboot-syms file
+  copy:
+    src: "{{tboot_syms_file}}"
+    dest: /boot/tboot-syms
+  when:
+    - uefi_secureboot == 'no'
+    - "'TXT measured launch: TRUE' not in pre_mle_state.stdout"
 
 - name: ISECL - TRUST AGENT | Reboot to enter tboot
   shell: sleep 2 && shutdown -r now "Ansible reboot"
