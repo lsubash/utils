@@ -17,7 +17,7 @@ Table of Contents
       * [Example Inventory and Vars](#example-inventory-and-vars)
       * [Using the Role in Ansible](#using-the-role-in-ansible)
       * [Example Playbook and CLI](#example-playbook-and-cli)
-      * [Additional Examples and Tips](#additional-examples-and-tips)
+      * [Additional Workflow Examples](#additional-workflow-examples)
       * [Intel® SecL-DC Services Details](#intel-secl-dc-services-details)
       * [Role Variables](#role-variables)
       * [License](#license)
@@ -108,8 +108,6 @@ Supported Deployment Model
 * CSP - ISecL Services Machine
 * CSP - Physical Server as per supported configurations
 * Enterprise - ISecL Services Machine
-
-
 
 Packages & Repos Installed by Role on RHEL
 ------------------------------------------
@@ -390,7 +388,7 @@ ansible_user=root
 ansible_password=<password>
 ```
 
-On Ubuntu:
+On Ubuntu: (Only applicable for SKC usecases)
 ```
 [CSP]
 <machine1_ip/hostname>
@@ -501,7 +499,7 @@ and
 ansible-playbook <playbook-name> --extra-vars setup=<setup var from supported usecases> --extra-vars binaries_path=<path where built binaries are copied to>
 ```
 
-```shell (on Ubuntu)
+```shell (on Ubuntu)(SKC usecases only)
 ansible-playbook <playbook-name> --extra-vars setup=<setup var from supported usecases> --extra-vars binaries_path=<path where built binaries are copied to> --extra-vars "ansible_sudo_pass=<password>"
 ```
 
@@ -510,6 +508,28 @@ ansible-playbook <playbook-name> --extra-vars setup=<setup var from supported us
 
 Additional Workflow Examples
 ----------------------------
+
+#### TBoot Installation
+
+Tboot needs to be built by the user from tboot source and the `tboot.gz` & `tboot-syms` files needs to be copied under the `binaries` folder. The supported version of Tboot as of 4.0 release is `tboot-1.10.1`.The options must then be provided during runtime in the playbook:
+
+```shell
+ansible-playbook <playbook-name> \
+--extra-vars setup=<setup var from supported usecases> \
+--extra-vars binaries_path=<path where built binaries are copied to> \
+--extra-vars tboot_gz_file=<path where built binaries are copied to>/tboot.gz
+--extra-vars tboot_syms_file=<path where built binaries are copied to>/tboot-syms
+```
+
+or 
+
+Update the following in `vars/main.yml`
+
+```yaml
+# The TPM Storage Root Key(SRK) Password to be used if TPM is already owned
+tboot_gz_file: "<binaries_path>/tboot.gz"
+tboot_syms_file: "<binaries_path>/tboot-syms"
+```
 
 #### TPM is already owned
 
@@ -555,6 +575,8 @@ uefi_secureboot: 'no'
 # [/boot/grub2/grub.cfg - Legacy mode, /boot/efi/EFI/redhat/grub.cfg - UEFI Mode]
 grub_file_path: /boot/grub2/grub.cfg
 ```
+
+
 
 #### In case of Misconfigurations 
 

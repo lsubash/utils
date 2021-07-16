@@ -1,5 +1,5 @@
 ---
-# ------------------------------------------- LEGACY MODE/UEFI MODE ----------------------------------------- #
+# ------------------------------------------- UEFI/UEFI SECURE BOOT OPTIONS ----------------------------------------- #
 # The below variables are required to be modified by user based on UEFI Mode or UEFI Mode + SecureBoot enabled/
 # Refer Additional Workflow Examples section for more details
 
@@ -7,30 +7,25 @@
 # ['no' - UEFI mode, 'yes' - UEFI SecureBoot mode]
 uefi_secureboot: 'no'
 
-# The grub file path for Legacy mode & UEFI Mode. 
-# [/boot/grub2/grub.cfg - Legacy mode, /boot/efi/EFI/redhat/grub.cfg - UEFI Mode]
+# The grub file path for UEFI Mode systems
+# [/boot/efi/EFI/redhat/grub.cfg - UEFI Mode]
 grub_file_path: /boot/efi/EFI/redhat/grub.cfg
 
 # The TPM Storage Root Key(SRK) Password to be used if TPM is already owned
 tpm_owner_secret: "{{tpm_secret | default('')}}"
 
-
-# The grub option to be selected for booting into TBOOT/MLE mode, use grubby --info <option:0/1...> to determine which one
-# has no boot menu assigned to it.
 # tboot 1.10.1 is the supported version of ISecL 4.0 release, however at the time of release tboot 1.9.12 is available version in the rhel repository
 # This ansible role upgrades tboot version from tboot 1.9.12 to tboot 1.10.1
-# It is end user reposibility to generate tboot.gz and tboot-syms files
-# Either place tboot.gz and tboot-syms files in the same directory where other binaries are placed or use "--extra-vars tboot_gz_file"  "--extra-vars tboot_syms_file" variables with ansible playbook command. 
+# It is end user reposibility to build tboot
+# Usage is detailed in the Readme.md file under Additional Workflows & 
 # Link to download tboot source code "https://sourceforge.net/projects/tboot/files/tboot/"
-#
-grub_default_option: "\"tboot 1.9.12\""
+grub_default_option: "tboot 1.10.1"
 
-## These two variable are for the tboot upgrade from tboot.1.9.x to tboot.1.10.x.
+## These two variable are for tboot upgrade from tboot.1.9.x to tboot.1.10.x.
+tboot_gz_file: "{{binaries_path}}/tboot.gz"
+tboot_syms_file: "{{binaries_path}}/tboot-syms"
 
-tboot_gz_file: {{binaries_path}}/tboot.gz
-tboot_syms_file: {{binaries_path}}/tboot-syms
-
-# -------------------------- WORKLOAD SECURITY - LAUNCH TIME PROTECTION FOR DOCKER/CRIO CONTAINERS-------------------------------#
+# -------------------------- WORKLOAD SECURITY - LAUNCH TIME PROTECTION FOR CRIO CONTAINERS OPTIONS-------------------------------#
 
 # Workload Policy Manager installation with container security for CRIO runtime
 # [ 'yes' - Container Confidentiality with CRIO Containers, can be left as is for other usecases]
