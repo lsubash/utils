@@ -1,9 +1,4 @@
 ---
-- name: ISECL - TRUST AGENT | Verify if already in measured launch state
-  shell: "txt-stat | grep 'TXT measured launch: TRUE'"
-  register: pre_mle_state
-  when: uefi_secureboot == 'no'
-
 
 - name: ISECL - TRUST AGENT | Install tboot from the repo
   dnf:
@@ -11,8 +6,7 @@
     state: present
   when: 
     - uefi_secureboot == 'no'
-    - "'TXT measured launch: TRUE' not in pre_mle_state.stdout"
-  
+
 
 - name: ISECL - TRUST AGENT | Install grub2-efi-x64-modules
   dnf:

@@ -19,7 +19,7 @@ tpm_owner_secret: "{{tpm_secret | default('')}}"
 # It is end user reposibility to build tboot
 # Usage is detailed in the Readme.md file under Additional Workflows & 
 # Link to download tboot source code "https://sourceforge.net/projects/tboot/files/tboot/"
-grub_default_option: "tboot 1.10.1"
+grub_default_option: "tboot 1.9.12"
 
 ## These two variable are for tboot upgrade from tboot.1.9.x to tboot.1.10.x.
 tboot_gz_file: "{{binaries_path}}/tboot.gz"
