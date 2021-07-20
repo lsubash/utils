@@ -567,13 +567,13 @@ or
 Update the following vars in `vars/main.yml`
 
 ```yaml
-# Legacy mode or UEFI SecureBoot mode
-# ['no' - Legacy mode, 'yes' - UEFI SecureBoot mode]
-uefi_secureboot: 'no'
+# UEFI mode or UEFI SecureBoot mode
+# ['no' - UEFI mode, 'yes' - UEFI SecureBoot mode]
+uefi_secureboot: 'yes'
 
-# The grub file path for Legacy mode & UEFI Mode. 
-# [/boot/grub2/grub.cfg - Legacy mode, /boot/efi/EFI/redhat/grub.cfg - UEFI Mode]
-grub_file_path: /boot/grub2/grub.cfg
+# The grub file path for UEFI Mode systems
+# [/boot/efi/EFI/redhat/grub.cfg - UEFI Mode]
+grub_file_path: /boot/efi/EFI/redhat/grub.cfg
 ```
 
 
