@@ -1,12 +1,6 @@
---- openssl.cnf	2021-04-09 03:12:03.078032995 -0700
-+++ /root/openssl.cnf	2021-04-09 03:24:19.899820746 -0700
-@@ -1,4 +1,4 @@
--#
-+# OpenSSL 1.1.1g (Rhel)
- # OpenSSL example configuration file.
- # This is mostly being used for generation of certificate requests.
- #
-@@ -13,7 +13,6 @@
+--- openssl.cnf.orig	2021-03-25 09:44:11.000000000 -0700
++++ openssl.cnf	2021-06-16 09:10:46.045963660 -0700
+@@ -13,7 +13,6 @@ HOME			= .
  
  # Extra OBJECT IDENTIFIER info:
  #oid_file		= $ENV::HOME/.oid
@@ -14,28 +8,20 @@
  
  # To use this configuration file with the "-extfile" option of the
  # "openssl x509" utility, name here the section containing the
-@@ -24,19 +23,20 @@
+@@ -24,12 +23,22 @@ oid_section		= new_oids
  
  # Load default TLS policy configuration
  
 -openssl_conf = default_modules
 -
 -[ default_modules ]
--
--ssl_conf = ssl_module
--
--[ ssl_module ]
--
--system_default = crypto_policy
--
--[ crypto_policy ]
 +openssl_conf = openssl_def
  
--.include /etc/crypto-policies/back-ends/opensslcnf.config
 +[ openssl_def ]
 +engines = engine_section
 +oid_section = new_oids
-+
+ ssl_conf = ssl_module
+ 
 +[ engine_section ]
 +pkcs11 = pkcs11_section
 +
@@ -44,6 +30,7 @@
 +dynamic_path =/usr/lib64/engines-1.1/pkcs11.so
 +MODULE_PATH =/opt/skc/lib/libpkcs11-api.so
 +init = 0
++ 
+ [ ssl_module ]
  
- [ new_oids ]
- 
+ system_default = crypto_policy

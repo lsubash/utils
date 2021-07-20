@@ -1,6 +1,6 @@
 #!/bin/bash
 SGX_AGENT_DIR=$PWD/sgx_agent
-SGX_DCAP_TAG=DCAP_1.10
+SGX_DCAP_TAG=DCAP_1.10.3
 SGX_DCAP_REPO="https://github.com/intel/SGXDataCenterAttestationPrimitives.git"
 GIT_CLONE_PATH=/tmp/dcap
 SGX_AGENT_BIN_DIR=$SGX_AGENT_DIR/bin

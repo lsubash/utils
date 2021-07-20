@@ -47,7 +47,7 @@ check_mandatory_variables() {
 deploy_cms() {
 
   echo "----------------------------------------------------"
-  echo "|      DEPLOY:CERTIFICATE-MANAGEMENT-SERVICE       |"
+  echo "|      DEPLOY: CERTIFICATE-MANAGEMENT-SERVICE      |"
   echo "----------------------------------------------------"
 
   cd cms/
@@ -90,7 +90,7 @@ deploy_authservice() {
   get_cms_tls_cert_sha384
   get_aas_bootstrap_token
   echo "----------------------------------------------------"
-  echo "|    DEPLOY:AUTHENTICATION-AUTHORIZATION-SERVICE   |"
+  echo "|    DEPLOY: AUTHENTICATION-AUTHORIZATION-SERVICE  |"
   echo "----------------------------------------------------"
 
   required_variables="AAS_ADMIN_USERNAME,AAS_ADMIN_PASSWORD,AAS_DB_HOSTNAME,AAS_DB_NAME,AAS_DB_PORT,AAS_DB_SSLMODE,AAS_DB_SSLCERT,AAS_BOOTSTRAP_TOKEN,AAS_SAN_LIST"
@@ -176,14 +176,14 @@ get_bearer_token() {
   chmod +x $aas_scripts_dir/populate-users
   $aas_scripts_dir/populate-users --answerfile $aas_scripts_dir/populate-users.env >$aas_scripts_dir/populate-users.log
 
-  BEARER_TOKEN=$(grep -m 1 "BEARER_TOKEN" $aas_scripts_dir/populate-users.log | cut -d '=' -f2)
+  BEARER_TOKEN=$(grep "Token for User: $INSTALL_ADMIN_USERNAME" $aas_scripts_dir/populate-users.log -A 2 | grep BEARER_TOKEN | cut -d '=' -f2)
   echo "Install token: $BEARER_TOKEN"
 }
 
 deploy_scs() {
 
   echo "----------------------------------------------------"
-  echo "|            DEPLOY:SGX CACHING SERVICE            |"
+  echo "|            DEPLOY: SGX-CACHING-SERVICE           |"
   echo "----------------------------------------------------"
 
   cd scs/
@@ -233,7 +233,7 @@ deploy_scs() {
 deploy_shvs() {
 
   echo "-------------------------------------------------------------"
-  echo "|            DEPLOY:SGX HOST VERIFICATION SERVICE            |"
+  echo "|            DEPLOY: SGX-HOST-VERIFICATION-SERVICE          |"
   echo "-------------------------------------------------------------"
 
   cd shvs/
@@ -285,7 +285,7 @@ deploy_shvs() {
 deploy_SKC_library() {
 
   echo "----------------------------------------------------"
-  echo "|      DEPLOY:SKC LIBRARY                           |"
+  echo "|      DEPLOY: SKC-LIBRARY                          |"
   echo "----------------------------------------------------"
 
   cd skc_library
@@ -323,7 +323,7 @@ deploy_SKC_library() {
 deploy_sqvs() {
 
   echo "----------------------------------------------------"
-  echo "|      DEPLOY:SGX QUOTE VERIFICATION SERVICE       |"
+  echo "|      DEPLOY: SGX-QUOTE-VERIFICATION-SERVICE      |"
   echo "----------------------------------------------------"
 
   required_variables="SQVS_INCLUDE_TOKEN,SGX_TRUSTED_ROOT_CA_PATH"
@@ -366,7 +366,7 @@ deploy_sqvs() {
 deploy_custom_controller() {
 
   echo "----------------------------------------------------"
-  echo "|            DEPLOY: K8S-CONTROLLER                |"
+  echo "|            DEPLOY: ISECL-K8S-CONTROLLER          |"
   echo "----------------------------------------------------"
 
   cd k8s-extensions-controller/
@@ -394,7 +394,7 @@ deploy_custom_controller() {
 deploy_ihub() {
 
   echo "----------------------------------------------------"
-  echo "|             DEPLOY:INTEGRATION-HUB               |"
+  echo "|             DEPLOY: INTEGRATION-HUB              |"
   echo "----------------------------------------------------"
 
   required_variables="IHUB_SERVICE_USERNAME,IHUB_SERVICE_PASSWORD,K8S_API_SERVER_CERT,SHVS_BASE_URL"
@@ -427,7 +427,7 @@ deploy_ihub() {
   sed -i "s/CMS_TLS_CERT_SHA384:.*/CMS_TLS_CERT_SHA384: $CMS_TLS_CERT_SHA384/g" configMap.yml
   sed -i "s/TLS_SAN_LIST:.*/TLS_SAN_LIST: $IH_CERT_SAN_LIST/g" configMap.yml
   sed -i "s/KUBERNETES_TOKEN:.*/KUBERNETES_TOKEN: $kubernetes_token/g" configMap.yml
-  sed -i "s/KUBERNETES_URL:.*/KUBERNETES_URL: https:\/\/$K8S_MASTER_IP:$API_SERVER_PORT\//g" configMap.yml
+  sed -i "s/KUBERNETES_URL:.*/KUBERNETES_URL: https:\/\/$K8S_CONTROL_PLANE_IP:$API_SERVER_PORT\//g" configMap.yml
   sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: ${CMS_BASE_URL}#g" configMap.yml
   sed -i "s#AAS_API_URL:.*#AAS_API_URL: ${AAS_API_URL}#g" configMap.yml
   sed -i "s#SHVS_BASE_URL:.*#SHVS_BASE_URL: ${SHVS_BASE_URL}#g" configMap.yml
@@ -452,6 +452,9 @@ deploy_ihub() {
     exit 1
   fi
 
+  echo "Waiting for IHUB to bootstrap itself..."
+  sleep 20
+
   cd ../
 
 }
@@ -460,7 +463,7 @@ deploy_extended_scheduler() {
 
   #K8s SCHEDULER
   echo "----------------------------------------------------"
-  echo "|            DEPLOY: K8S-SCHEDULER                 |"
+  echo "|            DEPLOY: ISECL-K8S-SCHEDULER           |"
   echo "----------------------------------------------------"
 
   required_variables="K8S_CA_CERT,K8S_CA_KEY"
@@ -475,8 +478,8 @@ deploy_extended_scheduler() {
 
   # create certs
   chmod +x scripts/create_k8s_extsched_certs.sh
-  cd scripts && echo ./create_k8s_extsched_certs.sh -n "K8S Extended Scheduler" -s "$K8S_MASTER_IP","$K8S_MASTER_HOSTNAME" -c "$K8S_CA_CERT" -k "$K8S_CA_KEY"
-  ./create_k8s_extsched_certs.sh -n "K8S Extended Scheduler" -s "$K8S_MASTER_IP","$K8S_MASTER_HOSTNAME" -c "$K8S_CA_CERT" -k "$K8S_CA_KEY"
+  cd scripts && echo ./create_k8s_extsched_certs.sh -n "K8S Extended Scheduler" -s "$K8S_CONTROL_PLANE_IP","$K8S_CONTROL_PLANE_HOSTNAME" -c "$K8S_CA_CERT" -k "$K8S_CA_KEY"
+  ./create_k8s_extsched_certs.sh -n "K8S Extended Scheduler" -s "$K8S_CONTROL_PLANE_IP","$K8S_CONTROL_PLANE_HOSTNAME" -c "$K8S_CA_CERT" -k "$K8S_CA_KEY"
   if [ $? -ne 0 ]; then
     echo "Error while creating certificates for extended scheduler"
     exit 1
@@ -520,7 +523,7 @@ deploy_extended_scheduler() {
 deploy_sagent() {
 
   echo "----------------------------------------------------"
-  echo "|             DEPLOY:SGX-AGENT                     |"
+  echo "|             DEPLOY: SGX-AGENT                    |"
   echo "----------------------------------------------------"
 
   cd sgx_agent/
@@ -564,10 +567,10 @@ deploy_kbs() {
 
   #KBS
   echo "----------------------------------------------------"
-  echo "|            DEPLOY:KBS                            |"
+  echo "|            DEPLOY: KEY-BROKER-SERVICE            |"
   echo "----------------------------------------------------"
 
-  required_variables="KBS_SERVICE_USERNAME,KBS_SERVICE_PASSWORD,SQVS_URL,ENDPOINT_URL,SKC_CHALLENGE_TYPE,SESSION_EXPIRY_TIME,KMIP_SERVER_IP,KMIP_SERVER_PORT,KMIP_CLIENT_CERT_NAME,KMIP_CLIENT_KEY_NAME,KMIP_ROOT_CERT_NAME"
+  required_variables="KBS_SERVICE_USERNAME,KBS_SERVICE_PASSWORD,SQVS_URL,ENDPOINT_URL,SKC_CHALLENGE_TYPE,SESSION_EXPIRY_TIME,KMIP_SERVER_IP,KMIP_SERVER_PORT,KMIP_CLIENT_CERT_NAME,KMIP_CLIENT_KEY_NAME,KMIP_ROOT_CERT_NAME,KMIP_HOSTNAME"
   check_mandatory_variables $KBS $required_variables
 
   get_bearer_token
@@ -586,6 +589,7 @@ deploy_kbs() {
   sed -i "s/SESSION_EXPIRY_TIME:.*/SESSION_EXPIRY_TIME: \"$SESSION_EXPIRY_TIME\"/g" configMap.yml
 
   # Create kubernetes secrets kmip-certs for kbs kmip certificates.
+  sed -i "s/KMIP_HOSTNAME:.*/KMIP_HOSTNAME: \"$KMIP_HOSTNAME\"/g" configMap.yml
   sed -i "s/KMIP_SERVER_PORT:.*/KMIP_SERVER_PORT: \"$KMIP_SERVER_PORT\"/g" configMap.yml
   sed -i "s/KMIP_SERVER_IP:.*/KMIP_SERVER_IP: $KMIP_SERVER_IP/g" configMap.yml
   KMIP_CLIENT_CERT_PATH=/etc/kmip/$KMIP_CLIENT_CERT_NAME
@@ -622,7 +626,7 @@ deploy_kbs() {
 
 cleanup_kbs() {
 
-  echo "Cleaning up KBS..."
+  echo "Cleaning up KEY-BROKER-SERVICE..."
 
   cd kbs/
 
@@ -652,7 +656,7 @@ cleanup_kbs() {
 
 cleanup_SKC_library() {
 
-  echo "Cleaning up skc LIBRARY..."
+  echo "Cleaning up SKC LIBRARY..."
   cd skc_library
   $KUBECTL delete secret kbs-cert-secret --namespace isecl
   $KUBECTL delete configmap skc-lib-config nginx-config kbs-key-config sgx-qcnl-config openssl-config pkcs11-config sgx-stm-config kms-npm-config haproxy-hosts-config --namespace isecl
@@ -709,6 +713,7 @@ cleanup_ihub() {
 }
 
 cleanup_isecl_controller() {
+  echo "Cleaning up ISECL-K8S-CONTROLLER..."
 
   cd k8s-extensions-controller/
 
@@ -722,7 +727,7 @@ cleanup_isecl_controller() {
 }
 
 cleanup_isecl_scheduler() {
-
+  echo "Cleaning up ISECL-K8S-SCHEDULER..."
   cd k8s-extensions-scheduler/
 
   $KUBECTL delete deploy isecl-scheduler-deployment --namespace isecl
@@ -769,7 +774,7 @@ cleanup_shvs() {
 
 cleanup_sqvs() {
 
-  echo "Cleaning up SGX QUOTE VERIFICATION SERVICE..."
+  echo "Cleaning up SGX-QUOTE-VERIFICATION-SERVICE..."
 
   cd sqvs/
 
@@ -796,7 +801,7 @@ cleanup_sqvs() {
 
 cleanup_scs() {
 
-  echo "Cleaning up SGX CACHING SERVICE..."
+  echo "Cleaning up SGX-CACHING-SERVICE..."
 
   cd scs/
 
@@ -859,7 +864,7 @@ cleanup_authservice() {
 
 cleanup_cms() {
 
-  echo "Cleaning up CERTIIFCATION-MANAGEMENT-SERVICE..."
+  echo "Cleaning up CERTIFICATE-MANAGEMENT-SERVICE..."
 
   cd cms/
 
@@ -910,8 +915,8 @@ bootstrap() {
     echo "K8s Distribution" $K8S_DISTRIBUTION "not supported"
   fi
 
-  echo "ipAddress: $K8S_MASTER_IP"
-  echo "hostName: $K8S_MASTER_HOSTNAME"
+  echo "ipAddress: $K8S_CONTROL_PLANE_IP"
+  echo "hostName: $K8S_CONTROL_PLANE_HOSTNAME"
 
   echo "----------------------------------------------------"
   echo "|     DEPLOY: ISECL SERVICES                        |"
@@ -1057,6 +1062,8 @@ dispatch_works() {
     "sgx-attestation")
       deploy_common_components
       deploy_sqvs
+      deploy_custom_controller
+      deploy_ihub
       ;;
     "sgx-orchestration-k8s")
       deploy_common_components
@@ -1134,7 +1141,8 @@ dispatch_works() {
     "sgx-attestation")
       cleanup_common_components
       cleanup_sqvs
-
+      cleanup_isecl_controller
+      cleanup_ihub
       ;;
     "sgx-orchestration-k8s")
       cleanup_common_components

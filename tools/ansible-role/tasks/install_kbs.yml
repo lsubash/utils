@@ -1,8 +1,11 @@
 ---
+- name: ISECL - KEY BROKER SERVICE | Set KBS_KMIP_IP variable
+  shell: "echo $KBS_KMIP_IP"
+  environment:
+    KBS_KMIP_IP: "{{ kbs }}"
+
 - name: ISECL - KEY BROKER SERVICE | Install PyKMIP Server
   include: setup-kmip.yml
-  when: backend_pykmip == "yes"
-
 
 - name: ISECL - KEY BROKER SERVICE | Generate kbs.env file
   template:
@@ -10,7 +13,7 @@
     dest: /root/kbs.env
 
 
-- name: ISECL - KEY BROKER SERVICE | Copy KBS binary installler
+- name: ISECL - KEY BROKER SERVICE | Copy KBS binary installer
   copy:
     src: "{{ kbs_installer_file_src }}"
     dest: "/root/{{ kbs_installer_file_name }}"

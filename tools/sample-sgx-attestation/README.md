@@ -10,6 +10,11 @@ The project demonstrates several fundamental usages of Intel® Software Guard Ex
 - Generate a Symmetric Wrapping Key (SWK) in the attestingApp, wrap it with enclave's public key and share it with the enclave.
 - Exchange encrypted secrets between the attestingApp and the enclave using the SWK.
 
+*Note* 
+-	Attested app uses self-signed certificate to simulate a production CA-signed certificate.
+-	Attesting app uses a static token to simulate a token that is generated in a production environment.
+-	Input validation and error handling are minimal to keep the focus on SGX related code. Actual applications need to perform full input validation and error handling.
+
 --------------------------------------------------------------------------------
 
 ## 1\. Building the Sample Code
@@ -49,9 +54,8 @@ sqvs-url: https://<sqvs>:<port>/svs/v1
 Name             | Type    | Description |
 -----------------|---------|--------------|
 attestedapp-host | string  | Host on which the attested app service is deployed.|
-attestedapp-port | int     | Port where attested app listens for incoming connections.|
+attestedapp-port | int     | Port where attested app hosts HTTPs APIs.|
 sqvs_url         | string  | SQVS URL.|
-
 
 - Run `make all` to build the project.
 
@@ -159,12 +163,24 @@ libenclave      | SGX Enclave Workload           | C/C++            | Yes       
 
 ### Quote Verification and Secret Provisioning Workflow:
 
-1. The attestingApp will transmit a CONNECT message to the attestedApp service over a TCP socket.
-2. The attestedApp service, parses the CONNECT request and fetches the enclave's SGX quote. "The extended quote" is sent back in the response - containing the quote and the enclave's public key.
-3. The attestingApp parses the response, extracts the quote and verifies it with SQVS and compares a subset of the fields extracted from the quote against those in a hardcoded quote policy file.
-4. The enclave's public key is extracted out of the extended quote, and a symmetric secret wrapping key (SWK) is generated and wrapped using the enclave public key.
-5. The attestingApp ensures that the public key has been generated in the enclave by comparing its hash to the hash included in the quote.
-6. The wrapped SWK is sent to the attestedApp, which inturn passes it to the SGX enclave.
-7. The enclave then extracts the SWK out of the payload and responds if it is able to do so. This response is transmitted back to the attestingApp.
-8. The attestingApp then sends the secret payload wrapped using the SWK to the attestedApp service.
-9. The attestedApp service passes it on to SGX workload inside the enclave. If the secret is unwrapped using the SWK inside the enclave, then the success response is sent back to the attestingApp.
+1. The attestedApp hosts three HTTPs APIs. 
+   1. GET /id
+   2. POST /wrapped_swk
+   3. POST /wrapped_message
+2. The attestingApp generates a 256 bit nonce.
+3. The attestingApp calls the HTTPs GET /id of the attestedApp with the nonce (generated in step 2) in the request body.
+   1. The attestedApp extracts the nonce by parsing the request body.
+   2. The attestedApp passes the nonce to the enclave.
+   3. A public/private key pair is generated inside the enclave.
+   3. A report is generated inside the enclave with the hash of enclave's public key + nonce (from step 3.2) as UserData.
+   3. A quote is generated using DCAP API configured with SCS.
+   4. The quote and public key is added in the HTTP response body.
+4. The attestingApp parses the response.
+   1. Extracts the quote and public key.
+   2. Sends the quote and uses public key + nonce (from step 2) as user data field to SQVS for verification.
+   3. SQVS responds with quote verification status, user data match status and a subset of the fields extracted from the quote which is verified against those in a quote policy file.
+5. The attestingApp generates a symmetric wrapping key (SWK) and wraps the SWK using the public key from step 3.
+6. The attestingApp shares the SWK (from step 6) to the attestedApp by calling HTTPs POST /wrapped_swk
+7. The attestedApp unwraps the SWK shared in step 6 using its private key inside the enclave.
+8. The attestingApp wraps the message with the SWK generated in step 4 and shares it with the attestedApp by POST /wrapped_message
+9. The attestedApp unwraps the message using the SWK from step 6 inside the enclave.

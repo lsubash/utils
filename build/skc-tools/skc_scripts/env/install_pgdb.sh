@@ -9,17 +9,18 @@ VER=$(cat /etc/os-release | grep ^VERSION_ID | tr -d 'VERSION_ID="')
 
 # read from environment variables file if it exists
 if [ -f ./iseclpgdb.env ]; then
-    echo "Reading Database Installation variables from $(pwd)/iseclpgdb.env"
-    source ./iseclpgdb.env
-    env_file_exports=$(cat ./iseclpgdb.env | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
-    if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
+	echo "Reading Database Installation variables from $(pwd)/iseclpgdb.env"
+	source ./iseclpgdb.env
+	env_file_exports=$(cat ./iseclpgdb.env | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
+	if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
 fi
 
+# Variables Section. Please edit the default value as appropriate or use the iseclpgdb.env file
 DEFAULT_CERTSUBJECT="/CN=ISecl Self Sign Cert"
 DEFAULT_CIPHERSUITES="ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256"
 DEFAULT_CERT_DNS="localhost"
 DEFAULT_CERT_IP="127.0.0.1"
-# Variables Section. Please edit the default value as appropriate or use the iseclpgdb.env file
+DEFAULT_DB_INSTANCE_SIZE="small"
 
 ISECL_PGDB_IP_INTERFACES="${ISECL_PGDB_IP_INTERFACES:-localhost}"    # network interfaces to listen for connection
 ISECL_PGDB_PORT="${ISECL_PGDB_PORT:-5432}"
@@ -33,22 +34,38 @@ ISECL_PGDB_CIPHERSUITES="${ISECL_PGDB_CIPHERSUITES:-$DEFAULT_CIPHERSUITES}"
 
 ISECL_PGDB_CERT_DNS="${ISECL_PGDB_CERT_DNS:-$DEFAULT_CERT_DNS}"
 ISECL_PGDB_CERT_IP="${ISECL_PGDB_CERT_IP:-$DEFAULT_CERT_IP}"
+ISECL_PGDB_INSTANCE_SIZE="${ISECL_PGDB_INSTANCE_SIZE:-$DEFAULT_DB_INSTANCE_SIZE}"
+
+isecl_pgdb_max_connections=""
+isecl_pgdb_shared_buffers=""
+
+# Based on the DB instance size, set max_connections and shared_buffers values
+if [[ "$ISECL_PGDB_INSTANCE_SIZE" == "small" ]]; then
+   isecl_pgdb_max_connections=100
+   isecl_pgdb_shared_buffers=1024MB
+elif [[ "$ISECL_PGDB_INSTANCE_SIZE" == "medium" ]]; then
+   isecl_pgdb_max_connections=200
+   isecl_pgdb_shared_buffers=2048MB
+elif [[ "$ISECL_PGDB_INSTANCE_SIZE" == "large" ]]; then
+   isecl_pgdb_max_connections=400
+   isecl_pgdb_shared_buffers=6144MB
+fi
 
 pgdb_cert_dns=""
 for dns in $(echo $ISECL_PGDB_CERT_DNS | tr "," "\n")
 do
-    pgdb_cert_dns=$pgdb_cert_dns"DNS:$dns,"
+	pgdb_cert_dns=$pgdb_cert_dns"DNS:$dns,"
 done
 pgdb_cert_dns=${pgdb_cert_dns::-1}
 
 pgdb_cert_ip=""
 for ip in $(echo $ISECL_PGDB_CERT_IP | tr "," "\n")
 do
-    pgdb_cert_ip=$pgdb_cert_ip"IP:$ip,"
+	pgdb_cert_ip=$pgdb_cert_ip"IP:$ip,"
 done
 pgdb_cert_ip=${pgdb_cert_ip::-1}
 
-echo "Installing postgres database version 11 and its rpm repo for RHEL 8 x86_64 ..."
+echo "Installing postgres database version 11"
 
 cd /tmp
 log_file=/dev/null
@@ -58,14 +75,14 @@ fi
 
 # Install postgresql
 if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
-yum -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm &>>$log_file
-yum module disable postgresql -y
-yum -y install postgresql11-server postgresql11 postgresql11-contrib &>>$log_file
+	dnf -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm &>>$log_file
+	dnf module disable postgresql -y
+	dnf -y install postgresql11 postgresql11-server postgresql11-contrib postgresql11-libs &>>$log_file
 elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
-   apt-get -y install postgresql-11 &>> $log_file
+	apt-get -y install postgresql-11 &>> $log_file
 else
-    echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04"
-    exit 1
+	echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04"
+	exit 1
 fi
 
 if [ $? -ne 0 ] ; then
@@ -83,81 +100,83 @@ export PGPORT=$ISECL_PGDB_PORT
 # make sure that we have openssl
 openssl version
 if [ $? != 0 ]; then
-    echo "OpenSSL is not installed. Cannot create certificates needed for SSL connection to DB"
-    echo "Exiting with Error.."
-    exit 1
+	echo "OpenSSL is not installed. Cannot create certificates needed for SSL connection to DB"
+	echo "Exiting with Error.."
+	exit 1
 fi
 
 # if there is no preset database folder, set it up
 if [ ! -f $PGDATA/pg_hba.conf ] ; then
-    # cleanup and create folders for db
-    rm -Rf /usr/local/pgsql
-    mkdir -p /usr/local/pgsql/data
-    chown -R postgres:postgres /usr/local/pgsql
+	# cleanup and create folders for db
+	rm -Rf /usr/local/pgsql
+	mkdir -p /usr/local/pgsql/data
+	chown -R postgres:postgres /usr/local/pgsql
 
-if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then    
-    sudo -u postgres /usr/pgsql-11/bin/pg_ctl initdb -D $PGDATA &>> $log_file
-elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
-    sudo -u postgres /usr/lib/postgresql/11/bin/pg_ctl initdb -D $PGDATA &>> $log_file
-else
-    echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04"
-    exit 1
-fi
+	if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then    
+		sudo -u postgres /usr/pgsql-11/bin/pg_ctl initdb -D $PGDATA &>> $log_file
+	elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
+		sudo -u postgres /usr/lib/postgresql/11/bin/pg_ctl initdb -D $PGDATA &>> $log_file
+	else
+		echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04"
+		exit 1
+	fi
 
-    # make certificate and key files for TLS
-    openssl req -new -x509 -days $ISECL_PGDB_CERT_VALIDITY_DAYS -newkey rsa:4096 \
+	# make certificate and key files for TLS
+	openssl req -new -x509 -days $ISECL_PGDB_CERT_VALIDITY_DAYS -newkey rsa:4096 \
 	-addext "subjectAltName = $pgdb_cert_dns, $pgdb_cert_ip" \
-        -nodes -text -out $PGDATA/server.crt -keyout $PGDATA/server.key -sha384 -subj "$ISECL_PGDB_CERTSUBJECT"
+	-nodes -text -out $PGDATA/server.crt -keyout $PGDATA/server.key -sha384 -subj "$ISECL_PGDB_CERTSUBJECT"
 
-    chmod og-rwx $PGDATA/server.key
+	chmod og-rwx $PGDATA/server.key
 
-    # Configure the Postgres database for TLS
-    mv $PGDATA/postgresql.conf $PGDATA/postgresql-original.conf
-    echo "# ISECL Postgres database configuration File\n" > $PGDATA/postgresql.conf
-    echo "# Original File moved to postgresql-original.conf" >> $PGDATA/postgresql.conf
-    echo "# If you need further configuration changes please overwrite this file with "  >> $PGDATA/postgresql.conf
-    echo "# original file and incorporate the following settings into the postgressql.conf file" >> $PGDATA/postgresql.conf
+	# Configure the Postgres database for TLS
+	mv $PGDATA/postgresql.conf $PGDATA/postgresql-original.conf
+	echo "# ISECL Postgres database configuration File\n" > $PGDATA/postgresql.conf
+	echo "# Original File moved to postgresql-original.conf" >> $PGDATA/postgresql.conf
+	echo "# If you need further configuration changes please overwrite this file with "  >> $PGDATA/postgresql.conf
+	echo "# original file and incorporate the following settings into the postgressql.conf file" >> $PGDATA/postgresql.conf
 
-    echo "listen_addresses = '$ISECL_PGDB_IP_INTERFACES'" >> $PGDATA/postgresql.conf
-    echo "port = $ISECL_PGDB_PORT" >> $PGDATA/postgresql.conf
-    echo "ssl = on" >> $PGDATA/postgresql.conf
-    echo "ssl_cert_file = 'server.crt'" >> $PGDATA/postgresql.conf
-    echo "ssl_key_file = 'server.key'" >> $PGDATA/postgresql.conf
-    echo "ssl_ciphers = '$ISECL_PGDB_CIPHERSUITES'" >> $PGDATA/postgresql.conf
+	echo "listen_addresses = '$ISECL_PGDB_IP_INTERFACES'" >> $PGDATA/postgresql.conf
+	echo "port = $ISECL_PGDB_PORT" >> $PGDATA/postgresql.conf
+	echo "ssl = on" >> $PGDATA/postgresql.conf
+	echo "ssl_cert_file = 'server.crt'" >> $PGDATA/postgresql.conf
+	echo "ssl_key_file = 'server.key'" >> $PGDATA/postgresql.conf
+	echo "ssl_ciphers = '$ISECL_PGDB_CIPHERSUITES'" >> $PGDATA/postgresql.conf
+	echo "max_connections = $isecl_pgdb_max_connections" >> $PGDATA/postgresql.conf
+	echo "shared_buffers = $isecl_pgdb_shared_buffers" >> $PGDATA/postgresql.conf
 
-    mv $PGDATA/pg_hba.conf $PGDATA/pg_hba-template.conf
-    echo "local all postgres peer" >> $PGDATA/pg_hba.conf
-    echo "local all all md5" >> $PGDATA/pg_hba.conf
-    if [ $ISECL_PGDB_ALLOW_NONSSL == "true" ]; then
-        if [ $ISECL_PGDB_SERVICEHOST != "localhost" ] && [ $ISECL_PGDB_SERVICEHOST != "127.0.0.1" ]; then
-            echo "host all all localhost md5" >> $PGDATA/pg_hba.conf
-        fi
-	    echo "host all all $ISECL_PGDB_SERVICEHOST md5" >> $PGDATA/pg_hba.conf
-    else 
-        if [ $ISECL_PGDB_SERVICEHOST != "localhost" ] && [ $ISECL_PGDB_SERVICEHOST != "127.0.0.1" ]; then
-            echo "hostssl all all localhost md5" >> $PGDATA/pg_hba.conf
-        fi
-        echo "# host all all $ISECL_PGDB_SERVICEHOST md5" >> $PGDATA/pg_hba.conf
-        echo "hostssl all all $ISECL_PGDB_SERVICEHOST md5" >> $PGDATA/pg_hba.conf
-	echo "hostnossl all all 0.0.0.0/0 reject" >> $PGDATA/pg_hba.conf
-    fi
-    chown -R postgres:postgres /usr/local/pgsql
+	mv $PGDATA/pg_hba.conf $PGDATA/pg_hba-template.conf
+	echo "local all postgres peer" >> $PGDATA/pg_hba.conf
+	echo "local all all md5" >> $PGDATA/pg_hba.conf
+	if [ $ISECL_PGDB_ALLOW_NONSSL == "true" ]; then
+		if [ $ISECL_PGDB_SERVICEHOST != "localhost" ] && [ $ISECL_PGDB_SERVICEHOST != "127.0.0.1" ]; then
+			echo "host all all localhost md5" >> $PGDATA/pg_hba.conf
+		fi
+		echo "host all all $ISECL_PGDB_SERVICEHOST md5" >> $PGDATA/pg_hba.conf
+	else
+		if [ $ISECL_PGDB_SERVICEHOST != "localhost" ] && [ $ISECL_PGDB_SERVICEHOST != "127.0.0.1" ]; then
+			echo "hostssl all all localhost md5" >> $PGDATA/pg_hba.conf
+		fi
+		echo "# host all all $ISECL_PGDB_SERVICEHOST md5" >> $PGDATA/pg_hba.conf
+		echo "hostssl all all $ISECL_PGDB_SERVICEHOST md5" >> $PGDATA/pg_hba.conf
+		echo "hostnossl all all 0.0.0.0/0 reject" >> $PGDATA/pg_hba.conf
+	fi
+	chown -R postgres:postgres /usr/local/pgsql
 fi
 
 echo "Setting up systemctl for postgres database ..."
 
 # setup systemd startup for postgresql
 if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
-pg_systemd=/usr/lib/systemd/system/postgresql-11.service
+	pg_systemd=/usr/lib/systemd/system/postgresql-11.service
 elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
-   if [ -f "/etc/init.d/postgresql" ]; then
-           systemctl stop postgresql && systemctl disable postgresql
-           rm -rf /lib/systemd/system/postgresql.service
-   fi
-pg_systemd=/lib/systemd/system/postgresql-11.service
+	if [ -f "/etc/init.d/postgresql" ]; then
+		systemctl stop postgresql && systemctl disable postgresql
+		rm -rf /lib/systemd/system/postgresql.service
+	fi
+	pg_systemd=/lib/systemd/system/postgresql-11.service
 else
-    echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04"
-    exit 1
+	echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04"
+	exit 1
 fi
 
 rm -rf $pg_systemd
@@ -176,16 +195,16 @@ echo "OOMScoreAdjust=-1000" >> $pg_systemd
 echo "Environment=PG_OOM_ADJUST_FILE=/proc/self/oom_score_adj" >> $pg_systemd
 echo "Environment=PG_OOM_ADJUST_VALUE=0" >> $pg_systemd
 if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
-echo "ExecStart=/usr/pgsql-11/bin/pg_ctl start -D ${PGDATA} -l ${PGDATA}/pg_log" >> $pg_systemd
-echo "ExecStop=/usr/pgsql-11/bin/pg_ctl stop -D ${PGDATA}" >> $pg_systemd
-echo "ExecReload=/usr/pgsql-11/bin/pg_ctl reload -D ${PGDATA}" >> $pg_systemd
+	echo "ExecStart=/usr/pgsql-11/bin/pg_ctl start -D ${PGDATA} -l ${PGDATA}/pg_log" >> $pg_systemd
+	echo "ExecStop=/usr/pgsql-11/bin/pg_ctl stop -D ${PGDATA}" >> $pg_systemd
+	echo "ExecReload=/usr/pgsql-11/bin/pg_ctl reload -D ${PGDATA}" >> $pg_systemd
 elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
-echo "ExecStart=/usr/lib/postgresql/11/bin/pg_ctl start -D ${PGDATA} -l ${PGDATA}/pg_log" >> $pg_systemd
-echo "ExecStop=/usr/lib/postgresql/11/bin/pg_ctl stop -D ${PGDATA}" >> $pg_systemd
-echo "ExecReload=/usr/lib/postgresql/11/bin/pg_ctl reload -D ${PGDATA}" >> $pg_systemd
+	echo "ExecStart=/usr/lib/postgresql/11/bin/pg_ctl start -D ${PGDATA} -l ${PGDATA}/pg_log" >> $pg_systemd
+	echo "ExecStop=/usr/lib/postgresql/11/bin/pg_ctl stop -D ${PGDATA}" >> $pg_systemd
+	echo "ExecReload=/usr/lib/postgresql/11/bin/pg_ctl reload -D ${PGDATA}" >> $pg_systemd
 else
-    echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04"
-    exit 1
+	echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04"
+	exit 1
 fi
 echo "" >> $pg_systemd
 echo "TimeoutSec=300" >> $pg_systemd

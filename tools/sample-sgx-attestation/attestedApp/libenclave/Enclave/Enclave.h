@@ -39,6 +39,9 @@
 
 #include <mbusafecrt.h> /* memcpy_s */
 
+// Nonce can be maximum of 256 bits
+#define NONCE_MAX_BYTES 32
+
 #define AESGCM_256_KEY_SIZE 32
 typedef uint8_t aes_gcm_256bit_key_t[AESGCM_256_KEY_SIZE];
 

@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"github.com/google/uuid"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -27,9 +28,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/intel-secl/intel-secl/v3/pkg/lib/common/crypt"
-	tamodel "github.com/intel-secl/intel-secl/v3/pkg/model/ta"
+	client "github.com/intel-secl/intel-secl/v4/pkg/clients/ta"
+	"github.com/intel-secl/intel-secl/v4/pkg/lib/common/crypt"
+	tamodel "github.com/intel-secl/intel-secl/v4/pkg/model/ta"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -38,6 +39,11 @@ import (
 var Version = ""
 var GitHash = ""
 var BuildDate = ""
+
+const (
+	communicationModeHttp     = "http"
+	communicationModeOutbound = "outbound"
+)
 
 type AppConfig struct {
 	PortStart              int
@@ -53,15 +59,20 @@ type AppConfig struct {
 	AasApiUrl              string
 	CmsApiUrl              string
 	SimulatorIP            string
+	NatsServers            []string
+	TaSimServiceMode       string
+	TaHostId               string
 
-	sslCertPath    string
-	sslKeyPath     string
-	tpmQuotePath   string
-	hostInfoPath   string
-	aikCertPath    string
-	aikKeyPath     string
-	bindingKeyPath string
-	hwUuidMapPath  string
+	sslCertPath              string
+	sslKeyPath               string
+	tpmQuotePath             string
+	hostInfoPath             string
+	aikCertPath              string
+	aikKeyPath               string
+	bindingKeyPath           string
+	hwUuidMapPath            string
+	natsTaSimCredentialsPath string
+	natsTaSubCredentialsPath string
 }
 
 type quoteSections struct {
@@ -118,11 +129,19 @@ func getApplicationData() (*AppConfig, error) {
 		ac.TrustedHostsPercentage = 100
 	}
 
+	if len(ac.NatsServers) == 0 && ac.TaHostId == "" {
+		ac.TaSimServiceMode = communicationModeHttp
+	} else {
+		ac.TaSimServiceMode = communicationModeOutbound
+	}
+
 	ac.aikCertPath = filepath.FromSlash(homePath + "configuration/aik.cert.pem")
 	ac.aikKeyPath = filepath.FromSlash(homePath + "configuration/aik.key.pem")
 	ac.bindingKeyPath = filepath.FromSlash(homePath + "configuration/bk.cert")
 	ac.hostInfoPath = filepath.FromSlash(homePath + "repository/host_info.json")
 	ac.tpmQuotePath = filepath.FromSlash(homePath + "repository/quote.xml")
+	ac.natsTaSimCredentialsPath = filepath.FromSlash(homePath + "repository/ta-sim.creds")
+	ac.natsTaSubCredentialsPath = filepath.FromSlash(homePath + "repository/ta-sub.creds")
 	ac.sslCertPath = filepath.FromSlash(homePath + "configuration/cert.pem")
 	ac.sslKeyPath = filepath.FromSlash(homePath + "configuration/key.pem")
 	ac.sslKeyPath = filepath.FromSlash(homePath + "configuration/key.pem")
@@ -292,9 +311,8 @@ func (ctrl controller) bindingKey(w http.ResponseWriter, _ *http.Request) {
 	_, _ = w.Write(ctrl.bindingKeyCert)
 }
 
-func (ctrl controller) getQuoteSignedWithNonce(nonce []byte, tagPresent bool, assetTag string) ([]byte, error) {
+func (ctrl controller) getQuoteSignedWithNonce(nonce []byte, tagPresent bool, assetTag string) (*tamodel.TpmQuoteResponse, error) {
 	// make a copy of the the quote so that we leave the original untouched
-
 	hash := sha1.New()
 	hash.Write(nonce)
 	taNonce := hash.Sum(nil)
@@ -337,8 +355,9 @@ func (ctrl controller) getQuoteSignedWithNonce(nonce []byte, tagPresent bool, as
 	fullQuote := *ctrl.tpmQuote
 	fullQuote.Quote = base64.StdEncoding.EncodeToString(newQuote)
 
-	return xml.MarshalIndent(fullQuote, "", "\t")
-
+	// adding delay to simulate the TPM response time delay from an actual host
+	time.Sleep(time.Duration(ctrl.config.QuoteDelayMs) * time.Millisecond)
+	return &fullQuote, nil
 }
 
 func (ctrl controller) quote(w http.ResponseWriter, r *http.Request) {
@@ -361,7 +380,8 @@ func (ctrl controller) quote(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		_, _ = w.Write([]byte("could not creating quote response error: " + err.Error()))
 	} else {
-		_, _ = w.Write(qt)
+		quote, _ := xml.MarshalIndent(qt, "", "\t")
+		_, _ = w.Write(quote)
 	}
 }
 
@@ -393,33 +413,63 @@ func startServers(ac *AppConfig) (err error) {
 	if ctrl, err = NewController(ac); err != nil {
 		return errors.Wrap(err, "Could not initialize controller")
 	}
-	// create `ServerMux`
-	mux := http.NewServeMux()
 
-	// create a default route handler
-	mux.HandleFunc("/", ctrl.hello)
-	mux.HandleFunc("/v2/aik", ctrl.aik)
-	mux.HandleFunc("/v2/binding-key-certificate", ctrl.bindingKey)
-	mux.HandleFunc("/v2/tpm/quote", ctrl.quote)
-	mux.HandleFunc("/v2/host", ctrl.info)
+	if ac.TaSimServiceMode == communicationModeHttp {
+		log.Info("Starting TA simulators in HTTP mode")
+		// create `ServerMux`
+		mux := http.NewServeMux()
+		// create a default route handler
+		mux.HandleFunc("/", ctrl.hello)
+		mux.HandleFunc("/v2/aik", ctrl.aik)
+		mux.HandleFunc("/v2/binding-key-certificate", ctrl.bindingKey)
+		mux.HandleFunc("/v2/tpm/quote", ctrl.quote)
+		mux.HandleFunc("/v2/host", ctrl.info)
 
-	wg := new(sync.WaitGroup)
-	// add number of Servers to `wg` WaitGroup
-	wg.Add(ac.Servers)
-
-	for i := ac.PortStart; i < ac.PortStart+ac.Servers; i++ {
-		go func(port int) {
-			// create new server
-			server := http.Server{
-				Addr:    fmt.Sprintf(":%v", port), // :{Port}
-				Handler: mux,
-			}
-			server.SetKeepAlivesEnabled(false)
-			fmt.Println(server.ListenAndServeTLS(ac.sslCertPath, ac.sslKeyPath))
-			wg.Done()
-		}(i)
+		wg := new(sync.WaitGroup)
+		// add number of Servers to `wg` WaitGroup
+		wg.Add(ac.Servers)
+		for i := ac.PortStart; i < ac.PortStart+ac.Servers; i++ {
+			go func(port int) {
+				// create new server
+				server := http.Server{
+					Addr:    fmt.Sprintf(":%v", port), // :{Port}
+					Handler: mux,
+				}
+				server.SetKeepAlivesEnabled(false)
+				log.Info(server.ListenAndServeTLS(ac.sslCertPath, ac.sslKeyPath))
+				wg.Done()
+			}(i)
+		}
+		wg.Wait()
+	} else if ac.TaSimServiceMode == communicationModeOutbound {
+		log.Info("Starting TA simulators in outbound mode")
+		hwUuids, err := loadNSaveHwUuidFile(ac.hwUuidMapPath, ac.PortStart, ac.Servers)
+		if err != nil {
+			return err
+		}
+		wg := new(sync.WaitGroup)
+		// add number of Servers to `wg` WaitGroup
+		wg.Add(100)
+		for i := 0; i < ac.Servers; i++ {
+			go func(i int) {
+				// create new server
+				hvsSubscriber, err := NewHVSSubscriber(hwUuids[i], ac, *ctrl)
+				if err != nil {
+					log.Errorf("Error getting a new HVS Subscriber: %s", err.Error())
+				}
+				err = hvsSubscriber.Start()
+				if err != nil {
+					log.Errorf("HVS subcriber Error : %s", err.Error())
+				}
+				wg.Done()
+			}(i)
+		}
+		wg.Wait()
+	} else {
+		return errors.New("Invalid TA simulator service mode, should be either http or outboud")
 	}
-	wg.Wait()
+
+	log.Info("Started %d servers", ac.Servers)
 	return nil
 }
 
@@ -452,12 +502,17 @@ func getAuthToken(aasUrl, apiUser, apiPass string) (string, error) {
 
 }
 
-func sendCreateHostRequest(hvsUrl, authtoken, ip, hw_uuid string, port int, client *http.Client, wg *sync.WaitGroup) {
+func sendCreateHostRequest(hvsUrl, authtoken, ip, hw_uuid string, port int, client *http.Client, wg *sync.WaitGroup, serviceMode string) {
 	defer wg.Done()
+
+	connection_str := fmt.Sprintf("https://%s:%d", ip, port)
+	if serviceMode == communicationModeOutbound {
+		connection_str = fmt.Sprintf("intel:nats://%s", hw_uuid)
+	}
 
 	reqBody, err := json.Marshal(map[string]string{
 		"host_name":         "Go-TASim-" + hw_uuid,
-		"connection_string": fmt.Sprintf("https://%s:%d", ip, port),
+		"connection_string": connection_str,
 	})
 
 	req, err := http.NewRequest("POST", hvsUrl+"hosts", bytes.NewBuffer(reqBody))
@@ -487,12 +542,17 @@ func sendCreateHostRequest(hvsUrl, authtoken, ip, hw_uuid string, port int, clie
 
 }
 
-func sendCreateFlavorRequest(flavorParts []string, hvsUrl, authtoken, ip string, port int, client *http.Client, wg *sync.WaitGroup) {
+func sendCreateFlavorRequest(flavorParts []string, hvsUrl, authtoken, ip string, port int, client *http.Client, wg *sync.WaitGroup, hw_uuid, serviceMode string) {
 	defer wg.Done()
 	log.Info("Preparing request to create flavors ")
 
+	connection_str := fmt.Sprintf("https://%s:%d", ip, port)
+	if serviceMode == communicationModeOutbound {
+		connection_str = fmt.Sprintf("intel:nats://%s", hw_uuid)
+	}
+
 	reqBody, err := json.Marshal(map[string]interface{}{
-		"connection_string":    fmt.Sprintf("https://%s:%d", ip, port),
+		"connection_string":    connection_str,
 		"partial_flavor_types": flavorParts,
 	})
 
@@ -547,9 +607,9 @@ func registerHosts(ac *AppConfig) error {
 
 	for i := ac.PortStart; i < ac.PortStart+ac.Servers; i++ {
 		wg.Add(1)
-		go sendCreateHostRequest(ac.HvsApiUrl, authToken, ac.SimulatorIP, hwUuids[i-ac.PortStart], i, &client, wg)
+		go sendCreateHostRequest(ac.HvsApiUrl, authToken, ac.SimulatorIP, hwUuids[i-ac.PortStart], i, &client, wg, ac.TaSimServiceMode)
 		if (i+1)%ac.RequestVolume == 0 {
-			time.Sleep(time.Duration(ac.QuoteDelayMs) * time.Millisecond)
+			time.Sleep(time.Duration(ac.RequestVolumeDelayMs) * time.Millisecond)
 			wg.Wait()
 		}
 	}
@@ -567,11 +627,14 @@ func createFlavors(ac *AppConfig) error {
 	log.Info("Authentication token obtained successfully")
 
 	wg := new(sync.WaitGroup)
-	//
 	trustedHosts := ac.Servers * ac.TrustedHostsPercentage / 100
 
 	allFlavors := []string{"PLATFORM", "OS", "HOST_UNIQUE"}
 	hostUniqueFlavors := []string{"HOST_UNIQUE"}
+	hwUuids, err := loadNSaveHwUuidFile(ac.hwUuidMapPath, ac.PortStart, ac.Servers)
+	if err != nil {
+		return err
+	}
 
 	i := ac.PortStart
 
@@ -585,7 +648,7 @@ func createFlavors(ac *AppConfig) error {
 
 	for ; i < ac.PortStart+trustedHosts && i < ac.PortStart+ac.DistinctFlavors; i++ {
 		wg.Add(1)
-		go sendCreateFlavorRequest(allFlavors, ac.HvsApiUrl, authToken, ac.SimulatorIP, i, &client, wg)
+		go sendCreateFlavorRequest(allFlavors, ac.HvsApiUrl, authToken, ac.SimulatorIP, i, &client, wg, hwUuids[i-ac.PortStart], ac.TaSimServiceMode)
 		if (i+1)%ac.RequestVolume == 0 {
 			time.Sleep(time.Duration(ac.RequestVolumeDelayMs) * time.Millisecond)
 			wg.Wait()
@@ -594,7 +657,7 @@ func createFlavors(ac *AppConfig) error {
 
 	for ; i < ac.PortStart+trustedHosts; i++ {
 		wg.Add(1)
-		go sendCreateFlavorRequest(hostUniqueFlavors, ac.HvsApiUrl, authToken, ac.SimulatorIP, i, &client, wg)
+		go sendCreateFlavorRequest(hostUniqueFlavors, ac.HvsApiUrl, authToken, ac.SimulatorIP, i, &client, wg, hwUuids[i-ac.PortStart], ac.TaSimServiceMode)
 		if (i+1)%ac.RequestVolume == 0 {
 			time.Sleep(time.Duration(ac.RequestVolumeDelayMs) * time.Millisecond)
 			wg.Wait()
@@ -633,7 +696,7 @@ func createBindingKeyCertMain(ac *AppConfig) error {
 	}
 
 	aikRSAKey, ok := aikPrivateKey.(*rsa.PrivateKey)
-	if ! ok {
+	if !ok {
 		return errors.Wrap(err, "aik Private Key is not an expected RSA key ")
 	}
 
@@ -642,7 +705,7 @@ func createBindingKeyCertMain(ac *AppConfig) error {
 		return errors.Wrap(err, "failed to load Privacy CA cer and key")
 	}
 
-	if _, ok := pcaPrivateKey.(*rsa.PrivateKey); ! ok {
+	if _, ok := pcaPrivateKey.(*rsa.PrivateKey); !ok {
 		return errors.Wrap(err, "Privacy Key is not of type RSA")
 	}
 
@@ -717,13 +780,60 @@ func main() {
 			os.Exit(1)
 		}
 
+	case "get-host-data-from-nats":
+		if err := getHostData(ac); err != nil {
+			log.Error("could not download host-info and tpm-quote from TA : ", err)
+			fmt.Printf("Error occured while getting TA data :\n %+v\n", err)
+			os.Exit(1)
+		}
+
 	case "help", "--help", "-h":
 		fmt.Printf("Go Trust Agent Simulator %s-%s\tBuilt %s", Version, GitHash, BuildDate)
 		fmt.Println("Usage")
 		fmt.Printf("\n\t %s start | create-all-flavors | create-all-hosts | create-binding-key-cert ", os.Args[0])
 		fmt.Printf("\n\n\t create-binding-key-cert Usage")
-		fmt.Printf("\n\t %s create-binding-key-cert --pca-cert=<path_to_privacy_ca_cert> --pca-key=<path_to_privacy_ca_key>", os.Args[0] )
+		fmt.Printf("\n\t %s create-binding-key-cert --pca-cert=<path_to_privacy_ca_cert> --pca-key=<path_to_privacy_ca_key>", os.Args[0])
 		fmt.Println("\n create-all-flavors and create-all-host require that start is called and process is running in background ")
 	}
+}
 
+func getHostData(ac *AppConfig) error {
+
+	// tls configuration with disabled server certificate chain verification
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: true,
+	}
+	// get TA client
+	taClient, err := client.NewNatsTAClient(ac.NatsServers, ac.TaHostId, tlsConfig, ac.natsTaSubCredentialsPath)
+	if err != nil {
+		return errors.Wrap(err, "Could not create Nats Trust Agent client")
+	}
+
+	hostInfo, err := taClient.GetHostInfo()
+	if err != nil {
+		return errors.Wrapf(err, "Error getting host-info from TA with HostId %s", ac.TaHostId)
+	}
+	taHostInfo, _ := json.Marshal(hostInfo)
+	err = ioutil.WriteFile(ac.hostInfoPath, taHostInfo, 0644)
+	if err != nil {
+		return errors.Wrapf(err, "Error writing host-info to file %s", ac.hostInfoPath)
+	}
+
+	nonce := "+c4ZEmco4aj1G5dTXQvjIMGFd44="
+	pcrList := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23}
+	pcrbanks := []string{"SHA1", "SHA256", "SHA384"}
+
+	quote, err := taClient.GetTPMQuote(nonce, pcrList, pcrbanks)
+	if err != nil {
+		return errors.Wrapf(err, "Error getting host-info from TA with HostId %s", ac.TaHostId)
+	}
+	tpmQuote, err := xml.Marshal(quote)
+	if err != nil {
+		return errors.Wrap(err, "Error marshalling tpm-quote")
+	}
+	err = ioutil.WriteFile(ac.tpmQuotePath, tpmQuote, 0644)
+	if err != nil {
+		return errors.Wrapf(err, "Error writing tpm-quote to file %s", ac.tpmQuotePath)
+	}
+	return nil
 }

@@ -11,17 +11,20 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/binary"
-	"encoding/gob"
+	"encoding/json"
 	"fmt"
-	"github.com/intel-secl/sample-sgx-attestation/v3/common"
+	"github.com/intel-secl/sample-sgx-attestation/v4/common"
 	"github.com/pkg/errors"
 	logger "github.com/sirupsen/logrus"
+	cos "intel/isecl/lib/common/v4/os"
 	"io"
 	"io/ioutil"
 	"math/big"
-	"net"
+	"net/http"
 	"strings"
 )
 
@@ -108,7 +111,7 @@ func (ca AppVerifierController) GenerateSWK() ([]byte, error) {
 	return keyBytes, nil
 }
 
-func (ca AppVerifierController) SharePubkeyWrappedSWK(conn net.Conn, key []byte, swk []byte) error {
+func (ca AppVerifierController) SharePubkeyWrappedSWK(baseURL string, key []byte, swk []byte) error {
 	cipherText, err := wrapSWKByPublicKey(swk, key)
 	if err != nil {
 		log.Info("Cipher Text generation Failed.", err)
@@ -117,29 +120,83 @@ func (ca AppVerifierController) SharePubkeyWrappedSWK(conn net.Conn, key []byte,
 
 	log.Info("Wrapped SWK Cipher Text Length : ", len(cipherText))
 
-	var msg common.Message
-	msg.Type = common.MsgTypePubkeyWrappedSWK
-	msg.PubkeyWrappedSWK.WrappedSWK = cipherText
+	url := baseURL + common.PostWrappedSWK
 
-	log.Info("Sending Public key wrapped SWK message...")
-	gobEncoder := gob.NewEncoder(conn)
-	err = gobEncoder.Encode(msg)
+	var wsr common.WrappedSWKRequest
+	wsr.SWK = base64.StdEncoding.EncodeToString(cipherText)
+
+	reqBytes := new(bytes.Buffer)
+	err = json.NewEncoder(reqBytes).Encode(wsr)
 	if err != nil {
-		log.Error("Sending Public key wrapped SWK message failed!")
-		return err
+		return errors.Wrap(err, "Error in encoding SWK.")
+	}
+
+	// Send request to Attested App
+	req, err := http.NewRequest("POST", url, reqBytes)
+	if err != nil {
+		return errors.Wrap(err, "Error in Creating request.")
+	}
+
+	req.Header.Add("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Add("Authorization", common.DummyBearerToken)
+
+	// Get the SystemCertPool, continue with an empty pool on error
+	rootCAs, _ := x509.SystemCertPool()
+	if rootCAs == nil {
+		rootCAs = x509.NewCertPool()
+	}
+
+	// Looking for self signed certificates.
+	rootCaCertPems, err := cos.GetDirFileContents("./", "cert.pem")
+
+	for _, rootCACert := range rootCaCertPems {
+		rootCAs.AppendCertsFromPEM(rootCACert)
+	}
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: false,
+				RootCAs:            rootCAs,
+				ServerName:         common.SelfSignedCertSNI,
+			},
+		},
+	}
+
+	resp, err := client.Do(req)
+	if resp != nil {
+		defer func() {
+			derr := resp.Body.Close()
+			if derr != nil {
+				log.WithError(derr).Error("Error closing wrapped SWK body.")
+			}
+		}()
+	}
+
+	if err != nil {
+		log.Error(err)
+		return errors.Wrap(err, "Error posting SWK Attested App.")
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		log.Error("Status Code : ", resp.StatusCode)
+		return errors.New("Posting SWK to Attested App failed.")
 	}
 
 	return nil
 }
 
-func (ca AppVerifierController) ShareSWKWrappedSecret(conn net.Conn, key []byte, secret []byte) error {
+func (ca AppVerifierController) ShareSWKWrappedSecret(baseURL string, key []byte, message []byte) error {
 
-	log.Info("Secret : ", string(secret))
+	log.Info("Message : ", string(message))
 
 	if len(key) != common.SWKSize {
 		log.Errorf("Key length has to be %d bytes.", common.SWKSize)
 		return errors.New("Invalid key length.")
 	}
+
+	// Wrap the message with SWK
 	cipherBlock, err := aes.NewCipher(key)
 	if err != nil {
 		log.Error("Error initialising cipher block", err)
@@ -159,52 +216,158 @@ func (ca AppVerifierController) ShareSWKWrappedSecret(conn net.Conn, key []byte,
 		return err
 	}
 
-	wrappedSecret := gcm.Seal(nonce, nonce, secret, nil)
+	wrappedMessage := gcm.Seal(nonce, nonce, message, nil)
 
-	// Send
-	var msg common.Message
-	msg.Type = common.MsgTypeSWKWrappedSecret
-	msg.SWKWrappedSecret.WrappedSecret = wrappedSecret
+	// Send request to Attested App
+	url := baseURL + common.PostWrappedMessage
 
-	log.Info("Sending SWK Wrapped Secret message ...")
-	gobEncoder := gob.NewEncoder(conn)
-	err = gobEncoder.Encode(msg)
+	var wm common.WrappedMessage
+	wm.Message = base64.StdEncoding.EncodeToString(wrappedMessage)
+	reqBytes := new(bytes.Buffer)
+	err = json.NewEncoder(reqBytes).Encode(wm)
 	if err != nil {
-		log.Error("Error sending SWK Wrapped Secret message!")
-		return err
+		return errors.Wrap(err, "Error in encoding Wrapped Message.")
+	}
+
+	req, err := http.NewRequest("POST", url, reqBytes)
+	if err != nil {
+		return errors.Wrap(err, "Error in Creating request.")
+	}
+
+	req.Header.Add("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Add("Authorization", common.DummyBearerToken)
+
+	// Get the SystemCertPool, continue with an empty pool on error
+	rootCAs, _ := x509.SystemCertPool()
+	if rootCAs == nil {
+		rootCAs = x509.NewCertPool()
+	}
+
+	// Look for self signed certificates
+	rootCaCertPems, err := cos.GetDirFileContents("./", "cert.pem")
+
+	for _, rootCACert := range rootCaCertPems {
+		rootCAs.AppendCertsFromPEM(rootCACert)
+	}
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: false,
+				RootCAs:            rootCAs,
+				ServerName:         common.SelfSignedCertSNI,
+			},
+		},
+	}
+
+	resp, err := client.Do(req)
+	if resp != nil {
+		defer func() {
+			derr := resp.Body.Close()
+			if derr != nil {
+				log.WithError(derr).Error("Error closing wrapped message body.")
+			}
+		}()
+	}
+
+	if err != nil {
+		log.Error(err)
+		return errors.Wrap(err, "Error posting wrapped message Attested App.")
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		log.Error("Status Code : ", resp.StatusCode)
+		return errors.New("Posting wrapped message to Attested App failed.")
 	}
 
 	return nil
 }
 
-func (ca AppVerifierController) ConnectAndReceiveQuote(conn net.Conn) (bool, *common.Message) {
-	var msg common.Message
-	msg.Type = common.MsgTypeConnect
-	msg.ConnectRequest.Username = common.AppUsername
-	msg.ConnectRequest.Password = common.AppPassword
+func (ca AppVerifierController) ConnectAndReceiveQuote(baseURL string, nonce string) (error, *common.IdentityResponse) {
 
-	// Write to socket
-	gobEncoder := gob.NewEncoder(conn)
-	err := gobEncoder.Encode(msg)
+	url := baseURL + common.GetIdentity
+
+	var idr common.IdentityRequest
+	idr.Nonce = nonce
+
+	reqBytes := new(bytes.Buffer)
+	err := json.NewEncoder(reqBytes).Encode(idr)
 	if err != nil {
-		log.Error("Error sending connect message!")
-		return false, nil
+		return errors.Wrap(err, "Error in encoding the nonce."), nil
 	}
 
-	// Receive from socket
-	respMsg := &common.Message{}
-	gobDecoder := gob.NewDecoder(conn)
-	err = gobDecoder.Decode(respMsg)
+	// Send request to Attested App
+	req, err := http.NewRequest("GET", url, reqBytes)
 	if err != nil {
-		log.Error("Error receiving SGX Quote + Pubkey message!")
-		return false, nil
+		return errors.Wrap(err, "Error in Creating request."), nil
 	}
 
-	return true, respMsg
+	req.Header.Add("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Add("Authorization", common.DummyBearerToken)
+
+	// Get the SystemCertPool, continue with an empty pool on error
+	rootCAs, _ := x509.SystemCertPool()
+	if rootCAs == nil {
+		rootCAs = x509.NewCertPool()
+	}
+
+	// Looking for self signed certificates.
+	rootCaCertPems, err := cos.GetDirFileContents("./", "cert.pem")
+
+	for _, rootCACert := range rootCaCertPems {
+		rootCAs.AppendCertsFromPEM(rootCACert)
+	}
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: false,
+				RootCAs:            rootCAs,
+				ServerName:         common.SelfSignedCertSNI,
+			},
+		},
+	}
+
+	resp, err := client.Do(req)
+	if resp != nil {
+		defer func() {
+			derr := resp.Body.Close()
+			if derr != nil {
+				log.WithError(derr).Error("Error closing get quote response body.")
+			}
+		}()
+	}
+
+	if err != nil {
+		log.Error(err)
+		return errors.Wrap(err, "Error fetching quote and public key from Attested App."), nil
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		log.Error("Status Code : ", resp.StatusCode)
+		return errors.New("Fetching quote and public key from Attested App failed."), nil
+	}
+
+	response, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.WithError(err).Error("Could not read Quote Response body.")
+		return err, nil
+	}
+
+	// Unmarshal JSON response
+	var responseAttributes common.IdentityResponse
+	err = json.Unmarshal(response, &responseAttributes)
+	if err != nil {
+		return errors.Wrap(err, "Error in unmarshalling response."), nil
+	}
+
+	return nil, &responseAttributes
 }
 
-func (ca AppVerifierController) VerifySGXQuote(sgxQuote []byte, enclavePublicKey []byte) bool {
-	err := ca.verifyQuote(sgxQuote, enclavePublicKey)
+func (ca AppVerifierController) VerifySGXQuote(sgxQuote []byte, userData []byte) bool {
+	err := ca.verifyQuote(sgxQuote, userData)
 	if err != nil {
 		log.WithError(err).Errorf("Error while verifying SGX quote")
 		return false
@@ -214,7 +377,7 @@ func (ca AppVerifierController) VerifySGXQuote(sgxQuote []byte, enclavePublicKey
 }
 
 // verifySgxQuote verifies the quote
-func (ca AppVerifierController) verifyQuote(quote []byte, publicKey []byte) error {
+func (ca AppVerifierController) verifyQuote(quote []byte, userData []byte) error {
 	var err error
 
 	// Initialize logger.
@@ -224,10 +387,10 @@ func (ca AppVerifierController) verifyQuote(quote []byte, publicKey []byte) erro
 
 	// Convert byte array to string.
 	qData := base64.StdEncoding.EncodeToString(quote)
-	key := base64.StdEncoding.EncodeToString(publicKey)
+	uData := base64.StdEncoding.EncodeToString(userData)
 
 	var responseAttributes QuoteVerifyAttributes
-	responseAttributes, err = ca.ExtVerifier.VerifyQuote(qData, key)
+	responseAttributes, err = ca.ExtVerifier.VerifyQuote(qData, uData)
 
 	if err != nil {
 		return errors.Wrap(err, "Error in quote verification!")

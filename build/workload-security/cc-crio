@@ -41,7 +41,6 @@ k8s_common: clean $(INTEL_SECL_K8S) wls_k8s k8s-extensions tagent_k8s wlagent_k8
 	mkdir -p k8s/container-images
 	mkdir -p k8s/manifests
 	mkdir -p k8s/container-runtime
-	mkdir -p k8s/platform-dependencies
 	cp -r utils/build/workload-security/k8s/pre-requisites.sh k8s/manifests/
 	cp -r utils/build/workload-security/k8s/isecl-bootstrap-db-services.sh k8s/manifests/isecl-bootstrap-db-services.sh
 	cp utils/build/workload-security/k8s/isecl-k8s.env k8s/manifests/isecl-k8s.env
@@ -58,7 +57,6 @@ k8s_common: clean $(INTEL_SECL_K8S) wls_k8s k8s-extensions tagent_k8s wlagent_k8
 	cp workload-agent/out/*.tar k8s/container-images/
 	cp trust-agent/out/*.tar k8s/container-images/
 	cp workload-service/out/*.tar k8s/container-images/
-	cp utils/build/workload-security/k8s/install-ta-prereqs.sh k8s/platform-dependencies/
 	cp skopeo/skopeo k8s/binaries/
 
 tagent_k8s:
@@ -88,7 +86,7 @@ download-eca:
 
 workload-agent:
 	cd workload-agent && \
-	make installer-no-docker
+	make installer
 
 skopeo:
 	cd skopeo && \

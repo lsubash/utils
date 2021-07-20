@@ -12,7 +12,7 @@ LOG_PATH=logs
 CONFIG_PATH=config
 DB_PATH=db
 
-mkdir -p $BASE_PATH && chmod 700 -R $BASE_PATH && chown -R $USER_ID:$USER_ID $BASE_PATH
+mkdir -p $BASE_PATH && chmod 711 -R $BASE_PATH && chown -R $USER_ID:$USER_ID $BASE_PATH
 for service in $services; do
   service=$BASE_PATH/$service
   mkdir -p $service && chown -R $USER_ID:$USER_ID $service

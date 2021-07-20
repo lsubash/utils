@@ -17,7 +17,7 @@ Table of Contents
       * [Example Inventory and Vars](#example-inventory-and-vars)
       * [Using the Role in Ansible](#using-the-role-in-ansible)
       * [Example Playbook and CLI](#example-playbook-and-cli)
-      * [Additional Examples and Tips](#additional-examples-and-tips)
+      * [Additional Workflow Examples](#additional-workflow-examples)
       * [Intel® SecL-DC Services Details](#intel-secl-dc-services-details)
       * [Role Variables](#role-variables)
       * [License](#license)
@@ -80,7 +80,6 @@ Usecase and Playbook Support on RHEL
 | Trusted Workload Placement                         | Yes(partial*)    |
 | Application Integrity                              | Yes              |
 | Launch Time Protection - VM Confidentiality        | Yes(partial*)    |
-| Launch Time Protection - Container Confidentiality with Docker runtime | Yes(partial*)    |
 | Launch Time Protection - Container Confidentiality with CRIO runtime | Yes(partial*)    |
 | Secure Key Caching                                 | Yes              |
 | SGX Orchestration Kubernetes                                | Yes(partial*)    |
@@ -88,6 +87,7 @@ Usecase and Playbook Support on RHEL
 | SGX Orchestration Openstack                                  | Yes(partial*)    |
 | SGX Attestation Openstack                                    | Yes(partial*)    |
 | SKC No Orchestration                               | Yes              |
+| SGX Attestation No Orchestration                   | Yes              |
    > **Note:** *partial means orchestrator installation is not bundled with the role and need to be done independently. Also, components dependent on the orchestrator like `isecl-k8s-extensions` and `integration-hub` are installed either partially or not installed
 
 Usecase and Playbook Support on Ubuntu
@@ -109,18 +109,12 @@ Supported Deployment Model
 * CSP - Physical Server as per supported configurations
 * Enterprise - ISecL Services Machine
 
-
-
 Packages & Repos Installed by Role on RHEL
 ------------------------------------------
 
 * tar
 * dnf-plugins-core
 * https://download.postgresql.org/pub/repos/yum/11/redhat/rhel-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm
-
-
-The below is installed for only `Launch Time Protection - Container Confidentiality with Docker Runtime` Usecase on Enterprise and Compute Node
-* docker-ce-19.03.13
 
 
 The below is installed for only `Launch Time Protection - Container Confidentiality with CRIO Runtime` Usecase on Enterprise and Compute Node
@@ -152,8 +146,7 @@ The following usecases are supported and the respective variables can be provide
 | Data Fencing & Asset Tags                          | `setup: data-fencing` in playbook or via `--extra-vars` as `setup=data-fencing` in CLI |
 | Trusted Workload Placement - VM            | `setup: trusted-workload-placement-vm` in playbook or via `--extra-vars` as `setup=trusted-workload-placement-vm` in CLI |
 | Trusted Workload Placement - Containers            | `setup: trusted-workload-placement-containers` in playbook or via `--extra-vars` as `setup=trusted-workload-placement-containers` in CLI |
-| Launch Time Protection - VM Confidentiality        | `setup: workload-conf-vm` in playbook or via `--extra-vars` as `setup=workload-conf-vm` in CLI |
-| Launch Time Protection - Container Confidentiality with Docker Runtime | `setup: workload-conf-containers-docker` in playbook or via `--extra-vars` as `setup=workload-conf-containers-docker`in CLI |
+| Launch Time Protection - VM Confidentiality        | `setup: workload-conf-vm` in playbook or via `--extra-vars` as `setup=workload-conf-vm` in CLI || 
 | Launch Time Protection - Container Confidentiality with CRIO Runtime | `setup: workload-conf-containers-crio` in playbook or via `--extra-vars` as `setup=workload-conf-crio`in CLI |
 | Secure Key Caching                                 | `setup: secure-key-caching` in playbook or via `--extra-vars` as `setup=secure-key-caching`in CLI |
 | SGX Orchestration Kubernetes                      | `setup: sgx-orchestration-kubernetes` in playbook or via `--extra-vars` as `setup=sgx-orchestration-kubernetes`in CLI |
@@ -161,6 +154,7 @@ The following usecases are supported and the respective variables can be provide
 | SGX Orchestration Openstack                       | `setup: sgx-orchestration-openstack` in playbook or via `--extra-vars` as `setup=sgx-orchestration-openstack`in CLI |
 | SGX Attestation Openstack                         | `setup: sgx-attestation-openstack` in playbook or via `--extra-vars` as `setup=sgx-attestation-openstack`in CLI |
 | SKC No Orchestration                              | `setup: skc-no-orchestration` in playbook or via `--extra-vars` as `setup=skc-no-orchestration`in CLI |
+| SGX Attestation No Orchestration                  | `setup: sgx-attestation-no-orchestration` in playbook or via `--extra-vars` as `setup=sgx-attestation-no-orchestration`in CLI |
 
 
 The ISecL services and scripts required w.r.t each use case is as follows. The binaries and scripts are generated when Intel® SecL-DC repositories are built.
@@ -238,27 +232,7 @@ The ISecL services and scripts required w.r.t each use case is as follows. The b
     The playbook will place the `integration-hub` installer and configure the env except for `Openstack` configuration in the `ihub.env`. 
     Once `Openstack` is installed and running, `ihub.env` can be updated for `tenant` configuration and installed. 
     Please refer product guide for supported versions of Openstack and installation of `integration-hub`<br>
-
-**Launch Time Protection - Container Confidentiality with Docker Runtime**
-
-1. Certificate Management Service
-2. Bootstrap Database (scripts)
-3. Authentication & Authorization Service
-4. Populate Users (scripts)
-5. Host Verification Service
-6. Workload Service
-7. Key Broker Service
-8. Workload Policy Manager
-9. Docker(runtime)
-10.  Trust Agent
-11. Workload Agent
-> **Note**: `Launch Time Protection - Container Confidentiality with Docker Runtime` requires `Kubernetes` orchestrator .
-    In addition to this, it also requires the installation of `integration-hub` to talk to the orchestrator. 
-    The playbook will place the `integration-hub` installer and configure the env except for `kubernetes` configuration in the `ihub.env`.  
-    Once `Kubernetes`  is installed and running, `ihub.env` can be updated for `tenant` configuration and installed.
-    Please refer product guide for supported versions of orchestrator and setup details for installing `integration-hub` 
-
-> **Note:** In addition to this `isecl-k8s-extensions` need to be installed on Kubernetes master. 
+> **Note:** In addition to this `isecl-k8s-extensions` need to be installed on Kubernetes control-plane. 
     Please refer product guide for supported versions of orchestrator and setup details for installing `isecl-k8s-extensions`<br>
 
 **Launch Time Protection - Container Confidentiality with CRIO Runtime**
@@ -281,7 +255,7 @@ The ISecL services and scripts required w.r.t each use case is as follows. The b
     The playbook will place the `integration-hub` installer and configure the env except for `kubernetes` configuration in the `ihub.env`.  
     Once `Kubernetes`  is installed and running, `ihub.env` can be updated for `tenant` configuration and installed. 
 
-> **Note:** In addition to this `isecl-k8s-extensions` need to be installed on Kubernetes master. 
+> **Note:** In addition to this `isecl-k8s-extensions` need to be installed on Kubernetes control-plane. 
     Please refer product guide for supported versions of orchestrator and setup details for installing `isecl-k8s-extensions`<br>
 
 **Secure Key Caching**
@@ -311,7 +285,7 @@ The ISecL services and scripts required w.r.t each use case is as follows. The b
     The playbook will place the `integration-hub` installer and configure the env except for `kubernetes`  configuration in the `ihub.env`.  
     Once `kubernetes`  is installed and running, `ihub.env` can be updated for `tenant` configuration and installed. 
 
-> **Note:** In addition to this `isecl-k8s-extensions` need to be installed on Kubernetes master. 
+> **Note:** In addition to this `isecl-k8s-extensions` need to be installed on Kubernetes control-plane. 
     Please refer product guide for supported versions of orchestrator and setup details for installing `isecl-k8s-extensions`<br>
 
 **SGX Attestation Kubernetes**
@@ -329,7 +303,7 @@ The ISecL services and scripts required w.r.t each use case is as follows. The b
     The playbook will place the `integration-hub` installer and configure the env except for `kubernetes` configuration in the `ihub.env`.  
     Once `kubernetes` is installed and running, `ihub.env` can be updated for `tenant` configuration and installed. 
 
-> **Note:** In addition to this `isecl-k8s-extensions` need to be installed on Kubernetes master. 
+> **Note:** In addition to this `isecl-k8s-extensions` need to be installed on Kubernetes control-plane. 
     Please refer product guide for supported versions of orchestrator and setup details for installing `isecl-k8s-extensions`<br>
 
 **SGX Orchestration Openstack**
@@ -373,6 +347,15 @@ The ISecL services and scripts required w.r.t each use case is as follows. The b
 7. SGX Agent
 8. SKC Library
 
+**SGX Attestation No Orchestration**
+1. Certificate Management Service
+2. Bootstrap Database (scripts)
+3. Authentication & Authorization Service
+4. SGX Caching Service
+5. SGX Quote Verfication Service
+6. SGX Agent
+7. SGX Dependencies
+
 Example Inventory and Vars
 --------------------------
 
@@ -405,7 +388,7 @@ ansible_user=root
 ansible_password=<password>
 ```
 
-On Ubuntu:
+On Ubuntu: (Only applicable for SKC usecases)
 ```
 [CSP]
 <machine1_ip/hostname>
@@ -516,7 +499,7 @@ and
 ansible-playbook <playbook-name> --extra-vars setup=<setup var from supported usecases> --extra-vars binaries_path=<path where built binaries are copied to>
 ```
 
-```shell (on Ubuntu)
+```shell (on Ubuntu)(SKC usecases only)
 ansible-playbook <playbook-name> --extra-vars setup=<setup var from supported usecases> --extra-vars binaries_path=<path where built binaries are copied to> --extra-vars "ansible_sudo_pass=<password>"
 ```
 
@@ -525,6 +508,28 @@ ansible-playbook <playbook-name> --extra-vars setup=<setup var from supported us
 
 Additional Workflow Examples
 ----------------------------
+
+#### TBoot Installation
+
+Tboot needs to be built by the user from tboot source and the `tboot.gz` & `tboot-syms` files needs to be copied under the `binaries` folder. The supported version of Tboot as of 4.0 release is `tboot-1.10.1`.The options must then be provided during runtime in the playbook:
+
+```shell
+ansible-playbook <playbook-name> \
+--extra-vars setup=<setup var from supported usecases> \
+--extra-vars binaries_path=<path where built binaries are copied to> \
+--extra-vars tboot_gz_file=<path where built binaries are copied to>/tboot.gz
+--extra-vars tboot_syms_file=<path where built binaries are copied to>/tboot-syms
+```
+
+or 
+
+Update the following in `vars/main.yml`
+
+```yaml
+# The TPM Storage Root Key(SRK) Password to be used if TPM is already owned
+tboot_gz_file: "<binaries_path>/tboot.gz"
+tboot_syms_file: "<binaries_path>/tboot-syms"
+```
 
 #### TPM is already owned
 
@@ -562,47 +567,16 @@ or
 Update the following vars in `vars/main.yml`
 
 ```yaml
-# Legacy mode or UEFI SecureBoot mode
-# ['no' - Legacy mode, 'yes' - UEFI SecureBoot mode]
-uefi_secureboot: 'no'
+# UEFI mode or UEFI SecureBoot mode
+# ['no' - UEFI mode, 'yes' - UEFI SecureBoot mode]
+uefi_secureboot: 'yes'
 
-# The grub file path for Legacy mode & UEFI Mode. 
-# [/boot/grub2/grub.cfg - Legacy mode, /boot/efi/EFI/redhat/grub.cfg - UEFI Mode]
-grub_file_path: /boot/grub2/grub.cfg
+# The grub file path for UEFI Mode systems
+# [/boot/efi/EFI/redhat/grub.cfg - UEFI Mode]
+grub_file_path: /boot/efi/EFI/redhat/grub.cfg
 ```
 
-#### Using Docker Notary
 
-If using Docker notary when working with `Launch Time Protection - Workload Confidentiality with Docker Runtime`, following options can be provided during runtime in the playbook
-
-```shell
-ansible-playbook <playbook-name> \
---extra-vars setup=<setup var from supported usecases> \
---extra-vars binaries_path=<path where built binaries are copied to> \
---extra-vars insecure_verify=<insecure_verify[TRUE/FALSE]> \
---extra-vars registry_ipaddr=<registry ipaddr> \
---extra-vars registry_scheme=<registry scheme[http/https]>
---extra-vars https_proxy=<https_proxy[To be set only if running behind a proxy]>
-```
-or
-
-Update the following vars in `vars/main.yml`
-
-```yaml
-# [TRUE/FALSE based on registry configured with http/https respectively]
-# Required for Workload Integrity with containers
-insecure_skip_verify: <insecure_skip_verify>
-
-# The registry IP for the Docker registry from where container images are pulled
-registry_ip: <registry_ipaddr>
-
-# Proxy details if running behind a proxy
-https_proxy: <https_proxy>
-
-# The registry protocol for talking to the remote registry 
-# [http - When registry is configured with http , https - When registry is configured with https]
-registry_scheme_type: <registry_scheme>
-```
 
 #### In case of Misconfigurations 
 

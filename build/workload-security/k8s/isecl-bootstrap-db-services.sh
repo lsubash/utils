@@ -15,7 +15,10 @@ check_k8s_distribution() {
   fi
 }
 
-HOME_DIR=$(pwd)
+MANIFESTS_DIR=$(pwd)
+HVS_DB_DIR=$MANIFESTS_DIR/hvs-db
+WLS_DB_DIR=$MANIFESTS_DIR/wls-db
+AAS_DB_DIR=$MANIFESTS_DIR/aas-db
 
 K8S_DISTRIBUTION=${K8S_DISTRIBUTION:-"microk8s"}
 # Setting default KUBECTl command as kubectl
@@ -24,11 +27,11 @@ KUBECTL=${KUBECTL:-"microk8s.kubectl"}
 deploy_authservice_db() {
 
   echo "-----------------------------------------------------------------------"
-  echo "|    DEPLOY:AUTHENTICATION-AUTHORIZATION-SERVICE DATABASE INSTANCE    |"
+  echo "|    DEPLOY: AUTHENTICATION-AUTHORIZATION-SERVICE DATABASE INSTANCE   |"
   echo "-----------------------------------------------------------------------"
 
-  cd aas-db/
-  mkdir -p secrets
+  secrets_dir=$AAS_DB_DIR/secrets
+  mkdir -p $secrets_dir
 
   if [ "$K8S_DISTRIBUTION" == "microk8s" ]; then
     # set user:group for pgdata directory
@@ -38,15 +41,17 @@ deploy_authservice_db() {
   fi
 
   # generate server.crt,server.key
-  openssl req -new -x509 -days 365 -newkey rsa:4096 -addext "subjectAltName = DNS:$AAS_DB_HOSTNAME" -nodes -text -out secrets/server.crt -keyout secrets/server.key -sha384 -subj "/CN=ISecl Self Sign Cert"
+  openssl req -new -x509 -days 365 -newkey rsa:4096 -addext "subjectAltName = DNS:$AAS_DB_HOSTNAME" -nodes -text -out $secrets_dir/server.crt -keyout $secrets_dir/server.key -sha384 -subj "/CN=ISecl Self Sign Cert"
 
-  $KUBECTL create secret generic aas-db-certs -n isecl --from-file=server.crt=secrets/server.crt --from-file=server.key=secrets/server.key
+  $KUBECTL create secret generic aas-db-certs -n isecl --from-file=server.crt=$secrets_dir/server.crt --from-file=server.key=$secrets_dir/server.key
   # deploy
+  cd $AAS_DB_DIR
   $KUBECTL kustomize . | $KUBECTL apply -f -
+  cd $MANIFESTS_DIR
 
   # wait to get ready
   echo "Wait for pods to initialize..."
-  POD_NAME=`$KUBECTL get pod -l app=aasdb -n isecl -o name`
+  POD_NAME=$($KUBECTL get pod -l app=aasdb -n isecl -o name)
   $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
   if [ $? == 0 ]; then
     echo "AUTHENTICATION-AUTHORIZATION-SERVICE DATABASE DEPLOYED SUCCESSFULLY"
@@ -55,18 +60,16 @@ deploy_authservice_db() {
     echo "Exiting with error..."
     exit 1
   fi
-
-  cd $HOME_DIR
 }
 
 deploy_wls_db() {
 
-  echo "---------------------------------------------------------------------"
-  echo "|            DEPLOY: WORKLOAD-SERVICE DATABASE INSTANCE            |"
-  echo "----------------------------------------------------------------------"
+  echo "-------------------------------------------------------------"
+  echo "|            DEPLOY: WORKLOAD-SERVICE DATABASE              |"
+  echo "-------------------------------------------------------------"
 
-  cd wls-db/
-  mkdir -p secrets
+  secrets_dir=$WLS_DB_DIR/secrets
+  mkdir -p $secrets_dir
 
   if [ "$K8S_DISTRIBUTION" == "microk8s" ]; then
     # set user:group for pgdata directory
@@ -76,15 +79,17 @@ deploy_wls_db() {
   fi
 
   # generate server.crt,server.key
-  openssl req -new -x509 -days 365 -newkey rsa:4096 -addext "subjectAltName = DNS:$WLS_DB_HOSTNAME" -nodes -text -out secrets/server.crt -keyout secrets/server.key -sha384 -subj "/CN=ISecl Self Sign Cert"
+  openssl req -new -x509 -days 365 -newkey rsa:4096 -addext "subjectAltName = DNS:$WLS_DB_HOSTNAME" -nodes -text -out $secrets_dir/server.crt -keyout $secrets_dir/server.key -sha384 -subj "/CN=ISecl Self Sign Cert"
 
-  $KUBECTL create secret generic wls-db-certs -n isecl --from-file=server.crt=secrets/server.crt --from-file=server.key=secrets/server.key
-  # deploy:q!
+  $KUBECTL create secret generic wls-db-certs -n isecl --from-file=server.crt=$secrets_dir/server.crt --from-file=server.key=$secrets_dir/server.key
+  # deploy
+  cd $WLS_DB_DIR
   $KUBECTL kustomize . | $KUBECTL apply -f -
+  cd $MANIFESTS_DIR
 
   # wait to get ready
   echo "Wait for pods to initialize..."
-  POD_NAME=`$KUBECTL get pod -l app=wlsdb -n isecl -o name`
+  POD_NAME=$($KUBECTL get pod -l app=wlsdb -n isecl -o name)
   $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
   if [ $? == 0 ]; then
     echo "WORKLOAD SERVICE DATABASE DEPLOYED SUCCESSFULLY"
@@ -93,17 +98,16 @@ deploy_wls_db() {
     echo "Exiting with error..."
     exit 1
   fi
-  cd ../
 }
 
 deploy_hvs_db() {
 
-  echo "-------------------------------------------------------------"
-  echo "|            DEPLOY:   HOST VERIFICATION SERVICE            |"
-  echo "-------------------------------------------------------------"
+  echo "--------------------------------------------------------------------"
+  echo "|            DEPLOY: HOST-VERIFICATION-SERVICE DATABASE            |"
+  echo "--------------------------------------------------------------------"
 
-  cd hvs-db/
-  mkdir -p secrets
+  secrets_dir=$HVS_DB_DIR/secrets
+  mkdir -p $secrets_dir
   if [ "$K8S_DISTRIBUTION" == "microk8s" ]; then
     # set user:group for pgdata directory
     mkdir -p /usr/local/kube/data/host-verification-service/pgdata/
@@ -112,14 +116,15 @@ deploy_hvs_db() {
   fi
 
   # generate server.crt,server.key
-  openssl req -new -x509 -days 365 -newkey rsa:4096 -addext "subjectAltName = DNS:$HVS_DB_HOSTNAME" -nodes -text -out secrets/server.crt -keyout secrets/server.key -sha384 -subj "/CN=ISecl Self Sign Cert"
-  $KUBECTL create secret generic hvs-db-certs -n isecl --from-file=server.crt=secrets/server.crt --from-file=server.key=secrets/server.key
+  openssl req -new -x509 -days 365 -newkey rsa:4096 -addext "subjectAltName = DNS:$HVS_DB_HOSTNAME" -nodes -text -out $secrets_dir/server.crt -keyout $secrets_dir/server.key -sha384 -subj "/CN=ISecl Self Sign Cert"
+  $KUBECTL create secret generic hvs-db-certs -n isecl --from-file=server.crt=$secrets_dir/server.crt --from-file=server.key=$secrets_dir/server.key
   # deploy
+  cd $HVS_DB_DIR
   $KUBECTL kustomize . | $KUBECTL apply -f -
-
+  cd $MANIFESTS_DIR
   # wait to get ready
   echo "Wait for pods to initialize..."
-  POD_NAME=`$KUBECTL get pod -l app=hvsdb -n isecl -o name`
+  POD_NAME=$($KUBECTL get pod -l app=hvsdb -n isecl -o name)
   $KUBECTL wait --for=condition=Ready $POD_NAME -n isecl --timeout=60s
   if [ $? == 0 ]; then
     echo "HOST-VERIFICATION-SERVICE DATABASE DEPLOYED SUCCESSFULLY"
@@ -128,85 +133,64 @@ deploy_hvs_db() {
     echo "Exiting with error..."
     exit 1
   fi
-  cd ../
+
 }
 
 cleanup_hvs_db() {
 
   echo "Cleaning up HOST-VERIFICATION-SERVICE Database"
-
-  cd hvs-db/
-
   $KUBECTL delete secret hvs-db-credentials hvs-db-certs --namespace isecl
 
   $KUBECTL delete configmap hvs-db-config --namespace isecl
   $KUBECTL delete deploy hvsdb-deployment --namespace isecl
   $KUBECTL delete svc hvsdb-svc --namespace isecl
 
+  rm -rf $HVS_DB_DIR/secrets/server.*
+
   if [ "$K8S_DISTRIBUTION" == "kubeadm" ]; then
     $KUBECTL delete pvc hvs-db-pvc --namespace isecl
     $KUBECTL delete pv hvs-db-pv --namespace isecl
   fi
 
-  rm -rf secrets/server.crt
-  rm -rf secrets/server.key
-
-  cd ../
-
-  echo $(pwd)
 }
 
 cleanup_wls_db() {
 
   echo "Cleaning up WORKLOAD-SERVICE Database"
-
-  cd wls-db/
-
   $KUBECTL delete secret wls-db-credentials wls-db-certs --namespace isecl
   $KUBECTL delete configmap wls-db-config --namespace isecl
   $KUBECTL delete deploy wlsdb-deployment --namespace isecl
   $KUBECTL delete svc wlsdb-svc --namespace isecl
 
-  rm -rf secrets/server.crt
-  rm -rf secrets/server.key
+  rm -rf $WLS_DB_DIR/secrets/server.*
 
   if [ "$K8S_DISTRIBUTION" == "kubeadm" ]; then
     $KUBECTL delete pvc wls-db-pvc --namespace isecl
     $KUBECTL delete pv wls-db-pv --namespace isecl
   fi
-
-  cd ../
-
-  echo $(pwd)
 }
 
 cleanup_authservice_db() {
 
   echo "Cleaning up AUTHENTICATION-AUTHORIZATION-SERVICE Database"
 
-  cd aas-db/
-
   $KUBECTL delete secret aas-db-credentials aas-db-certs --namespace isecl
   $KUBECTL delete configmap aas-db-config --namespace isecl
   $KUBECTL delete deploy aasdb-deployment --namespace isecl
   $KUBECTL delete svc aasdb-svc --namespace isecl
 
-  rm -rf secrets/server.crt
-  rm -rf secrets/server.key
+  rm -rf $AAS_DB_DIR/secrets/server.*
 
   if [ "$K8S_DISTRIBUTION" == "kubeadm" ]; then
     $KUBECTL delete pvc aas-db-pvc --namespace isecl
     $KUBECTL delete pv aas-db-pv --namespace isecl
   fi
 
-  cd ../..
-
 }
 
 bootstrap() {
 
   echo "Kubenertes-> "
-  check_k8s_distribution
 
   if [ "$K8S_DISTRIBUTION" == "microk8s" ]; then
     $KUBECTL version --short
@@ -240,11 +224,8 @@ bootstrap() {
   echo ""
 
   deploy_authservice_db
-  deploy_wls_db
   deploy_hvs_db
-
-  cd ../
-
+  deploy_wls_db
 }
 
 # #Function to cleanup Intel Micro SecL on Micro K8s
@@ -254,9 +235,8 @@ cleanup() {
   echo "|                    CLEANUP                       |"
   echo "----------------------------------------------------"
 
-  check_k8s_distribution
-  cleanup_hvs_db
   cleanup_wls_db
+  cleanup_hvs_db
   cleanup_authservice_db
   if [ $? == 0 ]; then
     echo "Wait for pods to terminate..."
@@ -278,8 +258,12 @@ purge() {
 print_help() {
   echo "Usage: $0 [-help/up/purge]"
   echo "    -help          print help and exit"
-  echo "    up        Bootstrap Database Services for Authservice, Workload Service and Host verification Service"
-  echo "    purge     Delete Database Services for Authservice, Workload Service and Host verification Service"
+  echo "    up       [all/foundational-security]     Bootstrap Database Services for specified use case"
+  echo "    purge    [all/foundational-security]     Delete Database Services for specified use case"
+  echo ""
+  echo "    Available Options for up/purge command:"
+  echo "    usecase    Can be one of foundational-security, all"
+
 }
 
 #Dispatch works based on args to script
@@ -287,10 +271,22 @@ dispatch_works() {
 
   case $1 in
   "up")
-    bootstrap
+    check_k8s_distribution
+    if [[ $2 == "foundational-security" ]]; then
+      deploy_authservice_db
+      deploy_hvs_db
+    else
+      bootstrap
+    fi
     ;;
   "purge")
-    cleanup
+    check_k8s_distribution
+    if [[ $2 == "foundational-security" ]]; then
+      cleanup_authservice_db
+      cleanup_hvs_db
+    else
+      cleanup
+    fi
     ;;
   *)
     print_help

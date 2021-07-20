@@ -46,7 +46,9 @@ enclave {
     public sgx_status_t enclave_pubkey ([out]ref_rsa_params_t* key);
 
     public uint32_t enclave_create_report([in]const sgx_target_info_t* p_qe3_target,
-					  [in]sgx_report_data_t* reportDataInput, [out]sgx_report_t* p_report);
+					  [in, string]char *nonce,
+					  [out]sgx_report_t* p_report);
+
 
     public sgx_status_t provision_pubkey_wrapped_swk ([in, size = wrapped_swk_size]uint8_t* pubkey_wrapped_swk,
 						      uint32_t wrapped_swk_size);

@@ -1,5 +1,5 @@
 Pre-requisite for the SKC Library Deployment
-==========================================
+============================================
  - SGX Enabled in BIOS
  - RHEL 8.2 OS
 
@@ -18,7 +18,7 @@ Following RHEL 8 repositories should be setup and available (/etc/yum.repos.d) t
 	This is important, else certificate verifications will fail
 
 How to Deploy
-==============
+=============
 - Please ensure the SGX Agent is already deployed first  on the same machine, where SKC Library is being deployed. for SGX Agent deployment instructions,
   refer to sgx_agent/deploy_scripts/README.install
 
@@ -57,7 +57,6 @@ Contents of the Deployment Tar file
 Repo Contents
 =============
 deploy_skc_library.sh		Main script for Deploying SKC Library on SGX enabled Server
-deploy_sgx_dependencies.sh	Installs SGX DCAP Driver, PSW and QGL library on SGX Server
 deployment_prerequisites.sh	Install RHEL 8 packages dependencies required for SKC Library Deployment
 skc_library_create_roles.sh	Script to create SKC Library user and roles with AAS and fetching TLS Client Cert from CMS
 skc_library.conf		Config file to provide Enterprise/CSP IP address and skc_library user credentials

@@ -21,6 +21,6 @@ $(TARGETS):
 	cd $* && make clean
 
 workload-agent:
-	cd $@ && make installer-no-docker
+	cd $@ && make installer
 
 .PHONY: all clean $(TARGETS) workload-agent

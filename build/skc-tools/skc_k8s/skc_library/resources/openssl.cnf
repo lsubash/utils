@@ -28,6 +28,7 @@ openssl_conf = openssl_def
 [openssl_def]
 engines = engine_section
 oid_section = new_oids
+ssl_conf = ssl_module
 
 [engine_section]
 pkcs11 = pkcs11_section
@@ -38,8 +39,10 @@ dynamic_path =/usr/lib64/engines-1.1/pkcs11.so
 MODULE_PATH =/opt/skc//lib/libpkcs11-api.so
 init = 0
 
-[ crypto_policy ]
+[ ssl_module ]
+system_default = crypto_policy
 
+[ crypto_policy ]
 .include /etc/crypto-policies/back-ends/opensslcnf.config
 
 [ new_oids ]

@@ -14,6 +14,7 @@ OS="$temp"
 VER=$(cat /etc/os-release | grep ^VERSION_ID | tr -d 'VERSION_ID="')
 
 if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
+	dnf install -qy https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm || exit 1
 	dnf install -qy curl || exit 1
 elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
 	apt install -y curl || exit 1
@@ -39,18 +40,20 @@ fi
 \cp -pf $SKC_BINARY_DIR/trusted_rootca.pem /tmp
 # read from environment variables file if it exists
 if [ -f ./enterprise_skc.conf ]; then
-    echo "Reading Installation variables from $(pwd)/enterprise_skc.conf"
-    source enterprise_skc.conf
-    if [ $? -ne 0 ]; then
-	echo "${red} please set correct values in enterprise_skc.conf ${reset}"
-	exit 1
-    fi
-    if [[ "$SCS_DB_NAME" == "$AAS_DB_NAME" ]]; then
-        echo "${red} SCS_DB_NAME & AAS_DB_NAME should not be same. Please change in enterprise_skc.conf ${reset}"
-        exit 1
-    fi
-    env_file_exports=$(cat ./enterprise_skc.conf | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
-    if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
+	echo "Reading Installation variables from $(pwd)/enterprise_skc.conf"
+	source enterprise_skc.conf
+	if [ $? -ne 0 ]; then
+		echo "${red} please set correct values in enterprise_skc.conf ${reset}"
+		exit 1
+	fi
+	if [[ "$SCS_DB_NAME" == "$AAS_DB_NAME" ]]; then
+		echo "${red} SCS_DB_NAME & AAS_DB_NAME should not be same. Please change in enterprise_skc.conf ${reset}"
+		exit 1
+	fi
+	env_file_exports=$(cat ./enterprise_skc.conf | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
+	if [ -n "$env_file_exports" ]; then
+		eval export $env_file_exports;
+	fi
 fi
 
 echo "Uninstalling Certificate Management Service...."
@@ -109,8 +112,8 @@ sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_SAN/" ~/cms.env
 ./cms-*.bin
 cms status > /dev/null
 if [ $? -ne 0 ]; then
-  echo "${red} Certificate Management Service Installation Failed ${reset}"
-  exit 1
+	echo "${red} Certificate Management Service Installation Failed ${reset}"
+	exit 1
 fi
 echo "${green} Installed Certificate Management Service.... ${reset}"
 
@@ -135,8 +138,8 @@ sed -i "s/^\(AAS_DB_PASSWORD\s*=\s*\).*\$/\1$AAS_DB_PASSWORD/"  ~/authservice.en
 ./authservice-*.bin
 authservice status > /dev/null
 if [ $? -ne 0 ]; then
-  echo "${red} AuthService Installation Failed ${reset}"
-  exit 1
+	echo "${red} AuthService Installation Failed ${reset}"
+	exit 1
 fi
 echo "${green} Installed AuthService.... ${reset}"
 
@@ -171,11 +174,11 @@ sed -i "/GLOBAL_ADMIN_USERNAME/d" ~/populate-users.env
 sed -i "/GLOBAL_ADMIN_PASSWORD/d" ~/populate-users.env
 
 if [ $CCC_ADMIN_USERNAME != "" ] && [ $CCC_ADMIN_PASSWORD != "" ]; then
-  sed -i "s/^\(CCC_ADMIN_USERNAME\s*=\s*\).*\$/\1$CCC_ADMIN_USERNAME/" ~/populate-users.env
-  sed -i "s/^\(CCC_ADMIN_PASSWORD\s*=\s*\).*\$/\1$CCC_ADMIN_PASSWORD/" ~/populate-users.env
+	sed -i "s/^\(CCC_ADMIN_USERNAME\s*=\s*\).*\$/\1$CCC_ADMIN_USERNAME/" ~/populate-users.env
+	sed -i "s/^\(CCC_ADMIN_PASSWORD\s*=\s*\).*\$/\1$CCC_ADMIN_PASSWORD/" ~/populate-users.env
 else
-  sed -i "/CCC_ADMIN_USERNAME/d" ~/populate-users.env
-  sed -i "/CCC_ADMIN_PASSWORD/d" ~/populate-users.env
+	sed -i "/CCC_ADMIN_USERNAME/d" ~/populate-users.env
+	sed -i "/CCC_ADMIN_PASSWORD/d" ~/populate-users.env
 fi
 
 echo "Invoking populate users script...."
@@ -183,8 +186,8 @@ pushd $PWD
 cd ~
 ./populate-users.sh
 if [ $? -ne 0 ]; then
-  echo "${red} populate user script failed ${reset}"
-  exit 1
+	echo "${red} populate user script failed ${reset}"
+	exit 1
 fi
 popd
 
@@ -192,8 +195,8 @@ echo "Getting AuthService Admin token...."
 INSTALL_ADMIN_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:$AAS_PORT/aas/v1/token -d '{"username": "'"$INSTALL_ADMIN_USERNAME"'", "password": "'"$INSTALL_ADMIN_PASSWORD"'"}'`
 
 if [ $? -ne 0 ]; then
-  echo "${red} Could not get AuthService Admin token ${reset}"
-  exit 1
+	echo "${red} Could not get AuthService Admin token ${reset}"
+	exit 1
 fi
 
 echo "Updating SGX Caching Service env...."
@@ -212,8 +215,8 @@ echo "Installing SGX Caching Service...."
 ./scs-*.bin
 scs status > /dev/null
 if [ $? -ne 0 ]; then
-  echo "${red} SGX Caching Service Installation Failed ${reset}"
-  exit 1
+	echo "${red} SGX Caching Service Installation Failed ${reset}"
+	exit 1
 fi
 echo "${green} Installed SGX Caching Service.... ${reset}"
 
@@ -230,8 +233,8 @@ echo "Installing SGX Quote Verification Service...."
 ./sqvs-*.bin
 sqvs status > /dev/null
 if [ $? -ne 0 ]; then
-  echo "${red} SGX Quote Verification Service Installation Failed ${reset}"
-  exit 1
+	echo "${red} SGX Quote Verification Service Installation Failed ${reset}"
+	exit 1
 fi
 echo "${green} Installed SGX Quote Verification Service....${reset}"
 
@@ -247,36 +250,32 @@ sed -i "s@^\(SQVS_URL\s*=\s*\).*\$@\1$SQVS_URL@" ~/kbs.env
 ENDPOINT_URL=https://$SYSTEM_IP:$KBS_PORT/v1
 sed -i "s@^\(ENDPOINT_URL\s*=\s*\).*\$@\1$ENDPOINT_URL@" ~/kbs.env
 
-sed -i "s@^\(KEY_MANAGER\s*=\s*\).*\$@\1$KEY_MANAGER@" ~/kbs.env
+echo "Updating KMIP Server conf...."
+sed -i "s@^\(KMIP_SERVER_IP\s*=\s*\).*\$@\1$SYSTEM_IP@" ~/kbs.env
+sed -i "s@^\(KMIP_SERVER_PORT\s*=\s*\).*\$@\1$KMIP_SERVER_PORT@" ~/kbs.env
+sed -i "s@^\(KMIP_CLIENT_CERT_PATH\s*=\s*\).*\$@\1$KMIP_CLIENT_CERT_PATH@" ~/kbs.env
+sed -i "s@^\(KMIP_CLIENT_KEY_PATH\s*=\s*\).*\$@\1$KMIP_CLIENT_KEY_PATH@" ~/kbs.env
+sed -i "s@^\(KMIP_ROOT_CERT_PATH\s*=\s*\).*\$@\1$KMIP_ROOT_CERT_PATH@" ~/kbs.env
 
-if [ $KEY_MANAGER == "KMIP" ]; then
-  echo "Updating KMIP Server conf...."
-  sed -i "s@^\(KMIP_SERVER_IP\s*=\s*\).*\$@\1$SYSTEM_IP@" ~/kbs.env
-  sed -i "s@^\(KMIP_SERVER_PORT\s*=\s*\).*\$@\1$KMIP_SERVER_PORT@" ~/kbs.env
-  sed -i "s@^\(KMIP_CLIENT_CERT_PATH\s*=\s*\).*\$@\1$KMIP_CLIENT_CERT_PATH@" ~/kbs.env
-  sed -i "s@^\(KMIP_CLIENT_KEY_PATH\s*=\s*\).*\$@\1$KMIP_CLIENT_KEY_PATH@" ~/kbs.env
-  sed -i "s@^\(KMIP_ROOT_CERT_PATH\s*=\s*\).*\$@\1$KMIP_ROOT_CERT_PATH@" ~/kbs.env
+sed -i "s@^\(hostname\s*=\s*\).*\$@\1$SYSTEM_IP@" kbs_script/server.conf
+sed -i "s@^\(port\s*=\s*\).*\$@\1$KMIP_SERVER_PORT@" kbs_script/server.conf
 
-  sed -i "s@^\(hostname\s*=\s*\).*\$@\1$SYSTEM_IP@" kbs_script/server.conf
-  sed -i "s@^\(port\s*=\s*\).*\$@\1$KMIP_SERVER_PORT@" kbs_script/server.conf
+sed -i "s@^\(HOSTNAME_IP\s*=\s*\).*\$@\1'$SYSTEM_IP'@" kbs_script/rsa_create.py
+sed -i "s@^\(SERVER_PORT\s*=\s*\).*\$@\1'$KMIP_SERVER_PORT'@" kbs_script/rsa_create.py
+sed -i "s@^\(CERT_PATH\s*=\s*\).*\$@\1'$KMIP_CLIENT_CERT_PATH'@" kbs_script/rsa_create.py
+sed -i "s@^\(KEY_PATH\s*=\s*\).*\$@\1'$KMIP_CLIENT_KEY_PATH'@" kbs_script/rsa_create.py
+sed -i "s@^\(CA_PATH\s*=\s*\).*\$@\1'$KMIP_ROOT_CERT_PATH'@" kbs_script/rsa_create.py
 
-  sed -i "s@^\(HOSTNAME_IP\s*=\s*\).*\$@\1'$SYSTEM_IP'@" kbs_script/rsa_create.py
-  sed -i "s@^\(SERVER_PORT\s*=\s*\).*\$@\1'$KMIP_SERVER_PORT'@" kbs_script/rsa_create.py
-  sed -i "s@^\(CERT_PATH\s*=\s*\).*\$@\1'$KMIP_CLIENT_CERT_PATH'@" kbs_script/rsa_create.py
-  sed -i "s@^\(KEY_PATH\s*=\s*\).*\$@\1'$KMIP_CLIENT_KEY_PATH'@" kbs_script/rsa_create.py
-  sed -i "s@^\(CA_PATH\s*=\s*\).*\$@\1'$KMIP_ROOT_CERT_PATH'@" kbs_script/rsa_create.py
-
-  echo "Installing KMIP Server....."
-  pushd $PWD
-  cd kbs_script/
-  bash install_pykmip.sh
-  if [ $? -ne 0 ]; then
-        echo "${red} KMIP Server installation failed ${reset}"
-        exit 1
-  fi
-  popd
-  echo "KMIP Server installated successfully"
+echo "Installing KMIP Server....."
+pushd $PWD
+cd kbs_script/
+bash install_pykmip.sh
+if [ $? -ne 0 ]; then
+	echo "${red} KMIP Server Installation Failed ${reset}"
+	exit 1
 fi
+popd
+echo "KMIP Server installed successfully"
 
 echo "Installing Key Broker Service...."
 ./kbs-*.bin

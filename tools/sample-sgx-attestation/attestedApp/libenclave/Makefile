@@ -59,6 +59,13 @@ else
 
 endif
 
+DISTRO := $(shell cat /etc/os-release | grep ^ID= | cut -d'=' -f2 | xargs)
+ifeq ($(DISTRO), ubuntu)
+	DEFAULT_LIB_PATH := /usr/lib/x86_64-linux-gnu
+else
+	DEFAULT_LIB_PATH := /usr/lib64
+endif
+
 SGXSSL_INCLUDE_PATH := $(SGX_SSL)/include
 SGXSSL_TRUSTED_LIB_PATH := $(SGX_SSL)/lib64/
 SGXSSL_UNTRUSTED_LIB_PATH := $(SGX_SSL)/lib64/
@@ -83,6 +90,8 @@ SGX_COMMON_CFLAGS := $(SGX_COMMON_FLAGS) -Wjump-misses-init -Wstrict-prototypes 
 SGX_COMMON_CXXFLAGS := $(SGX_COMMON_FLAGS) -Wnon-virtual-dtor -std=c++11
 
 ######## App Settings ########
+
+OUT_DIR := ../../out
 
 ifneq ($(SGX_MODE), HW)
 	Urts_Library_Name := sgx_urts_sim
@@ -192,8 +201,9 @@ endif
 .PHONY: all target run 
 all: .config_$(Build_Mode)_$(SGX_ARCH)
 	@$(MAKE) target
-	@cp -f ./untrusted.so /usr/lib64/libuntrusted.so
-	@cp -f $(Signed_Enclave_Name) /usr/lib64/$(Lib_Signed_Enclave_Name)
+	@cp -f ./untrusted.so $(OUT_DIR)/libuntrusted.so
+	@cp -f ./untrusted.so $(DEFAULT_LIB_PATH)/libuntrusted.so
+	@cp -f $(Signed_Enclave_Name) $(DEFAULT_LIB_PATH)/$(Lib_Signed_Enclave_Name)
 	@echo "COPY-------------------------------------=>  $@"
 
 

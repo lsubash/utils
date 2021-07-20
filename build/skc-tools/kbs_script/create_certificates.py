@@ -7,6 +7,10 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 import datetime
+import sys
+import ipaddress
+import re
+import socket
 
 def create_rsa_private_key(key_size=2048, public_exponent=65537):
     private_key = rsa.generate_private_key(
@@ -43,6 +47,7 @@ def create_certificate(subject_name,
                        private_key,
                        signing_certificate,
                        signing_key,
+                       hostName="",
                        days_valid=365,
                        client_auth=False):
     subject = x509.Name([
@@ -63,6 +68,22 @@ def create_certificate(subject_name,
         datetime.datetime.utcnow() + datetime.timedelta(days=days_valid)
     )
 
+    if hostName != "":
+        try: 
+            builder = builder.add_extension(
+                x509.SubjectAlternativeName([
+                    x509.IPAddress(hostName),
+                ]),
+                critical=True
+            )
+        except TypeError:
+            builder = builder.add_extension(
+                x509.SubjectAlternativeName([
+                    x509.DNSName(hostName),
+                ]),
+                critical=True
+            )
+
     if client_auth:
         builder = builder.add_extension(
             x509.ExtendedKeyUsage([x509.ExtendedKeyUsageOID.CLIENT_AUTH]),
@@ -77,6 +98,31 @@ def create_certificate(subject_name,
     return certificate
 
 def main():
+    host_name = ""
+    if len(sys.argv) == 2:
+        validIP = "^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$"
+    
+        validHostName = "^((?!-)[A-Za-z0-9-]" + "{1,63}(?<!-)\\.)" + "+[A-Za-z]{2,6}"
+
+        if(re.search(re.compile(validIP), sys.argv[1])):
+            host_name = ipaddress.ip_address(u""+sys.argv[1])
+        
+        elif(re.search(re.compile(validHostName), sys.argv[1])):
+            host_name = u""+sys.argv[1]
+        
+        else:
+            raise ValueError("Invalid IP or DNS provided")
+    
+    elif len(sys.argv) == 1:
+        print("Hostname argument is not provided. Proceeding with setting IP address to hostname.")
+        IPAddress = socket.gethostbyname(socket.gethostname())
+        host_name = ipaddress.ip_address(u""+IPAddress)
+    
+    else:
+        raise IOError("Invalid arguments passed")
+
+    print("Hostname set to ", host_name)
+
     root_key = create_rsa_private_key()
     root_certificate = create_self_signed_certificate(
         u"Root CA",
@@ -88,7 +134,8 @@ def main():
         u"Server Certificate",
         server_key,
         root_certificate,
-        root_key
+        root_key,
+        host_name,
     )
 
     client_key = create_rsa_private_key()

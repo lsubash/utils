@@ -1,22 +1,26 @@
 ---
-- name: ISECL - SGX DEPENDENCIES | Create tmp directory
+- name: ISECL - SAMPLE APPS | Create installation directory
   file:
-    path: "/tmp/{{sgxdep_installer_file__name}}"
-    state: directory   
+    path: "/root/{{sampleapps_installer_name}}"
+    state: directory
 
-- name: ISECL - SGX DEPENDENCIES | Copy tar bundle and other files
-  copy: 
-    src: "{{sgxdep_installer_file_src}}/"
-    dest: "/tmp/{{sgxdep_installer_file__name}}"
+- name: ISECL - SAMPLE APPS | Copy tar bundle and other files
+  copy:
+    src: "{{sampleapps_installer_file_src}}/{{item}}"
+    dest: "/root/{{sampleapps_installer_name}}"
     mode: "u+x"
+  loop:
+    - sample_apps.tar
+    - sample_apps.sha2
+    - sampleapps_untar.sh
 
-- name: ISECL - SGX DEPEPNDENCIES | Untar the tar bundle
-  shell: bash -x skclib_untar.sh
+- name: ISECL - SAMPLE APPS | Untar the tar bundle
+  shell: bash -x sampleapps_untar.sh
   args:
-    chdir: /tmp/{{sgxdep_installer_file__name}}
+    chdir: /root/{{sampleapps_installer_name}}
 
-- name: ISECL - SGX DEPENDENCIES | Deploy SGX DEPENDENCIES
-  shell: "set -o pipefail && ./deploy_sgx_dependencies.sh 2>&1 | tee /root/sgx-dependencies-installer.log"  
+- name: ISECL - SAMPLE APPS | Deploy SGX Dependencies
+  shell: "set -o pipefail && ./deploy_sgx_dependencies.sh 2>&1 | tee /root/sgx-dependencies-installer.log"
   args:
-    chdir: /tmp/{{sgxdep_installer_file__name}}
+    chdir: /root/{{sampleapps_installer_name}}
     executable: /bin/bash

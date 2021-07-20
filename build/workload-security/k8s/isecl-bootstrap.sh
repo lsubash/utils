@@ -46,7 +46,7 @@ check_mandatory_variables() {
 deploy_cms() {
 
   echo "----------------------------------------------------"
-  echo "|      DEPLOY:CERTIFICATE-MANAGEMENT-SERVICE       |"
+  echo "|      DEPLOY: CERTIFICATE-MANAGEMENT-SERVICE      |"
   echo "----------------------------------------------------"
 
   cd cms/
@@ -89,10 +89,10 @@ deploy_authservice() {
   get_cms_tls_cert_sha384
   get_aas_bootstrap_token
   echo "----------------------------------------------------"
-  echo "|    DEPLOY:AUTHENTICATION-AUTHORIZATION-SERVICE   |"
+  echo "|    DEPLOY: AUTHENTICATION-AUTHORIZATION-SERVICE  |"
   echo "----------------------------------------------------"
 
-  required_variables="AAS_ADMIN_USERNAME,AAS_ADMIN_PASSWORD,AAS_DB_HOSTNAME,AAS_DB_NAME,AAS_DB_PORT,AAS_DB_SSLMODE,AAS_DB_SSLCERT,AAS_BOOTSTRAP_TOKEN,AAS_SAN_LIST"
+  required_variables="AAS_ADMIN_USERNAME,AAS_ADMIN_PASSWORD,AAS_DB_HOSTNAME,AAS_DB_NAME,AAS_DB_PORT,AAS_DB_SSLMODE,AAS_BOOTSTRAP_TOKEN,AAS_SAN_LIST"
   check_mandatory_variables $AAS $required_variables
 
   cd aas/
@@ -106,7 +106,11 @@ deploy_authservice() {
   sed -i "s/AAS_DB_NAME:.*/AAS_DB_NAME: $AAS_DB_NAME/g" configMap.yml
   sed -i "s/AAS_DB_PORT:.*/AAS_DB_PORT: \"$AAS_DB_PORT\"/g" configMap.yml
   sed -i "s/AAS_DB_SSLMODE:.*/AAS_DB_SSLMODE: $AAS_DB_SSLMODE/g" configMap.yml
-  sed -i "s#AAS_DB_SSLCERT:.*#AAS_DB_SSLCERT: $AAS_DB_SSLCERT#g" configMap.yml
+  nats_account_name_exists=$(grep "NATS_ACCOUNT_NAME" configMap.yml)
+  if [ ! -z "${NATS_ACCOUNT_NAME}" ] && [ -z "$nats_account_name_exists" ]; then
+    echo "  NATS_ACCOUNT_NAME: $NATS_ACCOUNT_NAME" >>configMap.yml
+    echo "hi"
+  fi
   sed -i "s/AAS_DB_USERNAME=.*/AAS_DB_USERNAME=$AAS_DB_USERNAME/g" secrets.txt
   sed -i "s/AAS_DB_PASSWORD=.*/AAS_DB_PASSWORD=$AAS_DB_PASSWORD/g" secrets.txt
   sed -i "s/AAS_ADMIN_USERNAME=.*/AAS_ADMIN_USERNAME=$AAS_ADMIN_USERNAME/g" secrets.txt
@@ -145,6 +149,7 @@ get_bearer_token() {
   sed -i "s/KBS_CERT_SAN_LIST=.*/KBS_CERT_SAN_LIST=$KBS_CERT_SAN_LIST/g" $aas_scripts_dir/populate-users.env
   sed -i "s/WLS_CERT_SAN_LIST=.*/WLS_CERT_SAN_LIST=$WLS_CERT_SAN_LIST/g" $aas_scripts_dir/populate-users.env
   sed -i "s#TA_CERT_SAN_LIST=.*#TA_CERT_SAN_LIST=$TA_CERT_SAN_LIST#g" $aas_scripts_dir/populate-users.env
+  sed -i "s#NATS_CERT_SAN_LIST=.*#NATS_CERT_SAN_LIST=$NATS_CERT_SAN_LIST#g" $aas_scripts_dir/populate-users.env
 
   sed -i "s/AAS_ADMIN_USERNAME=.*/AAS_ADMIN_USERNAME=$AAS_ADMIN_USERNAME/g" $aas_scripts_dir/populate-users.env
   sed -i "s/AAS_ADMIN_PASSWORD=.*/AAS_ADMIN_PASSWORD=$AAS_ADMIN_PASSWORD/g" $aas_scripts_dir/populate-users.env
@@ -173,33 +178,45 @@ get_bearer_token() {
   sed -i "s/GLOBAL_ADMIN_USERNAME=.*/GLOBAL_ADMIN_USERNAME=$GLOBAL_ADMIN_USERNAME/g" $aas_scripts_dir/populate-users.env
   sed -i "s/GLOBAL_ADMIN_PASSWORD=.*/GLOBAL_ADMIN_PASSWORD=$GLOBAL_ADMIN_PASSWORD/g" $aas_scripts_dir/populate-users.env
 
-  sed -i "s/CCC_ADMIN_USERNAME=.*//g" $aas_scripts_dir/populate-users.env
-  sed -i "s/CCC_ADMIN_PASSWORD=.*//g" $aas_scripts_dir/populate-users.env
+  sed -i "s/CCC_ADMIN_USERNAME=.*/CCC_ADMIN_USERNAME=$CCC_ADMIN_USERNAME/g" $aas_scripts_dir/populate-users.env
+  sed -i "s/CCC_ADMIN_PASSWORD=.*/CCC_ADMIN_PASSWORD=$CCC_ADMIN_PASSWORD/g" $aas_scripts_dir/populate-users.env
+
+  sed -i "s/CUSTOM_CLAIMS_COMPONENTS=.*/CUSTOM_CLAIMS_COMPONENTS=$CUSTOM_CLAIMS_COMPONENTS/g" $aas_scripts_dir/populate-users.env
+  sed -i "s/CUSTOM_CLAIMS_TOKEN_VALIDITY_SECS=.*/CUSTOM_CLAIMS_TOKEN_VALIDITY_SECS=$CUSTOM_CLAIMS_TOKEN_VALIDITY_SECS/g" $aas_scripts_dir/populate-users.env
 
   # TODO: need to check if this can be fetched from builds instead of bundling the script here
   chmod +x $aas_scripts_dir/populate-users
   $aas_scripts_dir/populate-users --answerfile $aas_scripts_dir/populate-users.env >$aas_scripts_dir/populate-users.log
 
-  BEARER_TOKEN=$(grep -m 1 "BEARER_TOKEN" $aas_scripts_dir/populate-users.log | cut -d '=' -f2)
+  BEARER_TOKEN=$(grep "Token for User: $INSTALL_ADMIN_USERNAME" $aas_scripts_dir/populate-users.log -A 2 | grep BEARER_TOKEN | cut -d '=' -f2)
   echo "Install token: $BEARER_TOKEN"
+
+  if [ ! -z "$NATS_SERVERS" ]; then
+    CC_TA_TOKEN=$(grep "Custom Claims Token For TA" $aas_scripts_dir/populate-users.log -A 2 | grep BEARER_TOKEN | cut -d '=' -f2)
+  fi
 }
 
 deploy_hvs() {
 
-  echo "-------------------------------------------------------------"
-  echo "|            DEPLOY: HOST VERIFICATION SERVICE            |"
-  echo "-------------------------------------------------------------"
+  cd $HOME_DIR/hvs
 
-  cd hvs/
+  echo "-------------------------------------------------------------"
+  echo "|            DEPLOY: HOST-VERIFICATION-SERVICE              |"
+  echo "-------------------------------------------------------------"
 
   # The variables BEARER_TOKEN and CMS_TLS_CERT_SHA384 get loaded with below functions, this required if we want to deploy individual hvs service
   get_bearer_token
   get_cms_tls_cert_sha384
 
-  required_variables="BEARER_TOKEN,CMS_TLS_CERT_SHA384,HVS_SERVICE_USERNAME,HVS_SERVICE_PASSWORD,HVS_CERT_SAN_LIST,AAS_API_URL,CMS_BASE_URL,HVS_DB_HOSTNAME,HVS_DB_SSLCERTSRC,HVS_DB_PORT,HVS_DB_NAME"
+  required_variables="BEARER_TOKEN,CMS_TLS_CERT_SHA384,HVS_SERVICE_USERNAME,HVS_SERVICE_PASSWORD,HVS_CERT_SAN_LIST,AAS_API_URL,CMS_BASE_URL,HVS_DB_HOSTNAME,HVS_DB_PORT,HVS_DB_NAME"
   check_mandatory_variables $SHVS $required_variables
 
   # update hvs configMap & secrets
+  if [[ -z "${NATS_SERVERS}" ]]; then
+    sed -i "s/NATS_SERVERS:.*//g" configMap.yml
+  else
+    sed -i "s#NATS_SERVERS:.*#NATS_SERVERS: ${NATS_SERVERS}#g" configMap.yml
+  fi
   sed -i "s/HVS_SERVICE_USERNAME=.*/HVS_SERVICE_USERNAME=${HVS_SERVICE_USERNAME}/g" secrets.txt
   sed -i "s/HVS_SERVICE_PASSWORD=.*/HVS_SERVICE_PASSWORD=${HVS_SERVICE_PASSWORD}/g" secrets.txt
   sed -i "s/HVS_DB_USERNAME=.*/HVS_DB_USERNAME=${HVS_DB_USERNAME}/g" secrets.txt
@@ -214,7 +231,6 @@ deploy_hvs() {
   sed -i "s#AAS_API_URL:.*#AAS_API_URL: ${AAS_API_URL}#g" configMap.yml
   sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: ${CMS_BASE_URL}#g" configMap.yml
   sed -i "s/HVS_DB_HOSTNAME:.*/HVS_DB_HOSTNAME: ${HVS_DB_HOSTNAME}/g" configMap.yml
-  sed -i "s#HVS_DB_SSLCERTSRC:.*#HVS_DB_SSLCERTSRC: ${HVS_DB_SSLCERTSRC}#g" configMap.yml
 
   $KUBECTL create secret generic hvs-secret --from-file=secrets.txt --namespace=isecl
 
@@ -238,7 +254,7 @@ deploy_hvs() {
 deploy_custom_controller() {
 
   echo "----------------------------------------------------"
-  echo "|            DEPLOY: K8S-CONTROLLER                |"
+  echo "|            DEPLOY: ISECL-K8S-CONTROLLER          |"
   echo "----------------------------------------------------"
 
   cd k8s-extensions-controller/
@@ -266,7 +282,7 @@ deploy_custom_controller() {
 deploy_ihub() {
 
   echo "----------------------------------------------------"
-  echo "|             DEPLOY:INTEGRATION-HUB               |"
+  echo "|             DEPLOY: INTEGRATION-HUB              |"
   echo "----------------------------------------------------"
 
   required_variables="IHUB_SERVICE_USERNAME,IHUB_SERVICE_PASSWORD,K8S_API_SERVER_CERT,HVS_BASE_URL"
@@ -299,7 +315,7 @@ deploy_ihub() {
   sed -i "s/CMS_TLS_CERT_SHA384:.*/CMS_TLS_CERT_SHA384: $CMS_TLS_CERT_SHA384/g" configMap.yml
   sed -i "s/TLS_SAN_LIST:.*/TLS_SAN_LIST: $IH_CERT_SAN_LIST/g" configMap.yml
   sed -i "s/KUBERNETES_TOKEN:.*/KUBERNETES_TOKEN: $kubernetes_token/g" configMap.yml
-  sed -i "s/KUBERNETES_URL:.*/KUBERNETES_URL: https:\/\/$K8S_MASTER_IP:$API_SERVER_PORT\//g" configMap.yml
+  sed -i "s/KUBERNETES_URL:.*/KUBERNETES_URL: https:\/\/$K8S_CONTROL_PLANE_IP:$API_SERVER_PORT\//g" configMap.yml
   sed -i "s/IHUB_SERVICE_USERNAME=.*/IHUB_SERVICE_USERNAME=$IHUB_SERVICE_USERNAME/g" secrets.txt
   sed -i "s/IHUB_SERVICE_PASSWORD=.*/IHUB_SERVICE_PASSWORD=$IHUB_SERVICE_PASSWORD/g" secrets.txt
   sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: ${CMS_BASE_URL}#g" configMap.yml
@@ -324,6 +340,8 @@ deploy_ihub() {
     exit 1
   fi
 
+  echo "Waiting for IHub to bootstrap itself..."
+  sleep 20
   cd $HOME_DIR
 
 }
@@ -332,7 +350,7 @@ deploy_extended_scheduler() {
 
   #K8s SCHEDULER
   echo "----------------------------------------------------"
-  echo "|            DEPLOY: K8S-SCHEDULER                 |"
+  echo "|            DEPLOY: ISECL-K8S-SCHEDULER            |"
   echo "----------------------------------------------------"
 
   required_variables="K8S_CA_CERT,K8S_CA_KEY"
@@ -346,8 +364,8 @@ deploy_extended_scheduler() {
   sed -i "s#{SGX_IHUB_PUBLIC_KEY_PATH_VALUE}#\"\"#g" isecl-scheduler.yml
   # create certs
   chmod +x scripts/create_k8s_extsched_certs.sh
-  cd scripts && echo ./create_k8s_extsched_certs.sh -n "K8S Extended Scheduler" -s "$K8S_MASTER_IP","$K8S_MASTER_HOSTNAME" -c "$K8S_CA_CERT" -k "$K8S_CA_KEY"
-  ./create_k8s_extsched_certs.sh -n "K8S Extended Scheduler" -s "$K8S_MASTER_IP","$K8S_MASTER_HOSTNAME" -c "$K8S_CA_CERT" -k "$K8S_CA_KEY"
+  cd scripts && echo ./create_k8s_extsched_certs.sh -n "K8S Extended Scheduler" -s "$K8S_CONTROL_PLANE_IP","$K8S_CONTROL_PLANE_HOSTNAME" -c "$K8S_CA_CERT" -k "$K8S_CA_KEY"
+  ./create_k8s_extsched_certs.sh -n "K8S Extended Scheduler" -s "$K8S_CONTROL_PLANE_IP","$K8S_CONTROL_PLANE_HOSTNAME" -c "$K8S_CA_CERT" -k "$K8S_CA_KEY"
   if [ $? -ne 0 ]; then
     echo "Error while creating certificates for extended scheduler"
     exit 1
@@ -380,10 +398,10 @@ deploy_kbs() {
 
   #KBS
   echo "----------------------------------------------------"
-  echo "|            DEPLOY:KBS                            |"
+  echo "|            DEPLOY: KEY-BROKER-SERVICE            |"
   echo "----------------------------------------------------"
 
-  required_variables="ENDPOINT_URL,KBS_CERT_SAN_LIST,KMIP_SERVER_IP,KMIP_SERVER_PORT,KMIP_CLIENT_CERT_NAME,KMIP_CLIENT_KEY_NAME,KMIP_ROOT_CERT_NAME"
+  required_variables="ENDPOINT_URL,KBS_CERT_SAN_LIST,KMIP_SERVER_IP,KMIP_SERVER_PORT,KMIP_CLIENT_CERT_NAME,KMIP_CLIENT_KEY_NAME,KMIP_ROOT_CERT_NAME,KMIP_HOSTNAME"
   check_mandatory_variables $KBS $required_variables
 
   get_bearer_token
@@ -400,6 +418,7 @@ deploy_kbs() {
   sed -i "s/SESSION_EXPIRY_TIME:.*//g" configMap.yml
 
   # Create kubernetes secrets kmip-certs for kbs kmip certificates.
+  sed -i "s/KMIP_HOSTNAME:.*/KMIP_HOSTNAME: \"$KMIP_HOSTNAME\"/g" configMap.yml
   sed -i "s/KMIP_SERVER_PORT:.*/KMIP_SERVER_PORT: \"$KMIP_SERVER_PORT\"/g" configMap.yml
   sed -i "s/KMIP_SERVER_IP:.*/KMIP_SERVER_IP: $KMIP_SERVER_IP/g" configMap.yml
   KMIP_CLIENT_CERT_PATH=/etc/kmip/$KMIP_CLIENT_CERT_NAME
@@ -438,7 +457,7 @@ deploy_kbs() {
 deploy_wls() {
   #WLS
   echo "----------------------------------------------------"
-  echo "|            DEPLOY:WORKLOAD-SERVICE           |"
+  echo "|            DEPLOY: WORKLOAD-SERVICE               |"
   echo "----------------------------------------------------"
 
   cd wls/
@@ -483,21 +502,38 @@ deploy_wls() {
 
 deploy_tagent() {
 
+  echo "----------------------------------------------"
+  echo "|            DEPLOY: TRUST-AGENT             |"
+  echo "----------------------------------------------"
+
   # get latest bearer_token and cms tls cert digest
   get_bearer_token
   get_cms_tls_cert_sha384
 
-  required_variables="TPM_OWNER_SECRET,TA_CERT_SAN_LIST,AAS_API_URL,HVS_URL,CMS_BASE_URL"
+  required_variables="TA_CERT_SAN_LIST,AAS_API_URL,HVS_URL,CMS_BASE_URL"
   check_mandatory_variables $TAGENT $required_variables
 
   cd ta/
-  # #update trustagent.env
+  # update trustagent configMap.yml
   sed -i "s#AAS_API_URL:.*#AAS_API_URL: $AAS_API_URL#g" configMap.yml
   sed -i "s#HVS_URL:.*#HVS_URL: $HVS_URL#g" configMap.yml
   sed -i "s#CMS_BASE_URL:.*#CMS_BASE_URL: $CMS_BASE_URL#g" configMap.yml
   sed -i "s#CMS_TLS_CERT_SHA384:.*#CMS_TLS_CERT_SHA384: $CMS_TLS_CERT_SHA384#g" configMap.yml
-  sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=$BEARER_TOKEN/g" secrets.txt
-  sed -i "s/TPM_OWNER_SECRET=.*/TPM_OWNER_SECRET=$TPM_OWNER_SECRET/g" secrets.txt
+
+  if [ ! -z "$TPM_OWNER_SECRET" ]; then
+    sed -i "s/TPM_OWNER_SECRET=.*/TPM_OWNER_SECRET=$TPM_OWNER_SECRET/g" secrets.txt
+  else
+    sed -i "s/TPM_OWNER_SECRET=.*//g" secrets.txt
+  fi
+  if [ "$TA_SERVICE_MODE" == "outbound" ]; then
+    sed -i "s/TA_SERVICE_MODE:.*/TA_SERVICE_MODE: $TA_SERVICE_MODE/g" configMap.yml
+    sed -i "s#NATS_SERVERS:.*#NATS_SERVERS: $NATS_SERVERS#g" configMap.yml
+    sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=$CC_TA_TOKEN/g" secrets.txt
+  else
+    sed -i "s/TA_SERVICE_MODE:.*//g" configMap.yml
+    sed -i "s/NATS_SERVERS:.*//g" configMap.yml
+    sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=$BEARER_TOKEN/g" secrets.txt
+  fi
 
   $KUBECTL create secret generic ta-secret --from-file=secrets.txt --namespace=isecl
 
@@ -509,7 +545,57 @@ deploy_tagent() {
 
 }
 
+deploy_nats() {
+
+  echo "-------------------------------------------------"
+  echo "|            DEPLOY: NATS-SERVICE               |"
+  echo "-------------------------------------------------"
+
+  cd $HOME_DIR/nats/
+  get_bearer_token
+
+  mkdir -p secrets
+  SERVER_KEY_PATH=secrets/server.key
+  SERVER_CERT_PATH=secrets/server.pem
+  ./download-nats-tls-certs.sh -d secrets -n "$NATS_CERT_COMMON_NAME" -u "$CMS_K8S_ENDPOINT_URL" -s "$NATS_CERT_SAN_LIST" -t $BEARER_TOKEN
+  if [ $? != 0 ]; then
+    echo "Error while downloading tls certs for nats server"
+    exit 1
+  fi
+
+  # get operator and resolver preload from aas logs
+  aas_pod=$($KUBECTL get pod -n isecl -l app=aas -o jsonpath="{.items[0].metadata.name}")
+  credentials=$($KUBECTL exec -n isecl --stdin $aas_pod -- authservice setup create-credentials --force)
+  nats_operator=$(echo "$credentials" | grep operator: | awk '{print $2}')
+  resolver_preload=$(echo "$credentials" | grep "Account $NATS_ACCOUNT_NAME" -A 1)
+  resolver_jwt=$(echo "$resolver_preload" | cut -d$'\n' -f2)
+
+  sed -i "s#operator:.*#operator: $nats_operator#g" configMap.yml
+  sed -i "s#resolver_preload:.*#resolver_preload: { $resolver_jwt }#g" configMap.yml
+
+  $KUBECTL create secret generic nats-certs --from-file=secrets --namespace=isecl
+
+  $KUBECTL kustomize . | $KUBECTL apply -f -
+  # wait to get ready
+  echo "Wait for nats to initialize..."
+  sleep 20
+  $KUBECTL get pod -n isecl -l app=nats | grep Running
+  if [ $? == 0 ]; then
+    echo "NATS STATEFULSET DEPLOYED SUCCESSFULLY"
+  else
+    echo "Error: Deploying NATS"
+    echo "Exiting with error..."
+    exit 1
+  fi
+  cd $HOME_DIR
+
+}
+
 deploy_wlagent() {
+
+  echo "----------------------------------------------"
+  echo "|            DEPLOY: WORKLOAD-AGENT          |"
+  echo "----------------------------------------------"
 
   # get latest bearer_token and cms tls cert digest
   get_bearer_token
@@ -563,14 +649,30 @@ cleanup_wls() {
 
 }
 
+cleanup_nats() {
+
+  echo "Cleaning up NATS..."
+
+  $KUBECTL delete secret nats-certs --namespace isecl
+  $KUBECTL delete configmap nats-config --namespace isecl
+  $KUBECTL delete service nats --namespace isecl
+  $KUBECTL delete statefulset nats --namespace isecl
+
+}
+
 cleanup_tagent() {
+  echo "Cleaning up TRUST-AGENT..."
+
   $KUBECTL delete configmap ta-config --namespace isecl
   $KUBECTL delete secret ta-secret --namespace isecl
+
   $KUBECTL delete daemonset ta-daemonset-txt --namespace isecl
   $KUBECTL delete daemonset ta-daemonset-suefi --namespace isecl
 }
 
 cleanup_wlagent() {
+  echo "Cleaning up WORKLOAD-AGENT..."
+
   $KUBECTL delete configmap wla-config --namespace isecl
   $KUBECTL delete secret wla-secret --namespace isecl
   $KUBECTL delete daemonset wla-daemonset --namespace isecl
@@ -578,7 +680,7 @@ cleanup_wlagent() {
 
 cleanup_kbs() {
 
-  echo "Cleaning up KBS..."
+  echo "Cleaning up KEY-BROKER-SERVICE..."
 
   $KUBECTL delete secret kbs-secret --namespace isecl
   $KUBECTL delete configmap kbs-config --namespace isecl
@@ -600,6 +702,9 @@ cleanup_ihub() {
 
   echo "Cleaning up INTEGRATION-HUB..."
 
+  IFS=$'\r\n' GLOBIGNORE='*' command eval 'secrets=$(kubectl get secrets -n isecl | grep ihub-k8s-certs | cut -d " " -f 1)'
+  for i in "${secrets[@]}"; do kubectl delete secret -n isecl $i >/dev/null; done
+
   $KUBECTL delete secret ihub-secret --namespace isecl
   $KUBECTL delete configmap ihub-config --namespace isecl
   $KUBECTL delete deploy ihub-deployment --namespace isecl
@@ -614,16 +719,20 @@ cleanup_ihub() {
 
 cleanup_isecl_controller() {
 
+  echo "Cleaning up ISECL-K8S-CONTROLLER..."
+
   $KUBECTL delete deploy isecl-controller-deployment --namespace isecl
   $KUBECTL delete crd hostattributes.crd.isecl.intel.com --namespace isecl
   $KUBECTL delete clusterrole isecl-controller --namespace isecl
   $KUBECTL delete clusterrolebinding isecl-controller-binding --namespace isecl
   $KUBECTL delete clusterrolebinding isecl-clusterrole --namespace isecl
+  $KUBECTL delete serviceaccount -n isecl default
 
 }
 
 cleanup_isecl_scheduler() {
 
+  echo "Cleaning up ISECL-K8S-SCHEDULER..."
   cd k8s-extensions-scheduler/
 
   $KUBECTL delete deploy isecl-scheduler-deployment --namespace isecl
@@ -674,7 +783,7 @@ cleanup_authservice() {
 
 cleanup_cms() {
 
-  echo "Cleaning up CERTIIFCATION-MANAGEMENT-SERVICE..."
+  echo "Cleaning up CERTIFICATE-MANAGEMENT-SERVICE..."
 
   $KUBECTL delete configmap cms-config --namespace isecl
   $KUBECTL delete deploy cms-deployment --namespace isecl
@@ -718,25 +827,19 @@ bootstrap() {
     echo "K8s Distribution" $K8S_DISTRIBUTION "not supported"
   fi
 
-  echo "ipAddress: $K8S_MASTER_IP"
-  echo "hostName: $K8S_MASTER_HOSTNAME"
+  echo "ipAddress: $K8S_CONTROL_PLANE_IP"
+  echo "hostName: $K8S_CONTROL_PLANE_HOSTNAME"
 
   echo "----------------------------------------------------"
   echo "|     DEPLOY: ISECL SERVICES                        |"
   echo "----------------------------------------------------"
   echo ""
 
-  deploy_cms
-  get_cms_tls_cert_sha384
-  get_aas_bootstrap_token
-  deploy_authservice
-  get_bearer_token
-  deploy_hvs
+  deploy_common_components
   deploy_custom_controller
   deploy_ihub
   deploy_wls
   deploy_kbs
-  deploy_tagent
   deploy_wlagent
 
   if [ "$K8S_DISTRIBUTION" == "microk8s" ]; then
@@ -756,14 +859,11 @@ cleanup() {
 
   cleanup_kbs
   cleanup_wlagent
-  cleanup_tagent
   cleanup_ihub
   cleanup_wls
   cleanup_isecl_scheduler
   cleanup_isecl_controller
-  cleanup_hvs
-  cleanup_authservice
-  cleanup_cms
+  cleanup_common_components
   if [ $? == 0 ]; then
     echo "Wait for pods to terminate..."
     sleep 30
@@ -789,12 +889,15 @@ print_help() {
   echo "    Available Options for up/down command:"
   echo "        agent      Can be one of tagent, wlagent"
   echo "        service    Can be one of cms, authservice, hvs, ihub, wls, kbs, isecl-controller, isecl-scheduler"
-  echo "        usecase    Can be one of foundational-security, workload-security, isecl-orchestration-k8s, csp, enterprise"
+  echo "        usecase    Can be one of foundational-security, workload-security, isecl-orchestration-k8s, csp, enterprise, foundational-security-control-plane"
 }
 
 deploy_common_components() {
   deploy_cms
   deploy_authservice
+  if [[ ! -z "${NATS_SERVERS}" ]]; then
+    deploy_nats
+  fi
   deploy_hvs
   deploy_tagent
 }
@@ -803,6 +906,9 @@ cleanup_common_components() {
   cleanup_cms
   cleanup_authservice
   cleanup_hvs
+  if [[ ! -z "${NATS_SERVERS}" ]]; then
+    cleanup_nats
+  fi
   cleanup_tagent
 }
 
@@ -842,6 +948,14 @@ dispatch_works() {
       ;;
     "wlagent")
       deploy_wlagent
+      ;;
+    "foundational-security-control-plane")
+      deploy_cms
+      deploy_authservice
+      if [[ ! -z "${NATS_SERVERS}" ]]; then
+        deploy_nats
+      fi
+      deploy_hvs
       ;;
     "foundational-security")
       deploy_common_components
@@ -920,6 +1034,14 @@ dispatch_works() {
       ;;
     "foundational-security")
       cleanup_common_components
+      ;;
+    "foundational-security-control-plane")
+      cleanup_cms
+      cleanup_authservice
+      cleanup_hvs
+      if [[ ! -z "${NATS_SERVERS}" ]]; then
+        cleanup_nats
+      fi
       ;;
     "isecl-orchestration-k8s")
       cleanup_common_components

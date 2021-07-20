@@ -12,16 +12,18 @@ One click Postman API Collections for Intel® SecL-DC use-cases.
 |                        | Trusted Workload Placement (VM & Containers)  | ✔️ |
 |                        | Application Integrity                         | ✔️                  |
 | Launch Time Protection | VM Confidentiality                            | ✔️                  |
-|                        | Container Confidentiality with Docker Runtime | ✔️                  |
 |                        | Container Confidentiality with CRIO Runtime   | ✔️                  |
+| SGX Attestation Infra & Secure Key Caching | Secure Key Caching | ✔️ |
+|  | SGX Discovery & Provisioning | ✔️ |
+|  | SGX Discovery, Provisioning & Orchestration | ✔️ |
 
 > **Note: ** `Foundational Security - Host Attestation` is a pre-requisite for all usecases beyond Host Attestation. E.g: For working with `Launch Time Protection - VM Confidentiality` , Host Attestation flow must be run as a pre-req before trying VM Confidentiality
 
 ## Requirements
 
-* Intel® SecL-DC services installed and running as per chosen use case and deployment model supported as per Product Guide.
-* [Quick Start Guide - Foundational & Workload Security](https://github.com/intel-secl/docs/blob/master/quick-start-guides/Quick%20Start%20Guide%20-%20Intel%C2%AE%20Security%20Libraries%20-%20Foundational%20%26%20Workload%20Security.md)
-* [Quick Start Guide - Secure Key Caching](https://github.com/intel-secl/docs/blob/master/quick-start-guides/Quick%20Start%20Guide%20-%20Intel%C2%AE%20Security%20Libraries%20-%20Secure%20Key%20Caching.md)
+* Intel® SecL-DC services installed and running as per chosen use case and deployment model supported as per Quick Start Guide/Product Guide.
+* [Quick Start Guides]([docs/quick-start-guides at master · intel-secl/docs (github.com)](https://github.com/intel-secl/docs/tree/master/quick-start-guides))
+* [Product Guides](https://github.com/intel-secl/docs/tree/master/product-guides)
 * Postman client [downloaded](https://www.postman.com/downloads/) and Installed or accessible via web
 
 ## Using the API Collections

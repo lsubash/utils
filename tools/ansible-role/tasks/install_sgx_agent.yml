@@ -29,14 +29,14 @@
           path: /root/{{sgxagent_installer_name}}/sgx_agent.env
           regexp: "SHVS_BASE_URL"
           state: absent
-  when: setup == 'skc-no-orchestration'
+  when: setup == 'skc-no-orchestration' or setup == 'sgx-attestation-no-orchestration'
 
 - name: ISECL - SGX AGENT |Remove SHVS update interval from env file
   lineinfile:
           path: /root/{{sgxagent_installer_name}}/sgx_agent.env
           regexp: "SHVS_UPDATE_INTERVAL"
           state: absent
-  when: setup == 'skc-no-orchestration'
+  when: setup == 'skc-no-orchestration' or setup == 'sgx-attestation-no-orchestration'
 
 - name: ISECL - SGX AGENT | Deploy SGX Agent
   shell: "set -o pipefail && ./deploy_sgx_agent.sh 2>&1 | tee /root/sgx_agent-install.log"

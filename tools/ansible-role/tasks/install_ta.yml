@@ -1,59 +1,76 @@
 ---
-- name: ISECL - TRUST AGENT | Install tboot
+
+- name: ISECL - TRUST AGENT | Install tboot from the repo
   dnf:
-    name: tboot-1.9.10
+    name: tboot
+    state: present
+  when: 
+    - uefi_secureboot == 'no'
+
+
+- name: ISECL - TRUST AGENT | Install grub2-efi-x64-modules
+  dnf:
+    name: grub2-efi-x64-modules
     state: present
   when: uefi_secureboot == 'no'
 
 
-- name: ISECL - TRUST AGENT | Verify if already in measured launch state
-  shell: "txt-stat | grep 'TXT measured launch: TRUE'"
-  register: pre_mle_state
-  failed_when: pre_mle_state.rc != 1 and pre_mle_state.rc != 0
+- name: ISECL - TRUST AGENT | Create /boot/efi/EFI/redhat/x86_64-efi directory
+  file:
+    path: /boot/efi/EFI/redhat/x86_64-efi
+    state: directory
+    mode: "u=rw,g=wx,o=rwx"
   when: uefi_secureboot == 'no'
-  
 
-- name: ISECL - TRUST AGENT | Creating backup of grub.cfg 
+
+- name: ISECL - TRUST AGENT | Copy multiboot2.mod file
   copy:
-    src: "{{grub_file_path}}"
-    dest: /boot/grub2/grub.bak
-  delegate_to: "{{ inventory_hostname }}"
-  when: 
-    - uefi_secureboot == 'no'
-    - "'TXT measured launch: TRUE' not in pre_mle_state.stdout"
-  
+    src: /usr/lib/grub/x86_64-efi/multiboot2.mod
+    dest: /boot/efi/EFI/redhat/x86_64-efi/multiboot2.mod
+    remote_src: yes
+  when: uefi_secureboot == 'no'
 
-- name: ISECL - TRUST AGENT | Generate grub.cfg with tboot option
-  shell: "grub2-mkconfig -o {{grub_file_path}}"
-  when: 
-    - uefi_secureboot == 'no'
-    - "'TXT measured launch: TRUE' not in pre_mle_state.stdout"
+
+- name: ISECL - TRUST AGENT | Copy relocator.mod file
+  copy:
+    src: /usr/lib/grub/x86_64-efi/relocator.mod
+    dest: /boot/efi/EFI/redhat/x86_64-efi/relocator.mod
+    remote_src: yes
+  when: uefi_secureboot == 'no'
+
+
+- name: ISECL - TRUST AGENT | Copy tboot.gz file
+  copy:
+    src: "{{tboot_gz_file}}"
+    dest: /boot/tboot.gz
+  when: uefi_secureboot == 'no'
+
+
+- name: ISECL - TRUST AGENT | Copy tboot-syms file
+  copy:
+    src: "{{tboot_syms_file}}"
+    dest: /boot/tboot-syms
+  when: uefi_secureboot == 'no'
 
 
 - name: ISECL - TRUST AGENT | Verify and update /etc/default/grub to use GRUB_DEFAULT=saved
   lineinfile:
     path: /etc/default/grub
     regexp: '^GRUB_DEFAULT='
-    line: GRUB_DEFAULT=saved
-  when: 
-    - uefi_secureboot == 'no'
-    - "'TXT measured launch: TRUE' not in pre_mle_state.stdout"
+    line: GRUB_DEFAULT='{{grub_default_option}}'
+  when: uefi_secureboot == 'no'
 
 
-- name: ISECL - TRUST AGENT | Set the default grub option to Tboot and rebuild grub config
-  shell: "grub2-set-default {{grub_default_option}} && grub2-mkconfig -o {{grub_file_path}}"
-  when: 
-    - uefi_secureboot == 'no'
-    - "'TXT measured launch: TRUE' not in pre_mle_state.stdout"
+- name: ISECL - TRUST AGENT | Generate grub.cfg with tboot option
+  shell: "grub2-mkconfig -o {{grub_file_path}}"
+  when: uefi_secureboot == 'no'
 
 
 - name: ISECL - TRUST AGENT | Reboot to enter tboot
   shell: sleep 2 && shutdown -r now "Ansible reboot"
   async: 1
   poll: 0
-  when: 
-    - uefi_secureboot == 'no'
-    - "'TXT measured launch: TRUE' not in pre_mle_state.stdout"
+  when: uefi_secureboot == 'no'
 
 
 - name: ISECL - TRUST AGENT | Wait for active SSH connection
@@ -64,18 +81,14 @@
    state: started
    delay: 30
    timeout: 300
-  when: 
-    - uefi_secureboot == 'no'
-    - "'TXT measured launch: TRUE' not in pre_mle_state.stdout"
+  when: uefi_secureboot == 'no'
 
 
 - name: ISECL - TRUST AGENT | Verify a successful launch into tboot
   shell: "txt-stat | grep 'TXT measured launch: TRUE'"
   register: post_mle_state
   failed_when: "'TXT measured launch: TRUE' not in post_mle_state.stdout"
-  when: 
-    - uefi_secureboot == 'no'
-    - "'TXT measured launch: TRUE' not in pre_mle_state.stdout"
+  when: uefi_secureboot == 'no'
   
 
 - name: ISECL - TRUST AGENT | Generate trustagent.env

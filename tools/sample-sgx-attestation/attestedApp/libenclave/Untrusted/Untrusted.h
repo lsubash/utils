@@ -70,23 +70,23 @@
 #define FALSE 0
 #endif
 
-#define ENCLAVE_FILENAME "/usr/lib64/libenclave_signed.so"
+#define ENCLAVE_FILENAME "./enclave.signed.so"
 
 extern sgx_enclave_id_t global_eid;    /* global enclave id */
 
 void print_error_message(sgx_status_t ret);
 int initialize_enclave(void);
+sgx_status_t retrive_public_key(void);
 
 #if defined(__cplusplus)
 extern "C" {
 #endif
 
   int SGX_CDECL init();
-  int destroy_Enclave();
+  int destroy_enclave();
 
-  int get_Key();
-  uint8_t* get_SGX_Quote(int* x, int*y);
-  uint8_t* get_pubkey(int* x);
+  uint8_t* get_sgx_quote(int* x, char *nonce);
+  uint8_t* get_public_key(int* x);
 
   int unwrap_SWK(uint8_t* wrappedSWK, size_t wrappedSWKSize);
   int unwrap_secret(uint8_t* wrappedSecret, size_t wrappedSecretSize);
