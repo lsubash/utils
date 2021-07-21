@@ -50,6 +50,7 @@ PRE_REQ_PACKAGES_RHEL=(
   openssl-devel
   tpm2-tss-2.0.0-4.el8.x86_64
   tpm2-tss-devel.x86_64
+  https://www.cabextract.org.uk/cabextract-1.9.1-1.i386.rpm
 )
 
 declare -a PRE_REQ_PACKAGES_UBUNTU
