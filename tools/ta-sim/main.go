@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
-	"github.com/google/uuid"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -27,6 +26,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
 
 	client "github.com/intel-secl/intel-secl/v4/pkg/clients/ta"
 	"github.com/intel-secl/intel-secl/v4/pkg/lib/common/crypt"
@@ -469,7 +470,7 @@ func startServers(ac *AppConfig) (err error) {
 		return errors.New("Invalid TA simulator service mode, should be either http or outboud")
 	}
 
-	log.Info("Started %d servers", ac.Servers)
+	log.Infof("Started %d servers", ac.Servers)
 	return nil
 }
 
