@@ -1,11 +1,362 @@
 {
 	"info": {
-		"_postman_id": "99c46c70-5532-4792-99b1-63b17ae447d3",
+		"_postman_id": "16a540d3-61a9-4ad6-8b4e-aaa6d6552b26",
 		"name": "Host Attestation(RHEL)",
 		"description": "The Host Attestation use case will enable external platform integrity\nverification using TCG-standard practices. This feature is the foundation for\nother Intel® SecL – DC use cases.\n\nPlatform Attestation involves taking measurements of system components\nduring system boot and then cryptographically verifying that the actual\nmeasurements taken match a set of expected or approved values, ensuring\nthat the measured components were in an acceptable or “trusted” state at the\ntime of the last system boot.\n\nIntel® SecL – DC leverages the Trusted Compute Group specification for a\ntrusted boot process, extending measurements of platform components to\nregisters in a Trusted Platform Module (TPM) and securely generating quotes of\nthose measurements from the TPM for remote comparison to expected values\n(attestation).\n\nThe deployment will include the Verification Service and one or more Trust\nAgents. The Verification Service is typically installed on a Virtual Machine, while\nthe Trust Agent must be installed on each physical server.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
+		{
+			"name": "Verify Services",
+			"item": [
+				{
+					"name": "cmsVersion",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{cms}}:{{cmsPort}}/cms/v1/version",
+							"protocol": "https",
+							"host": [
+								"{{cms}}"
+							],
+							"port": "{{cmsPort}}",
+							"path": [
+								"cms",
+								"v1",
+								"version"
+							]
+						},
+						"description": "GetVersion is used to get the version of the application.\nReturns - The version of the application.\n"
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://{{cms}}:{{cmsPort}}/cms/v1/version",
+									"protocol": "https",
+									"host": [
+										"{{cms}}"
+									],
+									"port": "{{cmsPort}}",
+									"path": [
+										"cms",
+										"v1",
+										"version"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "plain",
+							"header": [
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=63072000; includeSubDomains"
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 28 Apr 2021 07:30:35 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "106"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/plain; charset=utf-8"
+								}
+							],
+							"cookie": [],
+							"body": "Service Name: Certificate Management Service\nVersion: v3.5.0-bc8d490\nBuild Date: 2021-04-21T12:17:16+0000\n"
+						}
+					]
+				},
+				{
+					"name": "aasVersion",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{aas}}:{{aasPort}}/aas/v1/version",
+							"protocol": "https",
+							"host": [
+								"{{aas}}"
+							],
+							"port": "{{aasPort}}",
+							"path": [
+								"aas",
+								"v1",
+								"version"
+							]
+						},
+						"description": "GetVersion is used to get the version of the application.\nReturns - The version of the application.\n"
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "https://{{aas}}:{{aasPort}}/aas/v1/version",
+									"protocol": "https",
+									"host": [
+										"{{aas}}"
+									],
+									"port": "{{aasPort}}",
+									"path": [
+										"aas",
+										"v1",
+										"version"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "plain",
+							"header": [
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=63072000; includeSubDomains"
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 28 Apr 2021 07:38:20 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "116"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/plain; charset=utf-8"
+								}
+							],
+							"cookie": [],
+							"body": "Service Name: Authentication and Authorization Service\nVersion: v3.5.0-bc8d490\nBuild Date: 2021-04-21T12:17:16+0000\n"
+						}
+					]
+				},
+				{
+					"name": "hvsVersion",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"accept": true
+						}
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "text/plain"
+							}
+						],
+						"url": {
+							"raw": "https://{{hvs}}:{{hvsPort}}/hvs/v2/version",
+							"protocol": "https",
+							"host": [
+								"{{hvs}}"
+							],
+							"port": "{{hvsPort}}",
+							"path": [
+								"hvs",
+								"v2",
+								"version"
+							]
+						},
+						"description": "Retrieves the version of hvs."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "text/plain"
+									}
+								],
+								"url": {
+									"raw": "https://{{hvs}}:{{hvsPort}}/hvs/v2/version",
+									"protocol": "https",
+									"host": [
+										"{{hvs}}"
+									],
+									"port": "{{hvsPort}}",
+									"path": [
+										"hvs",
+										"v2",
+										"version"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "plain",
+							"header": [
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=63072000; includeSubDomains"
+								},
+								{
+									"key": "Date",
+									"value": "Sat, 12 Sep 2020 12:41:27 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "14"
+								},
+								{
+									"key": "Content-Type",
+									"value": "text/plain; charset=utf-8"
+								}
+							],
+							"cookie": [],
+							"body": "v3.0.0-6d6d8e1"
+						}
+					]
+				},
+				{
+					"name": "tagentVersion",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://{{tagent}}:{{tagentPort}}/v2/version",
+							"protocol": "https",
+							"host": [
+								"{{tagent}}"
+							],
+							"port": "{{tagentPort}}",
+							"path": [
+								"v2",
+								"version"
+							]
+						},
+						"description": "Retrieves the version of trust agent."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "https://{{tagent}}:{{tagentPort}}/v2/version",
+									"protocol": "https",
+									"host": [
+										"{{tagent}}"
+									],
+									"port": "{{tagentPort}}",
+									"path": [
+										"v2",
+										"version"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "plain",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "text/plain"
+								},
+								{
+									"key": "Strict-Transport-Security",
+									"value": "max-age=63072000; includeSubDomains"
+								},
+								{
+									"key": "Date",
+									"value": "Wed, 26 May 2021 07:31:55 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "83"
+								}
+							],
+							"cookie": [],
+							"body": "Service Name: Trust Agent\nVersion: v3.6.0-4112149\nBuild Date: 2021-05-25T13:30:09Z\n"
+						}
+					]
+				}
+			],
+			"description": "The Version API can be used to confirm that all services are up and running\r\nbefore proceeding to the actual use case demonstration.",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
 		{
 			"name": "Authorization",
 			"item": [
@@ -115,219 +466,6 @@
 				}
 			],
 			"description": "To make an API request to an Intel® SecL-DC service, an authentication\r\ntoken is now required. API requests must now include an Authorization\r\nheader with an appropriate token:\r\n\r\n```\r\nAuthorization: Bearer <token>\r\n```\r\n\r\nThe token is issued by the AAS and will expire after a set amount of time.\r\nThis token may be used with any Intel® SecL-DC service, and will carry the\r\nappropriate permissions for the role(s) assigned to the account the token was\r\ngenerated for."
-		},
-		{
-			"name": "Verify Services",
-			"item": [
-				{
-					"name": "tagentVersion",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "https://{{tagent}}:{{tagentPort}}/version",
-							"protocol": "https",
-							"host": [
-								"{{tagent}}"
-							],
-							"port": "{{tagentPort}}",
-							"path": [
-								"version"
-							]
-						},
-						"description": "Retrieves the version of trust agent."
-					},
-					"response": [
-						{
-							"name": "Success",
-							"originalRequest": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Accept",
-										"value": "application/json",
-										"type": "text"
-									}
-								],
-								"url": {
-									"raw": "https://{{tagent}}:{{tagentPort}}/version",
-									"protocol": "https",
-									"host": [
-										"{{tagent}}"
-									],
-									"port": "{{tagentPort}}",
-									"path": [
-										"version"
-									]
-								}
-							},
-							"status": "OK",
-							"code": 200,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								},
-								{
-									"key": "Date",
-									"value": "Sat, 12 Sep 2020 12:41:06 GMT"
-								},
-								{
-									"key": "Content-Length",
-									"value": "157"
-								}
-							],
-							"cookie": [],
-							"body": "{\n    \"major\": 3,\n    \"minor\": 0,\n    \"patch\": 0,\n    \"commit\": \"985cc64\",\n    \"built\": \"2020-09-03T04:41:23Z\",\n    \"version_string\": \"Trust Agent v3.0.0-985cc64\\nBuilt 2020-09-03T04:41:23Z\\n\"\n}"
-						}
-					]
-				},
-				{
-					"name": "hvsVersion",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"protocolProfileBehavior": {
-						"disabledSystemHeaders": {
-							"accept": true
-						}
-					},
-					"request": {
-						"auth": {
-							"type": "noauth"
-						},
-						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"type": "text",
-								"value": "text/plain"
-							}
-						],
-						"url": {
-							"raw": "https://{{hvs}}:{{hvsPort}}/hvs/v2/version",
-							"protocol": "https",
-							"host": [
-								"{{hvs}}"
-							],
-							"port": "{{hvsPort}}",
-							"path": [
-								"hvs",
-								"v2",
-								"version"
-							]
-						},
-						"description": "Retrieves the version of hvs."
-					},
-					"response": [
-						{
-							"name": "Success",
-							"originalRequest": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Accept",
-										"type": "text",
-										"value": "text/plain"
-									}
-								],
-								"url": {
-									"raw": "https://{{hvs}}:{{hvsPort}}/hvs/v2/version",
-									"protocol": "https",
-									"host": [
-										"{{hvs}}"
-									],
-									"port": "{{hvsPort}}",
-									"path": [
-										"hvs",
-										"v2",
-										"version"
-									]
-								}
-							},
-							"status": "OK",
-							"code": 200,
-							"_postman_previewlanguage": "plain",
-							"header": [
-								{
-									"key": "Strict-Transport-Security",
-									"value": "max-age=63072000; includeSubDomains"
-								},
-								{
-									"key": "Date",
-									"value": "Sat, 12 Sep 2020 12:41:27 GMT"
-								},
-								{
-									"key": "Content-Length",
-									"value": "14"
-								},
-								{
-									"key": "Content-Type",
-									"value": "text/plain; charset=utf-8"
-								}
-							],
-							"cookie": [],
-							"body": "v3.0.0-6d6d8e1"
-						}
-					]
-				}
-			],
-			"description": "The Version API can be used to confirm that all services are up and running\r\nbefore proceeding to the actual use case demonstration.",
-			"event": [
-				{
-					"listen": "prerequest",
-					"script": {
-						"type": "text/javascript",
-						"exec": [
-							""
-						]
-					}
-				},
-				{
-					"listen": "test",
-					"script": {
-						"type": "text/javascript",
-						"exec": [
-							""
-						]
-					}
-				}
-			]
 		},
 		{
 			"name": "Register Hosts",
@@ -906,7 +1044,7 @@
 										{
 											"key": "latestPerHost",
 											"value": "true",
-											"description": "Returns only the latest report for each host. If latestPerHost is specified in conjunction with a date filter, it will return the latest report for within the specified date range per host."
+											"description": "Returns only the latest report for each host. If latestPerHost is specified in conjuction with a date filter, it will return the latest report for within the specified date range per host."
 										},
 										{
 											"key": "limit",
@@ -1268,7 +1406,7 @@
 					]
 				}
 			],
-			"description": "The SOFTWARE Flavor is required for Linux servers. By default, a\r\nmanifest for the Trust Agent components is pushed to the Trust Agent during\r\ninstallation; after rebooting to the TCB boot mode, this Flavor can now be\r\nimported. Importantly, this Flavor part should only be imported once – the \r\ndefault SOFTWARE Flavor has a unique label for each version, and requests to\r\nimport the SOFTWARE Flavor for a version of the Trust Agent that already\r\nexists will throw an error. For example, if you have 3 Trust Agent servers, you\r\nmay import the PLATFORM, OS, and HOST_UNIQUE Flavors from each of them,\r\nbut the SOFTWARE Flavor should only be imported once.",
+			"description": "> **Note**: SOFTWARE flavor is not applicable for Containerized deployment with Kubernetes for Foundational Security\n\nThe SOFTWARE Flavor is required for Linux servers. By default, a\nmanifest for the Trust Agent components is pushed to the Trust Agent during\ninstallation; after rebooting to the TCB boot mode, this Flavor can now be\nimported. Importantly, this Flavor part should only be imported once – the \ndefault SOFTWARE Flavor has a unique label for each version, and requests to\nimport the SOFTWARE Flavor for a version of the Trust Agent that already\nexists will throw an error. For example, if you have 3 Trust Agent servers, you\nmay import the PLATFORM, OS, and HOST_UNIQUE Flavors from each of them,\nbut the SOFTWARE Flavor should only be imported once.",
 			"event": [
 				{
 					"listen": "prerequest",
@@ -1392,7 +1530,7 @@
 								{
 									"key": "latestPerHost",
 									"value": "true",
-									"description": "Returns only the latest report for each host. If latestPerHost is specified in conjunction with a date filter, it will return the latest report for within the specified date range per host."
+									"description": "Returns only the latest report for each host. If latestPerHost is specified in conjuction with a date filter, it will return the latest report for within the specified date range per host."
 								},
 								{
 									"key": "limit",
@@ -1405,116 +1543,6 @@
 						"description": "Searches for Reports.\n\n<b>Report</b></br>\n\nA report contains the trust information produced by the flavor verification process. It provides details on if the host is trusted and the flavors it matched, or came closest to matching.\nIf the host is untrusted, the report will include faults which describe why the host is untrusted. These faults allow for easy analysis and remediation of an untrusted\nresult.\n\nA report can be returned in JSON format, or it can be returned in SAML format. A SAML report is provided in XML format and contains the same trust information in a specific attribute format.\nA SAML report also includes a signature that can be verified by the Host Verification Service’s SAML public key.\n\nReports have a configurable validity period with default period of 24 hours or 86400 seconds. The Host Verification service has a background refresh process that queries for reports where the expiration time is within the next 5 minutes, and triggers generation of a new report for all results.\nThis is checked every 2 minutes by default, and can be configured by changing property in the configuration. In this way fresh reports are generated before older reports expire."
 					},
 					"response": [
-						{
-							"name": "Success with workload agent",
-							"originalRequest": {
-								"method": "GET",
-								"header": [
-									{
-										"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
-										"key": "Authorization",
-										"value": "Bearer {{bearerToken}}"
-									},
-									{
-										"description": "(Required) ",
-										"key": "Accept",
-										"value": "application/samlassertion+xml"
-									}
-								],
-								"url": {
-									"raw": "https://{{hvs}}:{{hvsPort}}/hvs/v2/reports?hostName={{tagentHostname}}&latestPerHost=true",
-									"protocol": "https",
-									"host": [
-										"{{hvs}}"
-									],
-									"port": "{{hvsPort}}",
-									"path": [
-										"hvs",
-										"v2",
-										"reports"
-									],
-									"query": [
-										{
-											"key": "id",
-											"value": "<uuid>",
-											"description": "Report ID",
-											"disabled": true
-										},
-										{
-											"key": "hostId",
-											"value": "<uuid>",
-											"description": "host Id of the host. If this parameter is specified, it will return report only for active host with specified host id.",
-											"disabled": true
-										},
-										{
-											"key": "hostName",
-											"value": "{{tagentHostname}}",
-											"description": "Hostname of the host. If this parameter is specified, it will return report only for active host with specified host name."
-										},
-										{
-											"key": "hostHardwareId",
-											"value": "<uuid>",
-											"description": "Hardware UUID of the host. If this parameter is specified, it will return report only for active host with specified host hardware uuid.",
-											"disabled": true
-										},
-										{
-											"key": "hostStatus",
-											"value": "<string>",
-											"description": "Current state of an active host.  A list of host states is defined in the description section of the HostStatus.",
-											"disabled": true
-										},
-										{
-											"key": "numberOfDays",
-											"value": "<integer>",
-											"description": "Results returned will be restricted to between the current date and number of days prior. This option will override other date options.\nmin: 0\nmax: 365\n",
-											"disabled": true
-										},
-										{
-											"key": "fromDate",
-											"value": "<dateTime>",
-											"description": "Results returned will be restricted to after this date. Currently the following ISO 8601 date formats are supported for date parameters\n    date                                   Ex: fromDate=2006-01-02\n    date+time                              Ex: fromDate=2006-01-02 15:04:05\n    date+time(with milli seconds)          Ex: fromDate=2006-01-02T15:04:05.000Z\n    date+time(with micro seconds)          Ex: fromDate=2006-01-02T15:04:05.000000Z\n",
-											"disabled": true
-										},
-										{
-											"key": "toDate",
-											"value": "<dateTime>",
-											"description": "Results returned will be restricted to before this date. Currently the following ISO 8601 date formats are supported for date parameters\n    date                                   Ex: toDate=2006-01-02\n    date+time                              Ex: toDate=2006-01-02 15:04:05\n    date+time(with milli seconds)          Ex: toDate=2006-01-02T15:04:05.000Z\n    date+time(with micro seconds)          Ex: toDate=2006-01-02T15:04:05.000000Z\n",
-											"disabled": true
-										},
-										{
-											"key": "latestPerHost",
-											"value": "true",
-											"description": "Returns only the latest report for each host. If latestPerHost is specified in conjunction with a date filter, it will return the latest report for within the specified date range per host."
-										},
-										{
-											"key": "limit",
-											"value": "2000",
-											"description": "This limits the overall number of results (all hosts included).",
-											"disabled": true
-										}
-									]
-								}
-							},
-							"status": "OK",
-							"code": 200,
-							"_postman_previewlanguage": "xml",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/samlassertion+xml"
-								},
-								{
-									"key": "Date",
-									"value": "Mon, 28 Sep 2020 12:21:10 GMT"
-								},
-								{
-									"key": "Transfer-Encoding",
-									"value": "chunked"
-								}
-							],
-							"cookie": [],
-							"body": "<saml2:Assertion ID=\"MapAssertion\" IssueInstant=\"2020-09-25T08:20:36.815Z\" Version=\"2.0\" xmlns:saml2=\"urn:oasis:names:tc:SAML:2.0:assertion\">\n    <saml2:Issuer>AttestationService</saml2:Issuer>\n    <Signature xmlns=\"http://www.w3.org/2000/09/xmldsig#\">\n        <SignedInfo>\n            <CanonicalizationMethod Algorithm=\"http://www.w3.org/TR/2001/REC-xml-c14n-20010315#WithComments\"/>\n            <SignatureMethod Algorithm=\"http://www.w3.org/2001/04/xmldsig-more#rsa-sha256\"/>\n            <Reference URI=\"#MapAssertion\">\n                <Transforms>\n                    <Transform Algorithm=\"http://www.w3.org/2000/09/xmldsig#enveloped-signature\"/>\n                    <Transform Algorithm=\"http://www.w3.org/TR/2001/REC-xml-c14n-20010315#WithComments\"/>\n                </Transforms>\n                <DigestMethod Algorithm=\"http://www.w3.org/2001/04/xmlenc#sha256\"/>\n                <DigestValue>Kta+W9wRXAxv51pJfw2MPIfIJGRSO6PoVnq9ZE2oUVY=</DigestValue>\n            </Reference>\n        </SignedInfo>\n        <SignatureValue>Ua/ZY+/YD7tP7Wk8V4pRvIJtt78I5x2pEPSmu3FLCRjGBTf88x/XaIGAG6Oh/3rAv1NPcyqOYp02NwLBC+lW5+0wYN7b5+MCE4v1KscO9pci7ehEW8V7el3gx0JF2z6loqp0v6Nsm/nIaI1QzQ/+LndqS+ub0AK/NFdns/MaNL6PMLm5T+lK78XUlbq/GHdmsZABLpAo6iy7uStv9yPwsos6lruOf5lH7333YSvXkaj0oO3eukrGAQcPoANYhERfxkFsZaYY7ULVAdavuRnovJ13Hv1FfMPimwN+457q8K3AEST5ciJxsRPj4P373QMp6lhw6leOzxE5RC9kS1mlMRYPc5jz7eC0P9oiCvCSFjGR1620yGBk2CWFvCuC7UaK5C3t7d7MyxVYbA+Cw+/4d05x8GGzSI4fYIPNwy6346E5WMO13ftxAPq7CGw38hTi9/WqVfIHxB/HycPeebD2nQnGyALLjEdz3fetSdsHterxJXsxwpOIY52WC1Z1VJ7+</SignatureValue>\n        <KeyInfo>\n            <X509Data>\n                <X509Certificate>MIID/DCCAmSgAwIBAgIBCDANBgkqhkiG9w0BAQwFADBQMQswCQYDVQQGEwJVUzELMAkGA1UECBMCU0YxCzAJBgNVBAcTAlNDMQ4wDAYDVQQKEwVJTlRFTDEXMBUGA1UEAxMOQ01TIFNpZ25pbmcgQ0EwHhcNMjAwOTI0MTI1NzIzWhcNMjEwOTI0MTI1NzIzWjAfMR0wGwYDVQQDExRIVlMgU0FNTCBDZXJ0aWZpY2F0ZTCCAaIwDQYJKoZIhvcNAQEBBQADggGPADCCAYoCggGBANqOAazV2sd7jsB5dY5E+F+ZNFwAgTIOPph7AO4Do7m+aGWIiExhTveR4rQgLUy2gKnEYJPWTZSLKjeG5JPKdBx6PwBDNnsDyRICAbUc/QQSvzciVbK/ImL/qFKNPxeLa6ivX3P5j67+RoxVTxplgWJ1rWn5Yvvd6+WzmpjIkWLeVtA0lSgmJFgpBKG58BwxvtZveouWJ4TqHlwnmYznj8ejn7s8Oq1JjgTp+PUoaaZcIK2uey0TNGI4fmWm80hPel10qNFRE+iaBxEMQxFWH6rxSTuZruq7qjLvHfoGbWVg95DumCo8uXOLG3pa1BMFy3/byj2UKwUz+ABNOieXr2vi03JyBzsimoz68QIIFS9G4a/F2OrAdeTOoGgVsW9Pq8Er47ykpukC+dpLLBussNZ6jiW4/kTz6m6+nZ3J99NB0GgQA25HJ4IIh86UdUQv/GaiVb7G1nOyv5KjZ8tCq6GwO1HWTljxtDRlKsm0ayR7KsHbA2Tj7n8XuPuPchnXjQIDAQABoxIwEDAOBgNVHQ8BAf8EBAMCBsAwDQYJKoZIhvcNAQEMBQADggGBAHPrzYtdYGJIKZkdT5zoCZdsGalbxIou0+PM33t7i3w7j/ZyCfptVg/6N4vDeWyZpn5/uBhWHIz5hMAH0L9aRvvxjtRdywvGtSWQ9MfepMvUPlRqwE7+1MW+RQnCGWpcPDtojYIS5mTL/ZLnITA+eryzdtQhsqutahleqw/jY8tj0ewvrRFglqsQhzUPfCw++IjuNqIdbL879sJjeuTlNLOiT2Pe1tKtAbQ9Xrg++4HtclKllVrYuqwtkbL9/kvWpFQ/TIv45/yek/Clkz8mRzscrHwxuIijw8cG0Uh5Z83RzASf9Q1eszL52FkbA1QqZvhGKAn7lRc/5GOaW3Zk4wtQyTiqeuIVHSRDv1GB2euLLRtkqFPcQx9fG1QajVfv/9ZlnuPqhlyLna7UkRWWL5jtXlN3/ZXI/rIf+N5WcdC8GEy/GMPyMBdnNfuebX+vGp5xtxEXMa+aipqNTSy4p6k7s0T/J6yTJXk26XBzL3OTBxVBA7Sh7RLMvMzG/LSVJA==</X509Certificate>\n            </X509Data>\n        </KeyInfo>\n    </Signature>\n    <saml2:Subject>\n        <saml2:NameID Format=\"urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified\">HVS</saml2:NameID>\n        <saml2:SubjectConfirmation Method=\"urn:oasis:names:tc:SAML:2.0:cm:sender-vouches\">\n            <saml2:NameID Format=\"urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified\"/>\n            <saml2:SubjectConfirmationData NotBefore=\"2020-09-25T08:20:36.815Z\" NotOnOrAfter=\"2020-09-26T08:20:36.815Z\"/>\n        </saml2:SubjectConfirmation>\n    </saml2:Subject>\n    <saml2:AttributeStatement>\n        <saml2:Attribute Name=\"VMMName\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\"></saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"VMMVersion\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\"></saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"FEATURE_TPM\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">true</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"TRUST_HOST_UNIQUE\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">true</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"TRUST_ASSET_TAG\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">NA</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"Binding_Key_Certificate\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">MIIFHTCCA4WgAwIBAgIRAuqaINFiaY2eRIm/lNJJ+B4wDQYJKoZIhvcNAQEMBQAwIjEgMB4GA1UEAxMXSFZTIFByaXZhY3kgQ2VydGlmaWNhdGUwHhcNMjAwOTI0MTMwNzI1WhcNMzAwOTI0MTMwNzI1WjAiMSAwHgYDVQQDDBdCaW5kaW5nX0tleV9DZXJ0aWZpY2F0ZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALBvxBqF354AC0jaLObKEaPpkib71UR6Jb4Su5O1jS/Im2d/CVy+ZFkGDKHE/MQHzubXeFleIshPswJ/yJPf2AUZIru/tQJ2nI8a/k74HijHASDYKsKQZr8e46se3zXWMpngwk3yAtYvE2FG5SehCsQJhZKoYXG8GaThVQPT1V8fgdKKp6mp2GoaGxF86bw4LybefzIxal0NiAgj/bHxT1VZ37sJ9jAlAQniBUmZxOevpKzodhVdsvE1DzyxO3IspBKFPxIdP1R/kRaHbCAjva6ie8rLDOI0po89v4XZGyVGrMlws7l/49F5/w6gY6MnovobrQd5lEqVP9v3vEECu/8CAwEAAaOCAcwwggHIMA4GA1UdDwEB/wQEAwIFoDCBnQYHVQSBBQMCKQSBkf9UQ0eAFwAiAAtmxtAJgNv557EpHQ+29qZpw9KRMx9BTBICgDsd9hivhAAEAP9VqgAAAAA8CTTUAAAAvgAAAAEBAAcAPgAMNgAAIgALcixugAEm3qOqkd9g5a/yINI7jioAQgNBUpK5Q0erKNUAIgALej8PxFHOzOnGqxswqo2kYj92YJJm9ncVFTRTLyv5R2swggEUBghVBIEFAwIpAQSCAQYAFAALAQCk3QcH71zoxhVp4/yzHbithqFW15UGTH3B+qxL0WhPpYzjqr4TtLnW9ELnuYQtjRlEJ5lGQk0fGGhYgyURgVHPaUhWEYukaHz3mq3L4TxKt+VY4WjPR2HtgEDFuuJ9US8xsoeVPjNAkLolMZ/1tUMQMtI1H/XTcQJqfkKUi0TLhnI5/97/tPUFt15G6KDtbYfnE1Ez0Jsw7dnNNhOD1LU2qyU9rZicmhfupm46l5kesP1tk3Y5mBl+49fkQIIsZrLvEVpZGrjWRgTKZDHhwOMoyv7Dibi2orvw4epovH/K/o6BxnwB0+Emi9vpWihNZW7Ar6PMZByqCS8eGUR/mAhwMA0GCSqGSIb3DQEBDAUAA4IBgQCwZdb33sHxCTkZdOKcQ7oLt0H7uaswhIgsDwI4H1Yvd+s4kXC1DjBZN4g1XMGpRgaeSf8gAbrDQ8TubT66C+2yGMbXqUTKjLQmlCcG6clYOoNwFoPaBf4QSGe+jJDsY8uNnUN3uV9EPVH3z8eH+FeRURoXN+5jR6d64a43RPNbp62+UuMQbMiX+TDHsq5KlAzMC6P+u1ISPbG+avsYaiAZEENR2u6DgM5S9g8FAdxBUpFfI/mFAk5PV1LGAEnbIdiozjVRsFFGKYe9BtgI/DGDaX7W3+EZLPHwCDg+oMRj+OcgMVvSIrPTRiXrho/69G9pB+220HlGIGm9CzvCeIetscbKxTxzy9qffFkqWvXwP+q30dLHx0WNz+i4sO1oSfzRSfoSWpC0w1fpUuaXl+xL6WUTQ4kM2Ba1YvkHL6RVEVIrWyCqHdNFTkYLxorsqM8zS3FQ2J2Pg5+rJuRBUMoO9vZ/3hHZBjnA+95U0UqNBXNELUSaV2l8gxxSWUnKn/w=</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"OSName\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">RedHatEnterprise</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"InstalledComponents\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">[tagent wlagent]</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"TPMVersion\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">2.0</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"BiosName\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">Intel Corporation</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"ProcessorInfo\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\"><processor_info></saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"ProcessorFlags\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\"><processor_flags></saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"TRUST_OS\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">true</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"OSVersion\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">8.2</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"HostName\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">{{tagentHostname}}</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"FEATURE_TXT\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">true</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"TRUST_SOFTWARE\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">true</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"TRUST_PLATFORM\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">true</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"BiosVersion\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\"><bios_version></saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"IsDockerEnvironment\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">false</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"TbootInstalled\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">true</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"TRUST_OVERALL\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">true</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"AIK_Certificate\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">MIIDUTCCAbmgAwIBAgIRAIXzqqvcjTkwiAc353LM+rEwDQYJKoZIhvcNAQELBQAwIjEgMB4GA1UEAxMXSFZTIFByaXZhY3kgQ2VydGlmaWNhdGUwHhcNMjAwOTI0MTMwMzAxWhcNMjUwOTI0MTMwMzAxWjAiMSAwHgYDVQQDExdIVlMgUHJpdmFjeSBDZXJ0aWZpY2F0ZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALqzvnj4az2MDgmVO8C6wKOCZ81F1wC7NwMjh/nmU/ND5Ff8iOF2giYv2ieOV0xU+TZxq8gchhyNnXnqxyHyk+U6dqj0rguNsPOUleR8coPsPa7fmC6lCGH5xN2hG9YHdR4RCYh//qZhEVgciopmgBbpOcgAD2SVlAf37st3NapjPa/ukZMlij0P3fQfChtPb2tafV0EAdPgclvJFJtQBduu6nHBohoht3I1Cmz20Z7JXi87mBAlmO6gkgIaItP5iJOcqp/VP0nePw/TCJrEy0tECbVwwnreJ6jgIr02wAkBdvDf0sCyF1Vv/yhF3NejUQO0fwTQlPcEsk0b66EhyE0CAwEAAaMCMAAwDQYJKoZIhvcNAQELBQADggGBAHoM/wNNYwsSCOKvgjUNP0AyKPbA9kYZNNoFoW84S1yxHt+CX0SLxDwgnRMEft2yEejkEfZpVEGSfbXVC8y3RMPJTuNGvZe2EtF2NZ4GJpzJUfNw1wCOpTK/NJk6XzwHHKaWnhnBOZMNkMssSsAjnlkv328n3nRzwdcXwiBQcbBydb0jDTB7obEzbf4s6Bz/pKM0tRYR8XicCM70dRfnKyGt+HEULK851QOG66yEtyamixysjBf7IQYcSRgVP6pU9JbNUefmor98wHs0Nd0HpjLVIDtiGNAtoSgBI0JCMeMQo99Lh1SMEryBZ4EHfTiJnlTcJM4xz85m2REEOE6GTKMcXcQiq2oGtqy4ouP2Y/q0B3rX3ta4OMtSOMjWaDBzAssYl7KH8d5OjBK/ljmxe3Q6E1qzB2JcWaM68vhkd3No/XAvV1JEaF2LRtesemGdhUwF+FExMZtWqt+YOhnNkqdvpXyKkeidhtjzowK3x0W0JVeAkDli0nim+zwjq1FMxA==</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"HardwareUUID\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\"><hardware_uuid></saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"NumberOfSockets\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">2</saml2:AttributeValue>\n        </saml2:Attribute>\n    </saml2:AttributeStatement>\n</saml2:Assertion>"
-						},
 						{
 							"name": "Success without workload agent",
 							"originalRequest": {
@@ -1594,7 +1622,7 @@
 										{
 											"key": "latestPerHost",
 											"value": "true",
-											"description": "Returns only the latest report for each host. If latestPerHost is specified in conjunction with a date filter, it will return the latest report for within the specified date range per host."
+											"description": "Returns only the latest report for each host. If latestPerHost is specified in conjuction with a date filter, it will return the latest report for within the specified date range per host."
 										},
 										{
 											"key": "limit",
@@ -1624,6 +1652,116 @@
 							],
 							"cookie": [],
 							"body": "<saml2:Assertion ID=\"MapAssertion\" IssueInstant=\"2020-09-28T12:12:33.319Z\" Version=\"2.0\" xmlns:saml2=\"urn:oasis:names:tc:SAML:2.0:assertion\">\n    <saml2:Issuer>AttestationService</saml2:Issuer>\n    <Signature xmlns=\"http://www.w3.org/2000/09/xmldsig#\">\n        <SignedInfo>\n            <CanonicalizationMethod Algorithm=\"http://www.w3.org/TR/2001/REC-xml-c14n-20010315#WithComments\"/>\n            <SignatureMethod Algorithm=\"http://www.w3.org/2001/04/xmldsig-more#rsa-sha256\"/>\n            <Reference URI=\"#MapAssertion\">\n                <Transforms>\n                    <Transform Algorithm=\"http://www.w3.org/2000/09/xmldsig#enveloped-signature\"/>\n                    <Transform Algorithm=\"http://www.w3.org/TR/2001/REC-xml-c14n-20010315#WithComments\"/>\n                </Transforms>\n                <DigestMethod Algorithm=\"http://www.w3.org/2001/04/xmlenc#sha256\"/>\n                <DigestValue>TxbeB6Ig/eV56CSs3IDaHUql2Fa1Ziefn78oM1BDrwQ=</DigestValue>\n            </Reference>\n        </SignedInfo>\n        <SignatureValue>Buly6/dRc+gPposVw5L3Zydbw7nxYZjxcCyCSnDZffe4rLrgB2AleXggr6Qgo6vKgJMFS6vs1oYDQ5lUPcTotDhtjyZNjQ4xAUJC2BGrmi8jBUORWCWsPK0rfoDID62APIfQZN2k71vvM80UVDlknEQCOB41Z9PFMy2dkhsEDBeOvTtLelFFjxdXOrugGXa6cUUAcimJ2K+bz8GtbInRVg2ZeTLziKrYRY5dMiPv9HhrmgvUFxG2HKmaC+PcnE5RAEBKLmsskQLCwnZej7XuFSdXPBxUHXkXKN+4la8gSfU37qj7kQXsVGd//jttbzF1URPcizYO2D1dVD74sW/yYq/G4NxVdVry1J5Vgv1cqrcPdTQmYUPNLndhM4fkehWkaESr+NXhGdzPHBIl3nNSJxKi3Xbkt61PM3t3LmHsWKEEevE8ZlTjTZzUaR5PWx9IhmucMrNjqB3updngvZPI0WBbQAbAUsxnHVATQNg2GIspbpsl9zueKZSdkSKNBiiB</SignatureValue>\n        <KeyInfo>\n            <X509Data>\n                <X509Certificate>MIID/DCCAmSgAwIBAgIBCDANBgkqhkiG9w0BAQwFADBQMQswCQYDVQQGEwJVUzELMAkGA1UECBMCU0YxCzAJBgNVBAcTAlNDMQ4wDAYDVQQKEwVJTlRFTDEXMBUGA1UEAxMOQ01TIFNpZ25pbmcgQ0EwHhcNMjAwOTI2MDczNTQzWhcNMjEwOTI2MDczNTQzWjAfMR0wGwYDVQQDExRIVlMgU0FNTCBDZXJ0aWZpY2F0ZTCCAaIwDQYJKoZIhvcNAQEBBQADggGPADCCAYoCggGBAOOvPoRpAIhC71mDjS6PMWtM39iYHu8FW/TkTeQYsa6uco8JL4xDw/87sEZ1DVKrHlR8ALan2zbidJjNS6oVcDFs7FlGtWULxgRAoYeVwvpIE2CrFCEMtchin0cgZsk9J3rnzQSeSLRRpk6m/O8sEoxcWqkNczZyhhyeamLuzS83o7evdauuupniMStHJ88yDFzOf+np/Q+XVQTtkaTyIB1v813BBVc8P6yVh4AlZGpgZMsdDyb7OGgxR36fqwU6VZ3uk+VkenSPMbV0LN/lmRdzmXbOArTd/f6NYjer5dFnZJoSCf2GpYJxnbRLuFHShKVn3Bs+sKLLxAZ9UL5ciVlo/lrQhw68XuNYYdiYB55vr53eErH8WtV1isqQGF2jgYSKrW/hSwQ6rSuNCkrhNX2nZ98kieoElM5SUe9lm5NrV8Ch/JJSs368yJBLVdwrnjyBDBnnClt8Q4nYoZnxCOjFji0t0SkCqZoQpwnr1GHWMPYRBWFdZZNGrKaR8q9rSQIDAQABoxIwEDAOBgNVHQ8BAf8EBAMCBsAwDQYJKoZIhvcNAQEMBQADggGBAMhk080trt8TpGf57MNEwlh3yKgTU4cC0FDH3y4rbRWbKfHZtpYwHzbtD1QvIXeuEHq8aUXTV8Let2Ki4moeJgTTuFDT4CrQR01rsFInIviL2zhAAqaQzcPBhLFWnepLnNTAi/YC5Mkcs5PA6rBeHyZ70ZbC6S8Iac5KzjYa4rJEW7FIooXQB2dXJq0tXBGd/OkF6/YWVZZR6GLq4+8crKUru3W1OtWaX/Jb3Qc/o4yvpe1nujQQmH6HaFsFr8/4HR/fZ5VSzplen2v0ZPW2rb6JJ5cqXhhiWoH3SNPC4Gn+ozphOGOXQ2c9mdcO7hFqqI74r6Hkbwm/X1fHinlqGFFGR54XJqH9wdfWdLqj7EZxd4ECDmMRaKfDnm2xphNgL9JoTq+l+Ys5RRc5BLk4rv6yR5u8iPbLgvhaaY6xY0nf6oQn7UkrL0r7JrjlguB85CNhMDXtvvBG/IwpM3CS6W8qBdOv0FloEShk8YYU3aY+tBMJquTXJPQ3YNwsHx1BHA==</X509Certificate>\n            </X509Data>\n        </KeyInfo>\n    </Signature>\n    <saml2:Subject>\n        <saml2:NameID Format=\"urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified\">HVS</saml2:NameID>\n        <saml2:SubjectConfirmation Method=\"urn:oasis:names:tc:SAML:2.0:cm:sender-vouches\">\n            <saml2:NameID Format=\"urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified\"/>\n            <saml2:SubjectConfirmationData NotBefore=\"2020-09-28T12:12:33.319Z\" NotOnOrAfter=\"2020-09-29T12:12:33.319Z\"/>\n        </saml2:SubjectConfirmation>\n    </saml2:Subject>\n    <saml2:AttributeStatement>\n        <saml2:Attribute Name=\"NumberOfSockets\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">2</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"ProcessorFlags\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\"><processor_flags></saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"BiosName\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">Intel Corporation</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"TRUST_ASSET_TAG\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">NA</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"TRUST_PLATFORM\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">true</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"AIK_Certificate\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">MIIDUTCCAbmgAwIBAgIRAJbDWqAodHzfZvfUSG0bFaEwDQYJKoZIhvcNAQELBQAwIjEgMB4GA1UEAxMXSFZTIFByaXZhY3kgQ2VydGlmaWNhdGUwHhcNMjAwOTI2MDc0MjQzWhcNMjUwOTI2MDc0MjQzWjAiMSAwHgYDVQQDExdIVlMgUHJpdmFjeSBDZXJ0aWZpY2F0ZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAK31B+tZU2jaam6X9LBBJHci7+smT3NuCEENh3fzNRDmBuW1iaVdHfGhX5qp7QFH1gqS0HxPqa9MB9qF72p9gorsKMdMAYr/5zETwfG++jripnM1QZr2N6EPQK/eYnwmaLJbM+eQ8/bT38r3p0u9KrcPyW/3w9VVnE05Eilj8Wo1naRotJTSCOXtC2CyclQEOcCf8Llwg5f/7rldrwd5yyfiIwfSoWTMA7qzIb8FBUu8L5DJE1XcEctzvzeead3TWyqJJtCRHu+iP9Tpka/PhfR08ROrL1Ovbo3a31EAF4lwzN4yZGjx26ti+p5uW0e+jmF93BXisCFoIq/Ghb4CKTUCAwEAAaMCMAAwDQYJKoZIhvcNAQELBQADggGBAAbF07Jh9OB7yKBzBBplz2e5heBywDU4cYg9f57nl+SvQPqd6MfB/Hw1DHT4TuirCs8Uwo8kWkpP28vHomBxAOsM6OhMubgKsUCiOd6eCbb5hTfI30DK0JhJ5nHCz7B/oDgTrDeLiAIup/5B+FVG3X2qwuqmYXDylB4Q2c0l0orXt85KPTDT3FsJXy4tCXBVKFv55DCO+HlNd6zX891fgaH3r170kqpwPXGkp1DmFnJZVymoOf3bv8uvulZVPE1L6cmlSW2Aka8WRzND2QCgdm2m3vd/TmXI6ARXh/TVzTGs0im0u5SUv6bTOuNqek2HJNwAE/nN2xWoUe46jLnHioGzyBkDXpGmEuWYM96oCcPRgYab5LMEDqGQ/pKl4QSrQN4yALuCnWuFmSrVg5rzfp/baXypn9pcSjoyhpyDW2TA9gEZhWTj7tNy4KUknTskttkdq2UbFLSgZaEm8iwEfvq1tNoirgQCkcfoLP37inL8EuVLUSQyia5RWJURf0+rxg==</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"InstalledComponents\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">[tagent]</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"ProcessorInfo\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\"><processor_info></saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"HostName\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">{{tagentHostname}}</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"BiosVersion\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\"><bios_version></saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"HardwareUUID\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\"><hardware_uuid></saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"VMMVersion\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\"></saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"TRUST_HOST_UNIQUE\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">true</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"TRUST_SOFTWARE\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">true</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"OSName\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">RedHatEnterprise</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"Binding_Key_Certificate\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">MIIFHTCCA4WgAwIBAgIRAX/zXCFr0ckPjTaT5CiVGkcwDQYJKoZIhvcNAQEMBQAwIjEgMB4GA1UEAxMXSFZTIFByaXZhY3kgQ2VydGlmaWNhdGUwHhcNMjAwOTI2MDc0NjM1WhcNMzAwOTI2MDc0NjM1WjAiMSAwHgYDVQQDDBdCaW5kaW5nX0tleV9DZXJ0aWZpY2F0ZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALeopKrT1FX74y3CdVN6qvI+7q70s0bEcjTXzbOZU8Iv1p/iNBcch34kaLoaNyQJBVj5aKbc7SOw1SwuJLKsp6y8EFIk6BVBcUk6n+5FRXFg9FebrD/74eCO/r/g2UXCkPWR4wT6YJ59Jl25EKRdXCEnitl+QFpi18N+XEnTEI7RMmm0O20lTebj8vIsJuApLfgFLhS5PaQRv+iRE339ZT3Lc940L9FD6nHOPPO+zpA9DwKn4SltZNt+vz3IU+okrc2pLVKbcLm+XdwSP0bT4DqPM/BRRUbF/U3JBdTLhSp92goggb8LQ4QZvu57jiWPYpzotxdTdNSvSlzKDhJpBiUCAwEAAaOCAcwwggHIMA4GA1UdDwEB/wQEAwIFoDCBnQYHVQSBBQMCKQSBkf9UQ0eAFwAiAAvPYI6dwPg/fzYxktYnylzJtnfpYXFs2AT4VYmu4p3F1wAEAP9VqgAAAABDxbyxAAAA5gAAAAEAAAcAPgAMNgAAIgALEDNnWbSkiFXW6rsYo4Yl0UhH7Ek6ZsE23iKUBtpUrwAAIgALrky61vTYLEWVKUkt7MZu+4nSeVLdHwlHA7xi12M3/n8wggEUBghVBIEFAwIpAQSCAQYAFAALAQCp907edaN9fYde2jVNFm0tVmKHHC7FnWPjssJBHwQP8D05tyeXZvCnfbKwALWO0ENZ7ppLIsz5ztWtCrc6RREgt0V43fRl7gRGALMXjfCyjvrdTvCqSKm92AKrNLuJrYLFUlYbdlxrogiqLCTrTE40m5PU0VaFI1PP05kRfhKGjpUjMURZPhjt0arq1pcGd4mdLzQfwpn1wFdVI3l5VDYZZb3HYnn7hEo59ZQV2w2c+whhPgddAIkA8oBQwNVs4Y6y6LqtQGHcrbP4QFzyBU9UYW0P3IFMcKuOfXrSK8nosmOerVPM2CZNlci4Si0aCjipSw5ypbIO9mjNzQ1sHFHCMA0GCSqGSIb3DQEBDAUAA4IBgQBV7Vtnb09t5cJfb6ICvGqSgLdZHspjoJP9XaWb7gXf5pveeZ5MRcTOzdfCHjOXcbQsYq2gdTK01NKtmz8sRqWontFbXl3hwE8zBDVuyqHweOzER8UlUXzOID9Tfk4xr2gvsTmA0mogKc90UNFWCiYCA4Dlu+iHxPxtroKf8txsYBo5u+4sky4n6egk0wl+TU9PFHqaLZocsVbxBbf1rK+tFKbU0QEzzOIyJkKugPySnlKBDSbvICY6Fjm2JPv1BNXPnvDZyZYvZvqAccWK/hxUkXv+SYUHtU9TUjqEdaoeMBXwm05WrE2BWClSSHOlCYbhx5vbq+R380w8iJ61A7pB6RPc+SEcPwvGBqNbsSKRZGB9z6nspoYMNdWSDi/NDGg9ksJKIbyIClB9rBjZdmgd83C1FQ9Apt0rKzyEBuT7Gh6+a3Q0w9IMuT7pB5C0q25WJ6H1E3vVVrGDWcrTx+IHLZn63ubAOitXIFF1gtZoHt46Yiyyc00voTPQjdG1p40=</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"VMMName\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\"></saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"OSVersion\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">8.2</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"TRUST_OS\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">true</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"IsDockerEnvironment\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">false</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"FEATURE_TPM\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">true</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"FEATURE_TXT\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">true</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"TRUST_OVERALL\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">true</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"TPMVersion\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">2.0</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"TbootInstalled\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">true</saml2:AttributeValue>\n        </saml2:Attribute>\n    </saml2:AttributeStatement>\n</saml2:Assertion>"
+						},
+						{
+							"name": "Success with workload agent",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+										"key": "Authorization",
+										"value": "Bearer {{bearerToken}}"
+									},
+									{
+										"description": "(Required) ",
+										"key": "Accept",
+										"value": "application/samlassertion+xml"
+									}
+								],
+								"url": {
+									"raw": "https://{{hvs}}:{{hvsPort}}/hvs/v2/reports?hostName={{tagentHostname}}&latestPerHost=true",
+									"protocol": "https",
+									"host": [
+										"{{hvs}}"
+									],
+									"port": "{{hvsPort}}",
+									"path": [
+										"hvs",
+										"v2",
+										"reports"
+									],
+									"query": [
+										{
+											"key": "id",
+											"value": "<uuid>",
+											"description": "Report ID",
+											"disabled": true
+										},
+										{
+											"key": "hostId",
+											"value": "<uuid>",
+											"description": "host Id of the host. If this parameter is specified, it will return report only for active host with specified host id.",
+											"disabled": true
+										},
+										{
+											"key": "hostName",
+											"value": "{{tagentHostname}}",
+											"description": "Hostname of the host. If this parameter is specified, it will return report only for active host with specified host name."
+										},
+										{
+											"key": "hostHardwareId",
+											"value": "<uuid>",
+											"description": "Hardware UUID of the host. If this parameter is specified, it will return report only for active host with specified host hardware uuid.",
+											"disabled": true
+										},
+										{
+											"key": "hostStatus",
+											"value": "<string>",
+											"description": "Current state of an active host.  A list of host states is defined in the description section of the HostStatus.",
+											"disabled": true
+										},
+										{
+											"key": "numberOfDays",
+											"value": "<integer>",
+											"description": "Results returned will be restricted to between the current date and number of days prior. This option will override other date options.\nmin: 0\nmax: 365\n",
+											"disabled": true
+										},
+										{
+											"key": "fromDate",
+											"value": "<dateTime>",
+											"description": "Results returned will be restricted to after this date. Currently the following ISO 8601 date formats are supported for date parameters\n    date                                   Ex: fromDate=2006-01-02\n    date+time                              Ex: fromDate=2006-01-02 15:04:05\n    date+time(with milli seconds)          Ex: fromDate=2006-01-02T15:04:05.000Z\n    date+time(with micro seconds)          Ex: fromDate=2006-01-02T15:04:05.000000Z\n",
+											"disabled": true
+										},
+										{
+											"key": "toDate",
+											"value": "<dateTime>",
+											"description": "Results returned will be restricted to before this date. Currently the following ISO 8601 date formats are supported for date parameters\n    date                                   Ex: toDate=2006-01-02\n    date+time                              Ex: toDate=2006-01-02 15:04:05\n    date+time(with milli seconds)          Ex: toDate=2006-01-02T15:04:05.000Z\n    date+time(with micro seconds)          Ex: toDate=2006-01-02T15:04:05.000000Z\n",
+											"disabled": true
+										},
+										{
+											"key": "latestPerHost",
+											"value": "true",
+											"description": "Returns only the latest report for each host. If latestPerHost is specified in conjuction with a date filter, it will return the latest report for within the specified date range per host."
+										},
+										{
+											"key": "limit",
+											"value": "2000",
+											"description": "This limits the overall number of results (all hosts included).",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "xml",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/samlassertion+xml"
+								},
+								{
+									"key": "Date",
+									"value": "Mon, 28 Sep 2020 12:21:10 GMT"
+								},
+								{
+									"key": "Transfer-Encoding",
+									"value": "chunked"
+								}
+							],
+							"cookie": [],
+							"body": "<saml2:Assertion ID=\"MapAssertion\" IssueInstant=\"2020-09-25T08:20:36.815Z\" Version=\"2.0\" xmlns:saml2=\"urn:oasis:names:tc:SAML:2.0:assertion\">\n    <saml2:Issuer>AttestationService</saml2:Issuer>\n    <Signature xmlns=\"http://www.w3.org/2000/09/xmldsig#\">\n        <SignedInfo>\n            <CanonicalizationMethod Algorithm=\"http://www.w3.org/TR/2001/REC-xml-c14n-20010315#WithComments\"/>\n            <SignatureMethod Algorithm=\"http://www.w3.org/2001/04/xmldsig-more#rsa-sha256\"/>\n            <Reference URI=\"#MapAssertion\">\n                <Transforms>\n                    <Transform Algorithm=\"http://www.w3.org/2000/09/xmldsig#enveloped-signature\"/>\n                    <Transform Algorithm=\"http://www.w3.org/TR/2001/REC-xml-c14n-20010315#WithComments\"/>\n                </Transforms>\n                <DigestMethod Algorithm=\"http://www.w3.org/2001/04/xmlenc#sha256\"/>\n                <DigestValue>Kta+W9wRXAxv51pJfw2MPIfIJGRSO6PoVnq9ZE2oUVY=</DigestValue>\n            </Reference>\n        </SignedInfo>\n        <SignatureValue>Ua/ZY+/YD7tP7Wk8V4pRvIJtt78I5x2pEPSmu3FLCRjGBTf88x/XaIGAG6Oh/3rAv1NPcyqOYp02NwLBC+lW5+0wYN7b5+MCE4v1KscO9pci7ehEW8V7el3gx0JF2z6loqp0v6Nsm/nIaI1QzQ/+LndqS+ub0AK/NFdns/MaNL6PMLm5T+lK78XUlbq/GHdmsZABLpAo6iy7uStv9yPwsos6lruOf5lH7333YSvXkaj0oO3eukrGAQcPoANYhERfxkFsZaYY7ULVAdavuRnovJ13Hv1FfMPimwN+457q8K3AEST5ciJxsRPj4P373QMp6lhw6leOzxE5RC9kS1mlMRYPc5jz7eC0P9oiCvCSFjGR1620yGBk2CWFvCuC7UaK5C3t7d7MyxVYbA+Cw+/4d05x8GGzSI4fYIPNwy6346E5WMO13ftxAPq7CGw38hTi9/WqVfIHxB/HycPeebD2nQnGyALLjEdz3fetSdsHterxJXsxwpOIY52WC1Z1VJ7+</SignatureValue>\n        <KeyInfo>\n            <X509Data>\n                <X509Certificate>MIID/DCCAmSgAwIBAgIBCDANBgkqhkiG9w0BAQwFADBQMQswCQYDVQQGEwJVUzELMAkGA1UECBMCU0YxCzAJBgNVBAcTAlNDMQ4wDAYDVQQKEwVJTlRFTDEXMBUGA1UEAxMOQ01TIFNpZ25pbmcgQ0EwHhcNMjAwOTI0MTI1NzIzWhcNMjEwOTI0MTI1NzIzWjAfMR0wGwYDVQQDExRIVlMgU0FNTCBDZXJ0aWZpY2F0ZTCCAaIwDQYJKoZIhvcNAQEBBQADggGPADCCAYoCggGBANqOAazV2sd7jsB5dY5E+F+ZNFwAgTIOPph7AO4Do7m+aGWIiExhTveR4rQgLUy2gKnEYJPWTZSLKjeG5JPKdBx6PwBDNnsDyRICAbUc/QQSvzciVbK/ImL/qFKNPxeLa6ivX3P5j67+RoxVTxplgWJ1rWn5Yvvd6+WzmpjIkWLeVtA0lSgmJFgpBKG58BwxvtZveouWJ4TqHlwnmYznj8ejn7s8Oq1JjgTp+PUoaaZcIK2uey0TNGI4fmWm80hPel10qNFRE+iaBxEMQxFWH6rxSTuZruq7qjLvHfoGbWVg95DumCo8uXOLG3pa1BMFy3/byj2UKwUz+ABNOieXr2vi03JyBzsimoz68QIIFS9G4a/F2OrAdeTOoGgVsW9Pq8Er47ykpukC+dpLLBussNZ6jiW4/kTz6m6+nZ3J99NB0GgQA25HJ4IIh86UdUQv/GaiVb7G1nOyv5KjZ8tCq6GwO1HWTljxtDRlKsm0ayR7KsHbA2Tj7n8XuPuPchnXjQIDAQABoxIwEDAOBgNVHQ8BAf8EBAMCBsAwDQYJKoZIhvcNAQEMBQADggGBAHPrzYtdYGJIKZkdT5zoCZdsGalbxIou0+PM33t7i3w7j/ZyCfptVg/6N4vDeWyZpn5/uBhWHIz5hMAH0L9aRvvxjtRdywvGtSWQ9MfepMvUPlRqwE7+1MW+RQnCGWpcPDtojYIS5mTL/ZLnITA+eryzdtQhsqutahleqw/jY8tj0ewvrRFglqsQhzUPfCw++IjuNqIdbL879sJjeuTlNLOiT2Pe1tKtAbQ9Xrg++4HtclKllVrYuqwtkbL9/kvWpFQ/TIv45/yek/Clkz8mRzscrHwxuIijw8cG0Uh5Z83RzASf9Q1eszL52FkbA1QqZvhGKAn7lRc/5GOaW3Zk4wtQyTiqeuIVHSRDv1GB2euLLRtkqFPcQx9fG1QajVfv/9ZlnuPqhlyLna7UkRWWL5jtXlN3/ZXI/rIf+N5WcdC8GEy/GMPyMBdnNfuebX+vGp5xtxEXMa+aipqNTSy4p6k7s0T/J6yTJXk26XBzL3OTBxVBA7Sh7RLMvMzG/LSVJA==</X509Certificate>\n            </X509Data>\n        </KeyInfo>\n    </Signature>\n    <saml2:Subject>\n        <saml2:NameID Format=\"urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified\">HVS</saml2:NameID>\n        <saml2:SubjectConfirmation Method=\"urn:oasis:names:tc:SAML:2.0:cm:sender-vouches\">\n            <saml2:NameID Format=\"urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified\"/>\n            <saml2:SubjectConfirmationData NotBefore=\"2020-09-25T08:20:36.815Z\" NotOnOrAfter=\"2020-09-26T08:20:36.815Z\"/>\n        </saml2:SubjectConfirmation>\n    </saml2:Subject>\n    <saml2:AttributeStatement>\n        <saml2:Attribute Name=\"VMMName\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\"></saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"VMMVersion\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\"></saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"FEATURE_TPM\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">true</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"TRUST_HOST_UNIQUE\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">true</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"TRUST_ASSET_TAG\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">NA</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"Binding_Key_Certificate\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">MIIFHTCCA4WgAwIBAgIRAuqaINFiaY2eRIm/lNJJ+B4wDQYJKoZIhvcNAQEMBQAwIjEgMB4GA1UEAxMXSFZTIFByaXZhY3kgQ2VydGlmaWNhdGUwHhcNMjAwOTI0MTMwNzI1WhcNMzAwOTI0MTMwNzI1WjAiMSAwHgYDVQQDDBdCaW5kaW5nX0tleV9DZXJ0aWZpY2F0ZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALBvxBqF354AC0jaLObKEaPpkib71UR6Jb4Su5O1jS/Im2d/CVy+ZFkGDKHE/MQHzubXeFleIshPswJ/yJPf2AUZIru/tQJ2nI8a/k74HijHASDYKsKQZr8e46se3zXWMpngwk3yAtYvE2FG5SehCsQJhZKoYXG8GaThVQPT1V8fgdKKp6mp2GoaGxF86bw4LybefzIxal0NiAgj/bHxT1VZ37sJ9jAlAQniBUmZxOevpKzodhVdsvE1DzyxO3IspBKFPxIdP1R/kRaHbCAjva6ie8rLDOI0po89v4XZGyVGrMlws7l/49F5/w6gY6MnovobrQd5lEqVP9v3vEECu/8CAwEAAaOCAcwwggHIMA4GA1UdDwEB/wQEAwIFoDCBnQYHVQSBBQMCKQSBkf9UQ0eAFwAiAAtmxtAJgNv557EpHQ+29qZpw9KRMx9BTBICgDsd9hivhAAEAP9VqgAAAAA8CTTUAAAAvgAAAAEBAAcAPgAMNgAAIgALcixugAEm3qOqkd9g5a/yINI7jioAQgNBUpK5Q0erKNUAIgALej8PxFHOzOnGqxswqo2kYj92YJJm9ncVFTRTLyv5R2swggEUBghVBIEFAwIpAQSCAQYAFAALAQCk3QcH71zoxhVp4/yzHbithqFW15UGTH3B+qxL0WhPpYzjqr4TtLnW9ELnuYQtjRlEJ5lGQk0fGGhYgyURgVHPaUhWEYukaHz3mq3L4TxKt+VY4WjPR2HtgEDFuuJ9US8xsoeVPjNAkLolMZ/1tUMQMtI1H/XTcQJqfkKUi0TLhnI5/97/tPUFt15G6KDtbYfnE1Ez0Jsw7dnNNhOD1LU2qyU9rZicmhfupm46l5kesP1tk3Y5mBl+49fkQIIsZrLvEVpZGrjWRgTKZDHhwOMoyv7Dibi2orvw4epovH/K/o6BxnwB0+Emi9vpWihNZW7Ar6PMZByqCS8eGUR/mAhwMA0GCSqGSIb3DQEBDAUAA4IBgQCwZdb33sHxCTkZdOKcQ7oLt0H7uaswhIgsDwI4H1Yvd+s4kXC1DjBZN4g1XMGpRgaeSf8gAbrDQ8TubT66C+2yGMbXqUTKjLQmlCcG6clYOoNwFoPaBf4QSGe+jJDsY8uNnUN3uV9EPVH3z8eH+FeRURoXN+5jR6d64a43RPNbp62+UuMQbMiX+TDHsq5KlAzMC6P+u1ISPbG+avsYaiAZEENR2u6DgM5S9g8FAdxBUpFfI/mFAk5PV1LGAEnbIdiozjVRsFFGKYe9BtgI/DGDaX7W3+EZLPHwCDg+oMRj+OcgMVvSIrPTRiXrho/69G9pB+220HlGIGm9CzvCeIetscbKxTxzy9qffFkqWvXwP+q30dLHx0WNz+i4sO1oSfzRSfoSWpC0w1fpUuaXl+xL6WUTQ4kM2Ba1YvkHL6RVEVIrWyCqHdNFTkYLxorsqM8zS3FQ2J2Pg5+rJuRBUMoO9vZ/3hHZBjnA+95U0UqNBXNELUSaV2l8gxxSWUnKn/w=</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"OSName\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">RedHatEnterprise</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"InstalledComponents\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">[tagent wlagent]</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"TPMVersion\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">2.0</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"BiosName\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">Intel Corporation</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"ProcessorInfo\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\"><processor_info></saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"ProcessorFlags\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\"><processor_flags></saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"TRUST_OS\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">true</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"OSVersion\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">8.2</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"HostName\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">{{tagentHostname}}</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"FEATURE_TXT\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">true</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"TRUST_SOFTWARE\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">true</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"TRUST_PLATFORM\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">true</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"BiosVersion\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\"><bios_version></saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"IsDockerEnvironment\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">false</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"TbootInstalled\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">true</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"TRUST_OVERALL\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">true</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"AIK_Certificate\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">MIIDUTCCAbmgAwIBAgIRAIXzqqvcjTkwiAc353LM+rEwDQYJKoZIhvcNAQELBQAwIjEgMB4GA1UEAxMXSFZTIFByaXZhY3kgQ2VydGlmaWNhdGUwHhcNMjAwOTI0MTMwMzAxWhcNMjUwOTI0MTMwMzAxWjAiMSAwHgYDVQQDExdIVlMgUHJpdmFjeSBDZXJ0aWZpY2F0ZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALqzvnj4az2MDgmVO8C6wKOCZ81F1wC7NwMjh/nmU/ND5Ff8iOF2giYv2ieOV0xU+TZxq8gchhyNnXnqxyHyk+U6dqj0rguNsPOUleR8coPsPa7fmC6lCGH5xN2hG9YHdR4RCYh//qZhEVgciopmgBbpOcgAD2SVlAf37st3NapjPa/ukZMlij0P3fQfChtPb2tafV0EAdPgclvJFJtQBduu6nHBohoht3I1Cmz20Z7JXi87mBAlmO6gkgIaItP5iJOcqp/VP0nePw/TCJrEy0tECbVwwnreJ6jgIr02wAkBdvDf0sCyF1Vv/yhF3NejUQO0fwTQlPcEsk0b66EhyE0CAwEAAaMCMAAwDQYJKoZIhvcNAQELBQADggGBAHoM/wNNYwsSCOKvgjUNP0AyKPbA9kYZNNoFoW84S1yxHt+CX0SLxDwgnRMEft2yEejkEfZpVEGSfbXVC8y3RMPJTuNGvZe2EtF2NZ4GJpzJUfNw1wCOpTK/NJk6XzwHHKaWnhnBOZMNkMssSsAjnlkv328n3nRzwdcXwiBQcbBydb0jDTB7obEzbf4s6Bz/pKM0tRYR8XicCM70dRfnKyGt+HEULK851QOG66yEtyamixysjBf7IQYcSRgVP6pU9JbNUefmor98wHs0Nd0HpjLVIDtiGNAtoSgBI0JCMeMQo99Lh1SMEryBZ4EHfTiJnlTcJM4xz85m2REEOE6GTKMcXcQiq2oGtqy4ouP2Y/q0B3rX3ta4OMtSOMjWaDBzAssYl7KH8d5OjBK/ljmxe3Q6E1qzB2JcWaM68vhkd3No/XAvV1JEaF2LRtesemGdhUwF+FExMZtWqt+YOhnNkqdvpXyKkeidhtjzowK3x0W0JVeAkDli0nim+zwjq1FMxA==</saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"HardwareUUID\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\"><hardware_uuid></saml2:AttributeValue>\n        </saml2:Attribute>\n        <saml2:Attribute Name=\"NumberOfSockets\">\n            <saml2:AttributeValue xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:type=\"xsd:string\">2</saml2:AttributeValue>\n        </saml2:Attribute>\n    </saml2:AttributeStatement>\n</saml2:Assertion>"
 						}
 					]
 				},
@@ -1726,7 +1864,7 @@
 								{
 									"key": "latestPerHost",
 									"value": "true",
-									"description": "Returns only the latest report for each host. If latestPerHost is specified in conjunction with a date filter, it will return the latest report for within the specified date range per host."
+									"description": "Returns only the latest report for each host. If latestPerHost is specified in conjuction with a date filter, it will return the latest report for within the specified date range per host."
 								},
 								{
 									"key": "limit",
@@ -1818,7 +1956,7 @@
 										{
 											"key": "latestPerHost",
 											"value": "true",
-											"description": "Returns only the latest report for each host. If latestPerHost is specified in conjunction with a date filter, it will return the latest report for within the specified date range per host."
+											"description": "Returns only the latest report for each host. If latestPerHost is specified in conjuction with a date filter, it will return the latest report for within the specified date range per host."
 										},
 										{
 											"key": "limit",
@@ -1928,7 +2066,7 @@
 										{
 											"key": "latestPerHost",
 											"value": "true",
-											"description": "Returns only the latest report for each host. If latestPerHost is specified in conjunction with a date filter, it will return the latest report for within the specified date range per host."
+											"description": "Returns only the latest report for each host. If latestPerHost is specified in conjuction with a date filter, it will return the latest report for within the specified date range per host."
 										},
 										{
 											"key": "limit",
