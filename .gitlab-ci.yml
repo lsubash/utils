@@ -1,4 +1,4 @@
-image: golang:1.14
+image: golang:1.16
 
 before_script:
   - git config --global http.proxy ${HTTP_PROXY}
@@ -39,6 +39,7 @@ pcssimulator:
   script:
     - cd tools/skc-simulators/pcs_simulator
     - go get -u github.com/gorilla/mux
+    - GOOS=linux GOSUMDB=off GOPROXY=direct go mod tidy
     - go build ./...
 
 sgxagentsim:
