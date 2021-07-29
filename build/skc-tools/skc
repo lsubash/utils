@@ -86,10 +86,13 @@ skc_library_k8s:
 k8s_extensions:
 	cd k8s-extensions && make all
 
-k8s_common: clean intel_secl_k8s skc_k8s k8s_extensions sgx_agent_k8s skc_library_k8s
+k8s_common: clean intel_secl_k8s skc_k8s k8s_extensions sgx_agent_k8s skc_library_k8s sample_apps
 	mkdir -p k8s/container-images
 	mkdir -p k8s/manifests
 	mkdir -p k8s/platform-dependencies
+	mkdir -p k8s/sample_apps
+	cp utils/build/skc-tools/sample_apps/build_scripts/sample_apps.* k8s/sample_apps/
+	cp utils/build/skc-tools/sample_apps/sampleapps_untar.sh k8s/sample_apps/
 	cp -r utils/build/skc-tools/sgx_agent/agent_untar.sh k8s/platform-dependencies/
 	cp -r utils/build/skc-tools/sgx_agent/build_scripts/sgx_agent.tar k8s/platform-dependencies/
 	cp -r utils/build/skc-tools/sgx_agent/build_scripts/sgx_agent.sha2 k8s/platform-dependencies/
