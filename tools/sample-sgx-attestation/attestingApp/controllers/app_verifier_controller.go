@@ -139,7 +139,7 @@ func (ca AppVerifierController) SharePubkeyWrappedSWK(baseURL string, key []byte
 
 	req.Header.Add("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Add("Authorization", common.DummyBearerToken)
+	req.Header.Add("Authorization", ca.Config.DummyBearerToken)
 
 	// Get the SystemCertPool, continue with an empty pool on error
 	rootCAs, _ := x509.SystemCertPool()
@@ -236,7 +236,7 @@ func (ca AppVerifierController) ShareSWKWrappedSecret(baseURL string, key []byte
 
 	req.Header.Add("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Add("Authorization", common.DummyBearerToken)
+	req.Header.Add("Authorization", ca.Config.DummyBearerToken)
 
 	// Get the SystemCertPool, continue with an empty pool on error
 	rootCAs, _ := x509.SystemCertPool()
@@ -305,7 +305,7 @@ func (ca AppVerifierController) ConnectAndReceiveQuote(baseURL string, nonce str
 
 	req.Header.Add("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Add("Authorization", common.DummyBearerToken)
+	req.Header.Add("Authorization", ca.Config.DummyBearerToken)
 
 	// Get the SystemCertPool, continue with an empty pool on error
 	rootCAs, _ := x509.SystemCertPool()

@@ -12,7 +12,7 @@ The project demonstrates several fundamental usages of Intel® Software Guard Ex
 
 *Note* 
 -	Attested app uses self-signed certificate to simulate a production CA-signed certificate.
--	Attesting app uses a static token to simulate a token that is generated in a production environment.
+-	Attesting app uses a static token in config.yml to simulate a token that is generated in a production environment.
 -	Input validation and error handling are minimal to keep the focus on SGX related code. Actual applications need to perform full input validation and error handling.
 
 --------------------------------------------------------------------------------
