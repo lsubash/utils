@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "35e78341-1015-46d8-84a2-f371a9f7ba87",
+		"_postman_id": "ad394b17-9c8b-4ca2-abf8-798e91958ac9",
 		"name": "Secure Key Caching",
 		"description": "Key Protection is implemented by the SKC Client -- a set of libraries - which must be linked with a\ntenant workload, like Nginx, deployed in a CSP environment and the Key Broker Service (KBS)\ndeployed in the tenant's enterprise environment. The SKC Client retrieves the keys needed by the\nworkload from KBS after proving that the key can be protected in an SGX enclave.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
