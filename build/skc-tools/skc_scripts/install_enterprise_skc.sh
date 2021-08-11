@@ -247,7 +247,7 @@ sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/kbs.env
 sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@" ~/kbs.env
 SQVS_URL=https://$SYSTEM_IP:$SQVS_PORT/svs/v1
 sed -i "s@^\(SQVS_URL\s*=\s*\).*\$@\1$SQVS_URL@" ~/kbs.env
-ENDPOINT_URL=https://$SYSTEM_IP:$KBS_PORT/v1
+ENDPOINT_URL=https://$SYSTEM_IP:$KBS_PORT/kbs/v1
 sed -i "s@^\(ENDPOINT_URL\s*=\s*\).*\$@\1$ENDPOINT_URL@" ~/kbs.env
 
 echo "Updating KMIP Server conf...."
