@@ -51,7 +51,7 @@ PRE_REQ_PACKAGES_UBUNTU=(
   gcc-8
   g++-8
   build-essential
-  skopeo
+  libgpg-error-dev
 )
 
 declare -a PRE_REQ_PACKAGES_DOCKER
@@ -59,7 +59,6 @@ PRE_REQ_PACKAGES_DOCKER=(
   containers-common
   docker-ce-20.10.8-3.el8
   docker-ce-cli-20.10.8-3.el8
-  skopeo
 )
 
 install_prereq_repos_rhel() {
@@ -144,6 +143,21 @@ install_prereqs_packages() {
   return ${error_code}
 }
 
+install_prereq_skopeo() {
+  if [ "$OS" == "rhel" ]; then
+    local error_code=0
+    dnf -y module disable container-tools
+    dnf -y install 'dnf-command(copr)'
+    dnf -y copr enable rhcontainerbot/container-selinux
+    curl -L -o /etc/yum.repos.d/devel:kubic:libcontainers:stable.repo https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/CentOS_8_Stream/devel:kubic:libcontainers:stable.repo
+    dnf -y install skopeo
+  elif [ "$OS" == "ubuntu" ]; then
+    apt-get -y update
+    apt-get -y install skopeo
+  fi
+}
+
+
 #install docker pre-reqs
 install_prereqs_packages_docker() {
   local error_code=0
@@ -176,7 +190,7 @@ install_prereqs_packages_docker() {
 
 install_libkmip() {
   local error_code=0
-  rm -rf libkmip/
+  rm -rf libkmip/ > /dev/null
   git clone https://github.com/openkmip/libkmip.git
   cd libkmip
   make uninstall
@@ -199,28 +213,20 @@ install_libkmip() {
 print_help() {
   echo "Usage: $0 [-hdcv]"
   echo "    -h     print help and exit"
-  echo "    -d     pre-req setup for Workload Security:Launch Time Protection - Containers with Docker Runtime"
   echo "    -c     pre-req setup for Workload Security:Launch Time Protection - Containers with CRIO Runtime"
   echo "    -v     pre-req setup for Workload Security:Launch Time Protection - VM Confidentiality"
 }
 
 dispatch_works() {
   mkdir -p ~/.tmp
-  if [[ $1 == *"d"* ]]; then
-    echo "Installing Packages for Workload Security:Launch Time Protection - Containers with Docker Runtime..."
-    if [ "$OS" == "rhel" ]; then
-      install_prereq_repos_rhel
-    fi
-    install_prereqs_packages
-    install_prereqs_packages_docker
-    install_libkmip
-  elif [[ $1 == *"c"* ]]; then
+  if [[ $1 == *"c"* ]]; then
     echo "Installing Packages for Workload Security:Launch Time Protection - Containers with CRIO Runtime..."
     if [ "$OS" == "rhel" ]; then
       install_prereq_repos_rhel
     fi
     install_prereqs_packages
     install_prereqs_packages_docker
+    install_prereq_skopeo
     install_libkmip
   elif [[ $1 == *"v"* ]]; then
     echo "Installing Packages for Workload Security:Launch Time Protection - VM Confidentiality..."
