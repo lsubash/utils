@@ -5,14 +5,16 @@ ATTESTEDAPP_HOST=127.0.0.1
 
 # Read from environment variables file if it exists
 if [ -f ./sample_apps.conf ]; then
-    echo "Reading Installation variables from $(pwd)/out.conf"
-    source sample_apps.conf
-    if [ $? -ne 0 ]; then
-        echo "${red} please set correct values in out.conf ${reset}"
-        exit 1
-    fi
-    env_file_exports=$(cat ./sample_apps.conf | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
-    if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
+	echo "Reading Installation variables from $(pwd)/out.conf"
+	source sample_apps.conf
+	if [ $? -ne 0 ]; then
+		echo "${red} please set correct values in out.conf ${reset}"
+		exit 1
+	fi
+	env_file_exports=$(cat ./sample_apps.conf | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
+	if [ -n "$env_file_exports" ]; then
+		eval export $env_file_exports;
+	fi
 fi
 
 # Kill if any process is running
@@ -26,14 +28,8 @@ OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2| xargs | tr -d '\n')
 echo $OS
 
 # Copying the libraries to default location
-if [ $OS == "rhel" ]; then
-    	cp -r $HOME_DIR/enclave.signed.so /usr/lib64/libenclave.signed.so
-    	cp -r $HOME_DIR/untrusted.so /usr/lib64/libuntrusted.so
-
-elif [ $OS == "ubuntu" ]; then
-    	cp -r $HOME_DIR/enclave.signed.so /usr/lib/libenclave.signed.so
-    	cp -r $HOME_DIR/untrusted.so /usr/lib/libuntrusted.so
-fi
+cp -r $HOME_DIR/enclave.signed.so $LIB_DIR/libenclave.signed.so
+cp -r $HOME_DIR/untrusted.so $LIB_DIR/libuntrusted.so
 
 # Update the configuration file
 sed -i 's/attestedapp-host=.*/attestedapp-host='$ATTESTEDAPP_HOST'/' $HOME_DIR/config.yml
@@ -43,7 +39,6 @@ sed -i "s@^\(sqvs-url\s*:\s*\).*\$@\1$SQVS_URL@" $HOME_DIR/config.yml
 PCCS_URL=https://$SCS_IP:$SCS_PORT/scs/sgx/certification/v1/
 sed -i "s@^\(PCCS_URL\s*=\s*\).*\$@\1$PCCS_URL@" /etc/sgx_default_qcnl.conf
 sed -i "s|USE_SECURE_CERT=.*|USE_SECURE_CERT=FALSE|g" /etc/sgx_default_qcnl.conf
-
 
 source $SGX_SDK_INSTALL_PATH
 cd $HOME_DIR

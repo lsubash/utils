@@ -75,9 +75,9 @@ fi
 
 # Install postgresql
 if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
-	dnf -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm &>>$log_file
+	dnf -qy install https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm &>>$log_file
 	dnf module disable postgresql -y
-	dnf -y install postgresql11 postgresql11-server postgresql11-contrib postgresql11-libs &>>$log_file
+	dnf -qy install postgresql11 postgresql11-server postgresql11-contrib postgresql11-libs &>>$log_file
 elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
 	apt-get -y install postgresql-11 &>> $log_file
 else
