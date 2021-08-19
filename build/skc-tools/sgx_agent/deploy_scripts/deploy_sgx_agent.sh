@@ -72,7 +72,7 @@ install_psw_qgl()
 		$PKGMGR install -qy --nogpgcheck libsgx-dcap-ql || exit 1
 		rm -rf sgx_rpm_local_repo /etc/yum.repos.d/*sgx_rpm_local_repo.repo
 	elif [ "$OS" == "ubuntu" ]; then
-		echo 'deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu/ bionic main' | sudo tee /etc/apt/sources.list.d/intel-sgx.list
+                echo $SGX_LIBS_REPO | sudo tee /etc/apt/sources.list.d/intel-sgx.list
 		wget -qO - https://download.01.org/intel-sgx/sgx_repo/ubuntu/intel-sgx-deb.key | sudo apt-key add -
 		$PKGMGR update -y || exit 1
 		$PKGMGR install -y libsgx-dcap-ql || exit 1

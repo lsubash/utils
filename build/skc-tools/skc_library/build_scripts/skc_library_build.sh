@@ -27,7 +27,7 @@ create_skc_library_tar()
 	if [[ "$OS" == "rhel" && "$VER" == "8.2" ]]; then
 	        \cp -pf ../deploy_scripts/nginx.patch $SKCLIB_DIR
 	        \cp -pf ../deploy_scripts/openssl.patch $SKCLIB_DIR
-        elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
+        elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" || "$VER" == "20.04" ]]; then
 	        \cp -pf ../deploy_scripts/nginx_ubuntu.patch $SKCLIB_DIR
 	        \cp -pf ../deploy_scripts/openssl_ubuntu.patch $SKCLIB_DIR
         fi

@@ -21,10 +21,10 @@ install_sgxssl()
         make sgxssl_no_mitigation
         if [[ "$OS" == "rhel" &&  "$VER" == "8.2" ]]; then
                 make install || exit 1
-        elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
+        elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" || "$VER" == "20.04" ]]; then
                 sudo make install
         else
-                echo "Unsupported OS. Please use RHEL 8.2 or Ubuntu 18.04"
+                echo "Unsupported OS. Please use RHEL 8.2 or Ubuntu 18.04/20.04"
                 exit 1
         fi
         popd

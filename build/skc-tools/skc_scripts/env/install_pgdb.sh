@@ -78,10 +78,10 @@ if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
 	dnf -qy install https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm &>>$log_file
 	dnf module disable postgresql -y
 	dnf -qy install postgresql11 postgresql11-server postgresql11-contrib postgresql11-libs &>>$log_file
-elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
+elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" || "$VER" == "20.04" ]]; then
 	apt-get -y install postgresql-11 &>> $log_file
 else
-	echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04"
+	echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04/20.04"
 	exit 1
 fi
 
@@ -114,10 +114,10 @@ if [ ! -f $PGDATA/pg_hba.conf ] ; then
 
 	if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then    
 		sudo -u postgres /usr/pgsql-11/bin/pg_ctl initdb -D $PGDATA &>> $log_file
-	elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
+	elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" || "$VER" == "20.04" ]]; then
 		sudo -u postgres /usr/lib/postgresql/11/bin/pg_ctl initdb -D $PGDATA &>> $log_file
 	else
-		echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04"
+		echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04/20.04"
 		exit 1
 	fi
 
@@ -168,14 +168,14 @@ echo "Setting up systemctl for postgres database ..."
 # setup systemd startup for postgresql
 if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
 	pg_systemd=/usr/lib/systemd/system/postgresql-11.service
-elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
+elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" || "$VER" == "20.04" ]]; then
 	if [ -f "/etc/init.d/postgresql" ]; then
 		systemctl stop postgresql && systemctl disable postgresql
 		rm -rf /lib/systemd/system/postgresql.service
 	fi
 	pg_systemd=/lib/systemd/system/postgresql-11.service
 else
-	echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04"
+	echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04/20.04"
 	exit 1
 fi
 
@@ -198,12 +198,12 @@ if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
 	echo "ExecStart=/usr/pgsql-11/bin/pg_ctl start -D ${PGDATA} -l ${PGDATA}/pg_log" >> $pg_systemd
 	echo "ExecStop=/usr/pgsql-11/bin/pg_ctl stop -D ${PGDATA}" >> $pg_systemd
 	echo "ExecReload=/usr/pgsql-11/bin/pg_ctl reload -D ${PGDATA}" >> $pg_systemd
-elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
+elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" || "$VER" == "20.04" ]]; then
 	echo "ExecStart=/usr/lib/postgresql/11/bin/pg_ctl start -D ${PGDATA} -l ${PGDATA}/pg_log" >> $pg_systemd
 	echo "ExecStop=/usr/lib/postgresql/11/bin/pg_ctl stop -D ${PGDATA}" >> $pg_systemd
 	echo "ExecReload=/usr/lib/postgresql/11/bin/pg_ctl reload -D ${PGDATA}" >> $pg_systemd
 else
-	echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04"
+	echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04/20.04"
 	exit 1
 fi
 echo "" >> $pg_systemd
