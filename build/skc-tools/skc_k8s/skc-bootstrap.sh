@@ -326,7 +326,7 @@ deploy_sqvs() {
   echo "|      DEPLOY:SGX QUOTE VERIFICATION SERVICE       |"
   echo "----------------------------------------------------"
 
-  required_variables="SQVS_INCLUDE_TOKEN,SGX_TRUSTED_ROOT_CA_PATH"
+  required_variables="SQVS_INCLUDE_TOKEN,SGX_TRUSTED_ROOT_CA_FILE"
   check_mandatory_variables $SQVS $required_variables
 
   cd sqvs/
