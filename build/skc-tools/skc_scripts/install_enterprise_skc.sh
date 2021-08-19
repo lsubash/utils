@@ -1,181 +1,50 @@
 #!/bin/bash
-HOME_DIR=~/
-SKC_BINARY_DIR=$HOME_DIR/binaries
+source install_sgx_infra.sh
+if [ $? -ne 0 ]; then
+	echo "${red} unable to deploy SGX Attestation Indfrastructure services ${reset}"
+	exit 1
+fi
 
-red=`tput setaf 1`
-green=`tput setaf 2`
-reset=`tput sgr0`
-
-# Check OS and VERSION
-OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
-temp="${OS%\"}"
-temp="${temp#\"}"
-OS="$temp"
-VER=$(cat /etc/os-release | grep ^VERSION_ID | tr -d 'VERSION_ID="')
+\cp -pf $BINARY_DIR/env/kbs.env $HOME_DIR
 
 if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
-	dnf install -qy curl || exit 1
+        dnf install -qy curl || exit 1
 elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
-	apt install -y curl || exit 1
+        apt install -y curl || exit 1
 else
-	echo "${red} Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04 ${reset}"
-	exit 1
+        echo "${red} Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04 ${reset}"
+        exit 1
 fi
 
-# Copy env files to Home directory
-\cp -pf $SKC_BINARY_DIR/env/cms.env $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/env/authservice.env $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/env/scs.env $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/env/sqvs.env $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/env/kbs.env $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/env/iseclpgdb.env $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/env/populate-users.env $HOME_DIR
-
-# Copy DB and user/role creation script to Home directory
-\cp -pf $SKC_BINARY_DIR/install_pgdb.sh $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/create_db.sh $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/populate-users.sh $HOME_DIR
-
-\cp -pf $SKC_BINARY_DIR/trusted_rootca.pem /tmp
 # read from environment variables file if it exists
 if [ -f ./enterprise_skc.conf ]; then
-    echo "Reading Installation variables from $(pwd)/enterprise_skc.conf"
-    source enterprise_skc.conf
-    if [ $? -ne 0 ]; then
-	echo "${red} please set correct values in enterprise_skc.conf ${reset}"
-	exit 1
-    fi
-    if [[ "$SCS_DB_NAME" == "$AAS_DB_NAME" ]]; then
-        echo "${red} SCS_DB_NAME & AAS_DB_NAME should not be same. Please change in enterprise_skc.conf ${reset}"
-        exit 1
-    fi
-    env_file_exports=$(cat ./enterprise_skc.conf | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
-    if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
+	echo "Reading Installation variables from $(pwd)/enterprise_skc.conf"
+	source enterprise_skc.conf
+	if [ $? -ne 0 ]; then
+		echo "${red} please set correct values in enterprise_skc.conf ${reset}"
+		exit 1
+	fi
+	env_file_exports=$(cat ./enterprise_skc.conf | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
+	if [ -n "$env_file_exports" ]; then
+		eval export $env_file_exports;
+	fi
 fi
-
-echo "Uninstalling Certificate Management Service...."
-cms uninstall --purge
-echo "Uninstalling AuthService...."
-authservice uninstall --purge
-echo "Removing AuthService Database...."
-pushd $PWD
-cd /usr/local/pgsql
-sudo -u postgres dropdb $AAS_DB_NAME
-echo "Uninstalling SGX Caching Service...."
-scs uninstall --purge
-echo "Removing SGX Caching Service Database...."
-sudo -u postgres dropdb $SCS_DB_NAME
-echo "Uninstalling SGX Quote Verification Service...."
-sqvs uninstall --purge
-echo "Uninstalling Key Broker Service...."
-kbs uninstall --purge
-popd
-
-pushd $PWD
-cd ~
-
-echo "Installing Postgres....."
-bash install_pgdb.sh
-if [ $? -ne 0 ]; then
-        echo "${red} postgres installation failed ${reset}"
-        exit 1
-fi
-echo "Postgres installated successfully"
-
-echo "Creating AAS database....."
-bash create_db.sh $AAS_DB_NAME $AAS_DB_USERNAME $AAS_DB_PASSWORD
-if [ $? -ne 0 ]; then
-        echo "${red} aas db creation failed ${reset}"
-        exit 1
-fi
-echo "AAS database created successfully"
-
-echo "Creating SCS database....."
-bash create_db.sh $SCS_DB_NAME $SCS_DB_USERNAME $SCS_DB_PASSWORD
-if [ $? -ne 0 ]; then
-        echo "${red} scs db creation failed ${reset}"
-        exit 1
-fi
-echo "SCS database created successfully"
-
-popd
-
-echo "Installing Certificate Management Service...."
-AAS_URL=https://$SYSTEM_IP:$AAS_PORT/aas/v1
-sed -i "s/^\(AAS_TLS_SAN\s*=\s*\).*\$/\1$SYSTEM_SAN/" ~/cms.env
-sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/cms.env
-sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_SAN/" ~/cms.env
-
-./cms-*.bin
-cms status > /dev/null
-if [ $? -ne 0 ]; then
-  echo "${red} Certificate Management Service Installation Failed ${reset}"
-  exit 1
-fi
-echo "${green} Installed Certificate Management Service.... ${reset}"
-
-echo "Installing AuthService...."
-
-echo "Copying Certificate Management Service token to AuthService...."
-export AAS_TLS_SAN=$SYSTEM_SAN
-CMS_TOKEN=`cms setup cms-auth-token --force | grep 'JWT Token:' | awk '{print $3}'`
-sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$CMS_TOKEN/"  ~/authservice.env
-
-CMS_TLS_SHA=`cms tlscertsha384`
-sed -i "s/^\(CMS_TLS_CERT_SHA384\s*=\s*\).*\$/\1$CMS_TLS_SHA/"  ~/authservice.env
-
-CMS_URL=https://$SYSTEM_IP:$CMS_PORT/cms/v1/
-sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@"  ~/authservice.env
-
-sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_SAN/"  ~/authservice.env
-sed -i "s/^\(AAS_DB_NAME\s*=\s*\).*\$/\1$AAS_DB_NAME/"  ~/authservice.env
-sed -i "s/^\(AAS_DB_USERNAME\s*=\s*\).*\$/\1$AAS_DB_USERNAME/"  ~/authservice.env
-sed -i "s/^\(AAS_DB_PASSWORD\s*=\s*\).*\$/\1$AAS_DB_PASSWORD/"  ~/authservice.env
-
-./authservice-*.bin
-authservice status > /dev/null
-if [ $? -ne 0 ]; then
-  echo "${red} AuthService Installation Failed ${reset}"
-  exit 1
-fi
-echo "${green} Installed AuthService.... ${reset}"
 
 echo "Updating Populate users env ...."
-ISECL_INSTALL_COMPONENTS=AAS,SCS,SQVS,SKBS
+ISECL_INSTALL_COMPONENTS=SKBS
 sed -i "s@^\(ISECL_INSTALL_COMPONENTS\s*=\s*\).*\$@\1$ISECL_INSTALL_COMPONENTS@" ~/populate-users.env
-sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/populate-users.env
-
-AAS_ADMIN_USERNAME=$(cat ~/authservice.env | grep ^AAS_ADMIN_USERNAME= | cut -d'=' -f2)
-AAS_ADMIN_PASSWORD=$(cat ~/authservice.env | grep ^AAS_ADMIN_PASSWORD= | cut -d'=' -f2)
-sed -i "s/^\(AAS_ADMIN_USERNAME\s*=\s*\).*\$/\1$AAS_ADMIN_USERNAME/" ~/populate-users.env
-sed -i "s/^\(AAS_ADMIN_PASSWORD\s*=\s*\).*\$/\1$AAS_ADMIN_PASSWORD/" ~/populate-users.env
-
 sed -i "s@^\(KBS_CERT_SAN_LIST\s*=\s*\).*\$@\1$SYSTEM_SAN@" ~/populate-users.env
-sed -i "s@^\(SCS_CERT_SAN_LIST\s*=\s*\).*\$@\1$SYSTEM_SAN@" ~/populate-users.env
-sed -i "s@^\(SQVS_CERT_SAN_LIST\s*=\s*\).*\$@\1$SYSTEM_SAN@" ~/populate-users.env
-
 KBS_SERVICE_USERNAME=$(cat ~/kbs.env | grep ^KBS_SERVICE_USERNAME= | cut -d'=' -f2)
 KBS_SERVICE_PASSWORD=$(cat ~/kbs.env | grep ^KBS_SERVICE_PASSWORD= | cut -d'=' -f2)
 sed -i "s/^\(KBS_SERVICE_USERNAME\s*=\s*\).*\$/\1$KBS_SERVICE_USERNAME/" ~/populate-users.env
 sed -i "s/^\(KBS_SERVICE_PASSWORD\s*=\s*\).*\$/\1$KBS_SERVICE_PASSWORD/" ~/populate-users.env
 
-SCS_ADMIN_USERNAME=$(cat ~/scs.env | grep ^SCS_ADMIN_USERNAME= | cut -d'=' -f2)
-SCS_ADMIN_PASSWORD=$(cat ~/scs.env | grep ^SCS_ADMIN_PASSWORD= | cut -d'=' -f2)
-sed -i "s/^\(SCS_SERVICE_USERNAME\s*=\s*\).*\$/\1$SCS_ADMIN_USERNAME/" ~/populate-users.env
-sed -i "s/^\(SCS_SERVICE_PASSWORD\s*=\s*\).*\$/\1$SCS_ADMIN_PASSWORD/" ~/populate-users.env
-
-sed -i "s/^\(INSTALL_ADMIN_USERNAME\s*=\s*\).*\$/\1$INSTALL_ADMIN_USERNAME/" ~/populate-users.env
-sed -i "s/^\(INSTALL_ADMIN_PASSWORD\s*=\s*\).*\$/\1$INSTALL_ADMIN_PASSWORD/" ~/populate-users.env
-
-sed -i "/GLOBAL_ADMIN_USERNAME/d" ~/populate-users.env
-sed -i "/GLOBAL_ADMIN_PASSWORD/d" ~/populate-users.env
-
 if [ $CCC_ADMIN_USERNAME != "" ] && [ $CCC_ADMIN_PASSWORD != "" ]; then
-  sed -i "s/^\(CCC_ADMIN_USERNAME\s*=\s*\).*\$/\1$CCC_ADMIN_USERNAME/" ~/populate-users.env
-  sed -i "s/^\(CCC_ADMIN_PASSWORD\s*=\s*\).*\$/\1$CCC_ADMIN_PASSWORD/" ~/populate-users.env
+	sed -i "s/^\(CCC_ADMIN_USERNAME\s*=\s*\).*\$/\1$CCC_ADMIN_USERNAME/" ~/populate-users.env
+	sed -i "s/^\(CCC_ADMIN_PASSWORD\s*=\s*\).*\$/\1$CCC_ADMIN_PASSWORD/" ~/populate-users.env
 else
-  sed -i "/CCC_ADMIN_USERNAME/d" ~/populate-users.env
-  sed -i "/CCC_ADMIN_PASSWORD/d" ~/populate-users.env
+	sed -i "/CCC_ADMIN_USERNAME/d" ~/populate-users.env
+	sed -i "/CCC_ADMIN_PASSWORD/d" ~/populate-users.env
 fi
 
 echo "Invoking populate users script...."
@@ -183,8 +52,8 @@ pushd $PWD
 cd ~
 ./populate-users.sh
 if [ $? -ne 0 ]; then
-  echo "${red} populate user script failed ${reset}"
-  exit 1
+	echo "${red} populate user script failed ${reset}"
+	exit 1
 fi
 popd
 
@@ -192,48 +61,9 @@ echo "Getting AuthService Admin token...."
 INSTALL_ADMIN_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:$AAS_PORT/aas/v1/token -d '{"username": "'"$INSTALL_ADMIN_USERNAME"'", "password": "'"$INSTALL_ADMIN_PASSWORD"'"}'`
 
 if [ $? -ne 0 ]; then
-  echo "${red} Could not get AuthService Admin token ${reset}"
-  exit 1
+	echo "${red} Could not get AuthService Admin token ${reset}"
+	exit 1
 fi
-
-echo "Updating SGX Caching Service env...."
-sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_SAN/"  ~/scs.env
-sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$INSTALL_ADMIN_TOKEN/"  ~/scs.env
-sed -i "s/^\(CMS_TLS_CERT_SHA384\s*=\s*\).*\$/\1$CMS_TLS_SHA/" ~/scs.env
-sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/scs.env
-sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@" ~/scs.env
-sed -i "s@^\(INTEL_PROVISIONING_SERVER\s*=\s*\).*\$@\1$INTEL_PROVISIONING_SERVER@" ~/scs.env
-sed -i "s@^\(INTEL_PROVISIONING_SERVER_API_KEY\s*=\s*\).*\$@\1$INTEL_PROVISIONING_SERVER_API_KEY@" ~/scs.env
-sed -i "s/^\(SCS_DB_NAME\s*=\s*\).*\$/\1$SCS_DB_NAME/"  ~/scs.env
-sed -i "s/^\(SCS_DB_USERNAME\s*=\s*\).*\$/\1$SCS_DB_USERNAME/" ~/scs.env
-sed -i "s/^\(SCS_DB_PASSWORD\s*=\s*\).*\$/\1$SCS_DB_PASSWORD/" ~/scs.env
-
-echo "Installing SGX Caching Service...."
-./scs-*.bin
-scs status > /dev/null
-if [ $? -ne 0 ]; then
-  echo "${red} SGX Caching Service Installation Failed ${reset}"
-  exit 1
-fi
-echo "${green} Installed SGX Caching Service.... ${reset}"
-
-echo "Updating SGX Quote Verification Service env...."
-sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_SAN/"  ~/sqvs.env
-sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$INSTALL_ADMIN_TOKEN/"  ~/sqvs.env
-sed -i "s/^\(CMS_TLS_CERT_SHA384\s*=\s*\).*\$/\1$CMS_TLS_SHA/" ~/sqvs.env
-sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/sqvs.env
-sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@" ~/sqvs.env
-SCS_URL=https://$SYSTEM_IP:$SCS_PORT/scs/sgx/certification/v1
-sed -i "s@^\(SCS_BASE_URL\s*=\s*\).*\$@\1$SCS_URL@" ~/sqvs.env
-
-echo "Installing SGX Quote Verification Service...."
-./sqvs-*.bin
-sqvs status > /dev/null
-if [ $? -ne 0 ]; then
-  echo "${red} SGX Quote Verification Service Installation Failed ${reset}"
-  exit 1
-fi
-echo "${green} Installed SGX Quote Verification Service....${reset}"
 
 echo "Updating Key Broker Service env...."
 KBS_HOSTNAME=$("hostname")
@@ -250,39 +80,39 @@ sed -i "s@^\(ENDPOINT_URL\s*=\s*\).*\$@\1$ENDPOINT_URL@" ~/kbs.env
 sed -i "s@^\(KEY_MANAGER\s*=\s*\).*\$@\1$KEY_MANAGER@" ~/kbs.env
 
 if [ $KEY_MANAGER == "KMIP" ]; then
-  echo "Updating KMIP Server conf...."
-  sed -i "s@^\(KMIP_SERVER_IP\s*=\s*\).*\$@\1$SYSTEM_IP@" ~/kbs.env
-  sed -i "s@^\(KMIP_SERVER_PORT\s*=\s*\).*\$@\1$KMIP_SERVER_PORT@" ~/kbs.env
-  sed -i "s@^\(KMIP_CLIENT_CERT_PATH\s*=\s*\).*\$@\1$KMIP_CLIENT_CERT_PATH@" ~/kbs.env
-  sed -i "s@^\(KMIP_CLIENT_KEY_PATH\s*=\s*\).*\$@\1$KMIP_CLIENT_KEY_PATH@" ~/kbs.env
-  sed -i "s@^\(KMIP_ROOT_CERT_PATH\s*=\s*\).*\$@\1$KMIP_ROOT_CERT_PATH@" ~/kbs.env
+	echo "Updating KMIP Server conf...."
+	sed -i "s@^\(KMIP_SERVER_IP\s*=\s*\).*\$@\1$SYSTEM_IP@" ~/kbs.env
+	sed -i "s@^\(KMIP_SERVER_PORT\s*=\s*\).*\$@\1$KMIP_SERVER_PORT@" ~/kbs.env
+	sed -i "s@^\(KMIP_CLIENT_CERT_PATH\s*=\s*\).*\$@\1$KMIP_CLIENT_CERT_PATH@" ~/kbs.env
+	sed -i "s@^\(KMIP_CLIENT_KEY_PATH\s*=\s*\).*\$@\1$KMIP_CLIENT_KEY_PATH@" ~/kbs.env
+	sed -i "s@^\(KMIP_ROOT_CERT_PATH\s*=\s*\).*\$@\1$KMIP_ROOT_CERT_PATH@" ~/kbs.env
 
-  sed -i "s@^\(hostname\s*=\s*\).*\$@\1$SYSTEM_IP@" kbs_script/server.conf
-  sed -i "s@^\(port\s*=\s*\).*\$@\1$KMIP_SERVER_PORT@" kbs_script/server.conf
+	sed -i "s@^\(hostname\s*=\s*\).*\$@\1$SYSTEM_IP@" kbs_script/server.conf
+	sed -i "s@^\(port\s*=\s*\).*\$@\1$KMIP_SERVER_PORT@" kbs_script/server.conf
 
-  sed -i "s@^\(HOSTNAME_IP\s*=\s*\).*\$@\1'$SYSTEM_IP'@" kbs_script/rsa_create.py
-  sed -i "s@^\(SERVER_PORT\s*=\s*\).*\$@\1'$KMIP_SERVER_PORT'@" kbs_script/rsa_create.py
-  sed -i "s@^\(CERT_PATH\s*=\s*\).*\$@\1'$KMIP_CLIENT_CERT_PATH'@" kbs_script/rsa_create.py
-  sed -i "s@^\(KEY_PATH\s*=\s*\).*\$@\1'$KMIP_CLIENT_KEY_PATH'@" kbs_script/rsa_create.py
-  sed -i "s@^\(CA_PATH\s*=\s*\).*\$@\1'$KMIP_ROOT_CERT_PATH'@" kbs_script/rsa_create.py
+	sed -i "s@^\(HOSTNAME_IP\s*=\s*\).*\$@\1'$SYSTEM_IP'@" kbs_script/rsa_create.py
+	sed -i "s@^\(SERVER_PORT\s*=\s*\).*\$@\1'$KMIP_SERVER_PORT'@" kbs_script/rsa_create.py
+	sed -i "s@^\(CERT_PATH\s*=\s*\).*\$@\1'$KMIP_CLIENT_CERT_PATH'@" kbs_script/rsa_create.py
+	sed -i "s@^\(KEY_PATH\s*=\s*\).*\$@\1'$KMIP_CLIENT_KEY_PATH'@" kbs_script/rsa_create.py
+	sed -i "s@^\(CA_PATH\s*=\s*\).*\$@\1'$KMIP_ROOT_CERT_PATH'@" kbs_script/rsa_create.py
 
-  echo "Installing KMIP Server....."
-  pushd $PWD
-  cd kbs_script/
-  bash install_pykmip.sh
-  if [ $? -ne 0 ]; then
-        echo "${red} KMIP Server installation failed ${reset}"
-        exit 1
-  fi
-  popd
-  echo "KMIP Server installated successfully"
+	echo "Installing KMIP Server....."
+	pushd $PWD
+	cd kbs_script/
+	bash install_pykmip.sh
+	if [ $? -ne 0 ]; then
+		echo "${red} KMIP Server installation failed ${reset}"
+		exit 1
+	fi
+	popd
+	echo "KMIP Server installated successfully"
 fi
 
 echo "Installing Key Broker Service...."
 ./kbs-*.bin
 kbs status > /dev/null
 if [ $? -ne 0 ]; then
-  echo "${red} Key Broker Service Installation Failed ${reset}"
-  exit 1
+	echo "${red} Key Broker Service Installation Failed ${reset}"
+	exit 1
 fi
 echo "${green} Installed Key Broker Service.... ${reset}"

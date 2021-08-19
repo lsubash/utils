@@ -58,14 +58,14 @@ fi
 
 # Install postgresql
 if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
-yum -y install https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm &>>$log_file
-yum module disable postgresql -y
-yum -y install postgresql11-server postgresql11 postgresql11-contrib &>>$log_file
+	dnf -qy install https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm &>>$log_file
+	dnf module disable postgresql -y
+	dnf -qy install postgresql11 postgresql11-server postgresql11-contrib postgresql11-libs &>>$log_file
 elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
-   apt-get -y install postgresql-11 &>> $log_file
+	apt-get -y install postgresql-11 &>> $log_file
 else
-    echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04"
-    exit 1
+	echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04"
+	exit 1
 fi
 
 if [ $? -ne 0 ] ; then
@@ -96,12 +96,12 @@ if [ ! -f $PGDATA/pg_hba.conf ] ; then
     chown -R postgres:postgres /usr/local/pgsql
 
 if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then    
-    sudo -u postgres /usr/pgsql-11/bin/pg_ctl initdb -D $PGDATA &>> $log_file
+	sudo -u postgres /usr/pgsql-11/bin/pg_ctl initdb -D $PGDATA &>> $log_file
 elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
-    sudo -u postgres /usr/lib/postgresql/11/bin/pg_ctl initdb -D $PGDATA &>> $log_file
+	sudo -u postgres /usr/lib/postgresql/11/bin/pg_ctl initdb -D $PGDATA &>> $log_file
 else
-    echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04"
-    exit 1
+	echo "Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04"
+	exit 1
 fi
 
     # make certificate and key files for TLS

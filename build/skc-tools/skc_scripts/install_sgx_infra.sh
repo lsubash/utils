@@ -5,45 +5,35 @@ if [ $? -ne 0 ]; then
 	exit 1
 fi
 
-HOME_DIR=~/
-BINARY_DIR=$HOME_DIR/binaries
-
-if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
-	dnf install -qy curl || exit 1
-elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
-	apt install -y curl || exit 1
-else
-	echo "${red} Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04 ${reset}"
-	exit 1
-fi
-
 # Copy env files to Home directory
-\cp -pf ./env/cms.env $HOME_DIR
-\cp -pf ./env/authservice.env $HOME_DIR
-\cp -pf ./env/scs.env $HOME_DIR
-\cp -pf ./env/shvs.env $HOME_DIR
-\cp -pf ./env/ihub.env $HOME_DIR
-\cp -pf ./env/iseclpgdb.env $HOME_DIR
-\cp -pf ./env/populate-users.env $HOME_DIR
+\cp -pf $BINARY_DIR/env/cms.env $HOME_DIR
+\cp -pf $BINARY_DIR/env/authservice.env $HOME_DIR
+\cp -pf $BINARY_DIR/env/scs.env $HOME_DIR
+\cp -pf $BINARY_DIR/env/sqvs.env $HOME_DIR
+\cp -pf $BINARY_DIR/env/iseclpgdb.env $HOME_DIR
+\cp -pf $BINARY_DIR/env/populate-users.env $HOME_DIR
 
 # Copy DB and user/role creation script to Home directory
 \cp -pf ./install_pgdb.sh $HOME_DIR
 \cp -pf ./create_db.sh $HOME_DIR
 \cp -pf ./populate-users.sh $HOME_DIR
 
+\cp -pf $BINARY_DIR/trusted_rootca.pem /tmp
+
 # read from environment variables file if it exists
-if [ -f ./csp_skc.conf ]; then
-	echo "Reading Installation variables from $(pwd)/csp_skc.conf"
-	source csp_skc.conf
+if [ -f ./enterprise_skc.conf ]; then
+	echo "Reading Installation variables from $(pwd)/enterprise_skc.conf"
+	source enterprise_skc.conf
 	if [ $? -ne 0 ]; then
-		echo "${red} please set correct values in csp_skc.conf ${reset}"
+		echo "${red} please set correct values in enterprise_skc.conf ${reset}"
 		exit 1
 	fi
-	if [[ "$SCS_DB_NAME" == "$SHVS_DB_NAME" || "$AAS_DB_NAME" == "$SHVS_DB_NAME" || "$SCS_DB_NAME" == "$AAS_DB_NAME" ]]; then
-		echo "${red} SCS_DB_NAME, SHVS_DB_NAME & AAS_DB_NAME should not be same. Please change in csp_skc.conf ${reset}"
-		exit 1
+
+	if [[ "$SCS_DB_NAME" == "$AAS_DB_NAME" ]]; then
+		echo "${red} SCS_DB_NAME & AAS_DB_NAME should not be same. Please change in enterprise_skc.conf ${reset}"
+	exit 1
 	fi
-	env_file_exports=$(cat ./csp_skc.conf | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
+	env_file_exports=$(cat ./enterprise_skc.conf | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
 	if [ -n "$env_file_exports" ]; then
 		eval export $env_file_exports;
 	fi
@@ -61,12 +51,8 @@ echo "Uninstalling SGX Caching Service...."
 scs uninstall --purge
 echo "Removing SGX Caching Service Database...."
 sudo -u postgres dropdb $SCS_DB_NAME
-echo "Uninstalling SGX Host Verification Service...."
-shvs uninstall --purge
-echo "Removing SGX Host Verification Service Database...."
-sudo -u postgres dropdb $SHVS_DB_NAME
-echo "Uninstalling Integration HUB...."
-ihub uninstall --purge --exec
+echo "Uninstalling SGX Quote Verification Service...."
+sqvs uninstall --purge
 popd
 
 pushd $PWD
@@ -95,14 +81,6 @@ if [ $? -ne 0 ]; then
         exit 1
 fi
 echo "SCS database created successfully"
-
-echo "Creating SHVS database....."
-bash create_db.sh $SHVS_DB_NAME $SHVS_DB_USERNAME $SHVS_DB_PASSWORD
-if [ $? -ne 0 ]; then
-        echo "${red} shvs db creation failed ${reset}"
-        exit 1
-fi
-echo "SHVS database created successfully"
 
 popd
 
@@ -147,7 +125,7 @@ fi
 echo "${green} Installed AuthService.... ${reset}"
 
 echo "Updating Populate users env ...."
-ISECL_INSTALL_COMPONENTS=AAS,SCS,SHVS,SIH,IHUB
+ISECL_INSTALL_COMPONENTS=AAS,SCS,SQVS
 sed -i "s@^\(ISECL_INSTALL_COMPONENTS\s*=\s*\).*\$@\1$ISECL_INSTALL_COMPONENTS@" ~/populate-users.env
 sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/populate-users.env
 
@@ -158,22 +136,12 @@ sed -i "s/^\(AAS_ADMIN_PASSWORD\s*=\s*\).*\$/\1$AAS_ADMIN_PASSWORD/" ~/populate-
 
 sed -i "s@^\(IH_CERT_SAN_LIST\s*=\s*\).*\$@\1$SYSTEM_SAN@" ~/populate-users.env
 sed -i "s@^\(SCS_CERT_SAN_LIST\s*=\s*\).*\$@\1$SYSTEM_SAN@" ~/populate-users.env
-sed -i "s@^\(SHVS_CERT_SAN_LIST\s*=\s*\).*\$@\1$SYSTEM_SAN@" ~/populate-users.env
-
-IHUB_SERVICE_USERNAME=$(cat ~/ihub.env | grep ^IHUB_SERVICE_USERNAME= | cut -d'=' -f2)
-IHUB_SERVICE_PASSWORD=$(cat ~/ihub.env | grep ^IHUB_SERVICE_PASSWORD= | cut -d'=' -f2)
-sed -i "s/^\(IHUB_SERVICE_USERNAME\s*=\s*\).*\$/\1$IHUB_SERVICE_USERNAME/" ~/populate-users.env
-sed -i "s/^\(IHUB_SERVICE_PASSWORD\s*=\s*\).*\$/\1$IHUB_SERVICE_PASSWORD/" ~/populate-users.env
+sed -i "s@^\(SQVS_CERT_SAN_LIST\s*=\s*\).*\$@\1$SYSTEM_SAN@" ~/populate-users.env
 
 SCS_ADMIN_USERNAME=$(cat ~/scs.env | grep ^SCS_ADMIN_USERNAME= | cut -d'=' -f2)
 SCS_ADMIN_PASSWORD=$(cat ~/scs.env | grep ^SCS_ADMIN_PASSWORD= | cut -d'=' -f2)
 sed -i "s/^\(SCS_SERVICE_USERNAME\s*=\s*\).*\$/\1$SCS_ADMIN_USERNAME/" ~/populate-users.env
 sed -i "s/^\(SCS_SERVICE_PASSWORD\s*=\s*\).*\$/\1$SCS_ADMIN_PASSWORD/" ~/populate-users.env
-
-SHVS_ADMIN_USERNAME=$(cat ~/shvs.env | grep ^SHVS_ADMIN_USERNAME= | cut -d'=' -f2)
-SHVS_ADMIN_PASSWORD=$(cat ~/shvs.env | grep ^SHVS_ADMIN_PASSWORD= | cut -d'=' -f2)
-sed -i "s/^\(SHVS_SERVICE_USERNAME\s*=\s*\).*\$/\1$SHVS_ADMIN_USERNAME/" ~/populate-users.env
-sed -i "s/^\(SHVS_SERVICE_PASSWORD\s*=\s*\).*\$/\1$SHVS_ADMIN_PASSWORD/" ~/populate-users.env
 
 sed -i "s/^\(INSTALL_ADMIN_USERNAME\s*=\s*\).*\$/\1$INSTALL_ADMIN_USERNAME/" ~/populate-users.env
 sed -i "s/^\(INSTALL_ADMIN_PASSWORD\s*=\s*\).*\$/\1$INSTALL_ADMIN_PASSWORD/" ~/populate-users.env
@@ -219,50 +187,20 @@ if [ $? -ne 0 ]; then
 fi
 echo "${green} Installed SGX Caching Service.... ${reset}"
 
-echo "Updating SGX Host Verification Service env.... "
-sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_SAN/" ~/shvs.env
-sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$INSTALL_ADMIN_TOKEN/" ~/shvs.env
-sed -i "s/^\(CMS_TLS_CERT_SHA384\s*=\s*\).*\$/\1$CMS_TLS_SHA/" ~/shvs.env
-sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/shvs.env
-sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@" ~/shvs.env
-SCS_URL=https://$SYSTEM_IP:$SCS_PORT/scs/sgx/
-sed -i "s@^\(SCS_BASE_URL\s*=\s*\).*\$@\1$SCS_URL@" ~/shvs.env
-sed -i "s/^\(SHVS_DB_NAME\s*=\s*\).*\$/\1$SHVS_DB_NAME/"  ~/shvs.env
-sed -i "s/^\(SHVS_DB_USERNAME\s*=\s*\).*\$/\1$SHVS_DB_USERNAME/"  ~/shvs.env
-sed -i "s/^\(SHVS_DB_PASSWORD\s*=\s*\).*\$/\1$SHVS_DB_PASSWORD/"  ~/shvs.env
+echo "Updating SGX Quote Verification Service env...."
+sed -i "s/^\(SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_SAN/"  ~/sqvs.env
+sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$INSTALL_ADMIN_TOKEN/"  ~/sqvs.env
+sed -i "s/^\(CMS_TLS_CERT_SHA384\s*=\s*\).*\$/\1$CMS_TLS_SHA/" ~/sqvs.env
+sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/sqvs.env
+sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@" ~/sqvs.env
+SCS_URL=https://$SYSTEM_IP:$SCS_PORT/scs/sgx/certification/v1
+sed -i "s@^\(SCS_BASE_URL\s*=\s*\).*\$@\1$SCS_URL@" ~/sqvs.env
 
-echo "Installing SGX Host Verification Service...."
-./shvs-*.bin
-shvs status > /dev/null
+echo "Installing SGX Quote Verification Service...."
+./sqvs-*.bin
+sqvs status > /dev/null
 if [ $? -ne 0 ]; then
-	echo "${red} SGX Host Verification Service Installation Failed ${reset}"
+	echo "${red} SGX Quote Verification Service Installation Failed ${reset}"
 	exit 1
 fi
-echo "${green} Installed SGX Host Verification Service.... ${reset}"
-
-echo "Updating Integration HUB env...."
-sed -i "s/^\(TLS_SAN_LIST\s*=\s*\).*\$/\1$SYSTEM_SAN/" ~/ihub.env
-sed -i "s/^\(BEARER_TOKEN\s*=\s*\).*\$/\1$INSTALL_ADMIN_TOKEN/" ~/ihub.env
-sed -i "s/^\(CMS_TLS_CERT_SHA384\s*=\s*\).*\$/\1$CMS_TLS_SHA/" ~/ihub.env
-sed -i "s@^\(AAS_API_URL\s*=\s*\).*\$@\1$AAS_URL@" ~/ihub.env
-sed -i "s@^\(CMS_BASE_URL\s*=\s*\).*\$@\1$CMS_URL@" ~/ihub.env
-SHVS_URL=https://$SYSTEM_IP:$SHVS_PORT/sgx-hvs/v2
-K8S_URL=https://$K8S_IP:$K8S_PORT/
-sed -i "s@^\(SHVS_BASE_URL\s*=\s*\).*\$@\1$SHVS_URL@" ~/ihub.env
-sed -i "s@^\(KUBERNETES_URL\s*=\s*\).*\$@\1$K8S_URL@" ~/ihub.env
-if [[ "$OS" != "ubuntu" ]]; then
-	OPENSTACK_AUTH_URL=http://$OPENSTACK_IP:$OPENSTACK_AUTH_PORT/
-	OPENSTACK_PLACEMENT_URL=http://$OPENSTACK_IP:$OPENSTACK_PLACEMENT_PORT/
-	sed -i "s@^\(OPENSTACK_AUTH_URL\s*=\s*\).*\$@\1$OPENSTACK_AUTH_URL@" ~/ihub.env
-	sed -i "s@^\(OPENSTACK_PLACEMENT_URL\s*=\s*\).*\$@\1$OPENSTACK_PLACEMENT_URL@" ~/ihub.env
-fi
-sed -i "s@^\(TENANT\s*=\s*\).*\$@\1$TENANT@" ~/ihub.env
-
-echo "Installing Integration HUB...."
-./ihub-*.bin
-ihub status > /dev/null
-if [ $? -ne 0 ]; then
-	echo " ${red} Integration HUB Installation Failed ${reset}"
-	exit 1
-fi
-echo "${green} Installed Integration HUB.... ${reset}"
+echo "${green} Installed SGX Quote Verification Service....${reset}"
