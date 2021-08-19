@@ -48,6 +48,7 @@ k8s-aio: k8s_common
 	cp -r utils/build/k8s-manifests/db-deployments/single-node/skc/* k8s/manifests/
 	cp -r utils/build/k8s-manifests/single-node/* k8s/manifests/
 	cp -r utils/build/skc-tools/skc_k8s/single-node/* k8s/manifests/
+	cp -r utils/build/skc-tools/skc_k8s/trusted_rootca_files k8s/manifests/sqvs/
 	mkdir -p k8s/manifests/aas/scripts
 	cp intel-secl/deployments/k8s/aas/populate-users k8s/manifests/aas/scripts/
 	cp intel-secl/deployments/k8s/aas/populate-users.env k8s/manifests/aas/scripts/populate-users.env
@@ -59,6 +60,7 @@ k8s: k8s_common
 	cp -r utils/build/skc-tools/skc_k8s/create-skc-dirs-nfs.sh k8s/
 	cp -r sgx-caching-service/out/k8s k8s/manifests/scs
 	cp -r sgx-verification-service/out/k8s k8s/manifests/sqvs
+	cp -r utils/build/skc-tools/skc_k8s/trusted_rootca_files k8s/manifests/sqvs/
 	cp -r sgx-hvs/out/k8s k8s/manifests/shvs
 	mkdir -p k8s/manifests/aas/scripts
 	mv k8s/manifests/aas/populate-users k8s/manifests/aas/scripts/
