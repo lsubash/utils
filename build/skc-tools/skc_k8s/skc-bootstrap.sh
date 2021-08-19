@@ -341,10 +341,11 @@ deploy_sqvs() {
   sed -i "s/CMS_TLS_CERT_SHA384:.*/CMS_TLS_CERT_SHA384: ${CMS_TLS_CERT_SHA384}/g" configMap.yml
   sed -i "s/SAN_LIST:.*/SAN_LIST: ${SQVS_CERT_SAN_LIST}/g" configMap.yml
   sed -i "s/SQVS_INCLUDE_TOKEN:.*/SQVS_INCLUDE_TOKEN: \"${SQVS_INCLUDE_TOKEN}\"/g" configMap.yml
-  sed -i "s#SGX_TRUSTED_ROOT_CA_PATH:.*#SGX_TRUSTED_ROOT_CA_PATH: ${SGX_TRUSTED_ROOT_CA_PATH}#g" configMap.yml
+  sed -i "s#SGX_TRUSTED_ROOT_CA_PATH:.*#SGX_TRUSTED_ROOT_CA_PATH: /tmp/${SGX_TRUSTED_ROOT_CA_FILE}#g" configMap.yml
   sed -i "s/BEARER_TOKEN=.*/BEARER_TOKEN=${BEARER_TOKEN}/g" secrets.txt
 
   $KUBECTL create secret generic sqvs-secret --from-file=secrets.txt --namespace=isecl
+  $KUBECTL create secret generic sqvs-trusted-rootca --from-file=trusted_rootca_files/$SGX_TRUSTED_ROOT_CA_FILE --namespace=isecl
 
   # deploy
   $KUBECTL kustomize . | $KUBECTL apply -f -
@@ -777,7 +778,7 @@ cleanup_sqvs() {
   sed -i "s/CMS_TLS_CERT_SHA384: .*/CMS_TLS_CERT_SHA384: \${CMS_TLS_CERT_SHA384}/g" configMap.yml
   sed -i "s/SAN_LIST: .*/SAN_LIST: \${SAN_LIST}/g" configMap.yml
 
-  $KUBECTL delete secret sqvs-secret --namespace isecl
+  $KUBECTL delete secret sqvs-secret sqvs-trusted-rootca --namespace isecl
   $KUBECTL delete configmap sqvs-config --namespace isecl
   $KUBECTL delete deploy sqvs-deployment --namespace isecl
   $KUBECTL delete svc sqvs-svc --namespace isecl
