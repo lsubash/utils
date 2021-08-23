@@ -5,6 +5,8 @@ if [ $? -ne 0 ]; then
 	exit 1
 fi
 
+SAMPLEAPPS_BIN=bin
+
 uninstall()
 {
 	if [[ -d $SGX_INSTALL_DIR/sgxssl ]]; then
@@ -24,7 +26,7 @@ install_prerequisites()
 {
 	source deployment_prerequisites.sh 
 	if [[ $? -ne 0 ]]; then
-		echo "${red} pre requisited installation failed ${reset}"
+		echo "${red} pre requisites installation failed ${reset}"
 		exit 1
 	fi
 }
