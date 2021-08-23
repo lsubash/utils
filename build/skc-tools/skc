@@ -1,4 +1,4 @@
-bin: skc orchestrator
+bin: app skc orchestrator
 
 attest: clean sgx_agent
 	cd intel-secl && make cms-installer && make authservice-installer && make aas-manager
@@ -21,6 +21,11 @@ attest: clean sgx_agent
 	cp -pf utils/build/skc-tools/skc_scripts/env/install_pgdb.sh binaries/
 	cp -pf utils/build/skc-tools/skc_scripts/install_*.sh binaries/
 	cp -pf utils/build/skc-tools/skc_scripts/*.conf binaries/
+
+app: attest
+	cd utils/build/skc-tools/sample_apps/build_scripts/ && ./sample_apps_build.sh
+	cp utils/build/skc-tools/sample_apps/build_scripts/sample_apps.* binaries/
+	cp utils/build/skc-tools/sample_apps/sampleapps_untar.sh binaries/
 
 skc: attest skc_library
 	cd intel-secl && make kbs-installer
@@ -95,10 +100,13 @@ skc_library_k8s:
 k8s_extensions:
 	cd k8s-extensions && make all
 
-k8s_common: clean intel_secl_k8s skc_k8s k8s_extensions sgx_agent_k8s skc_library_k8s
+k8s_common: clean intel_secl_k8s skc_k8s k8s_extensions sgx_agent_k8s skc_library_k8s app
 	mkdir -p k8s/container-images
 	mkdir -p k8s/manifests
 	mkdir -p k8s/platform-dependencies
+	mkdir -p k8s/sample_apps
+	cp utils/build/skc-tools/sample_apps/build_scripts/sample_apps.* k8s/sample_apps/
+	cp utils/build/skc-tools/sample_apps/sampleapps_untar.sh k8s/sample_apps/
 	cp -r utils/build/skc-tools/sgx_agent/agent_untar.sh k8s/platform-dependencies/
 	cp -r utils/build/skc-tools/sgx_agent/build_scripts/sgx_agent.* k8s/platform-dependencies/
 	cp -r utils/build/skc-tools/sgx_agent/deploy_scripts/agent_container_prereq.sh k8s/platform-dependencies/
@@ -125,4 +133,4 @@ k8s_common: clean intel_secl_k8s skc_k8s k8s_extensions sgx_agent_k8s skc_librar
 	cp sgx_agent/out/*.tar k8s/container-images/
 	cp skc_library/out/*.tar k8s/container-images/
 
-.PHONY: all clean attest skc orchestrator sgx_agent skc_library
+.PHONY: all clean attest app skc orchestrator sgx_agent skc_library

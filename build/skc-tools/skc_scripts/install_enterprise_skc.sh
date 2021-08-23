@@ -1,7 +1,7 @@
 #!/bin/bash
 source install_sgx_infra.sh
 if [ $? -ne 0 ]; then
-	echo "${red} unable to deploy SGX Attestation Indfrastructure services ${reset}"
+	echo "${red} unable to deploy SGX Attestation Infrastructure services ${reset}"
 	exit 1
 fi
 
