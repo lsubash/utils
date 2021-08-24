@@ -30,6 +30,8 @@ if [ -f ./enterprise_skc.conf ]; then
 	fi
 fi
 
+AAS_URL=https://$SYSTEM_IP:$AAS_PORT/aas/v1
+
 echo "Updating Populate users env ...."
 ISECL_INSTALL_COMPONENTS=SKBS
 sed -i "s@^\(ISECL_INSTALL_COMPONENTS\s*=\s*\).*\$@\1$ISECL_INSTALL_COMPONENTS@" ~/populate-users.env

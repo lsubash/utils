@@ -32,7 +32,7 @@ Deploying Orchestration Components (CMS/AAS/SCS/SQVS/IHUB/SHVS) on a single VM/b
 # ./install_enterprise_skc.sh
 
 To check if installation is successful, following command can be used
-# netstat -lntp (if netstat command is not available, run $PKGMGR install net-tools)
+# netstat -lntp (if netstat command is not available, run dnf install net-tools)
 
 Alternatively service status can be checked as follows
 # cms status

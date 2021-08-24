@@ -65,3 +65,9 @@ SKCLIB_VERSION=3.6.1
 SKCLIB_DIR=$PWD/skc_library
 SKCLIB_BIN_DIR=$SKCLIB_DIR/bin
 SKCLIB_BIN=bin
+
+if [ "$VER" == "20.04" ]; then
+	SGX_LIBS_REPO='deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu/ focal main'
+elif [ "$VER" == "18.04" ]; then
+	SGX_LIBS_REPO='deb [arch=amd64] https://download.01.org/intel-sgx/sgx_repo/ubuntu/ bionic main'
+fi

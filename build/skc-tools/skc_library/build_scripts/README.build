@@ -7,7 +7,7 @@ RHEL8 package Requirements
 	BaseOS
 	AppStream
 	CodeReady
-- $PKGMGR install git
+- dnf install git
 - Ensure that the system date is properly setup (to PDT time)
 
 How to Build
