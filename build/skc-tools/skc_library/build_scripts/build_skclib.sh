@@ -22,7 +22,7 @@ build_skc_library()
         elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
                 \cp -pf $LIB_DIR/x86_64-linux-gnu/engines-1.1/pkcs11.so $SKCLIB_BIN_DIR
         fi
-        \cp -pf $LIB_DIR/libp11.so.* $SKCLIB_BIN_DIR
+        \cp -pf $LIB_DIR/libp11.so.3.4.3 $SKCLIB_BIN_DIR
 }
 
 build_skc_library
