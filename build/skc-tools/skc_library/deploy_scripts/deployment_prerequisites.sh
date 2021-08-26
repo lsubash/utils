@@ -31,8 +31,8 @@ install_pre_requisites()
 		echo "${red} Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04/20.04 ${reset}"
 		exit 1
 	fi
-	\cp -rpf bin/libp11.so.* $LIB_DIR
-	ln -sf $LIB_DIRlibp11.so.3.4.3 $LIB_DIR/libp11.so
+	\cp -rpf bin/libp11.so.3.4.3 $LIB_DIR
+	ln -sf $LIB_DIR/libp11.so.3.4.3 $LIB_DIR/libp11.so
 	ln -sf $LIB_DIR/libjsoncpp.so $LIB_DIR/libjsoncpp.so.0
 }
 
