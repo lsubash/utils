@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "dce9cbb3-ae5f-4e87-9b66-791bd8dd01a0",
+		"_postman_id": "bf185ecd-15be-4a33-981c-d94d8f4bd3e9",
 		"name": "SGX Discovery and Provisioning",
 		"description": "For the secrets to be provisioned securely to SGX compute nodes in public clouds, the owner of the secret needs to ensure that the secrets will be protected in SGX enclaves by performing an SGX Attestation.\r\n\r\nSGX Attestation involves provisioning SGX nodes with Platform Certification Key (PCK) certificates. PCK certificates for SGX nodes are obtained by providing the node SGX data to the Intel SGX Provisioning Certificate Service (PCS), a cloud hosted service. PCS also returns SGX collateral such as CRLs, TCB information and QE Identity.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -229,13 +229,14 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "https://{{kbs}}:{{kbsPort}}/v1/version",
+							"raw": "https://{{kbs}}:{{kbsPort}}/kbs/v1/version",
 							"protocol": "https",
 							"host": [
 								"{{kbs}}"
 							],
 							"port": "{{kbsPort}}",
 							"path": [
+								"kbs",
 								"v1",
 								"version"
 							]
@@ -249,13 +250,14 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "https://{{kbs}}:{{kbsPort}}/v1/version",
+									"raw": "https://{{kbs}}:{{kbsPort}}/kbs/v1/version",
 									"protocol": "https",
 									"host": [
 										"{{kbs}}"
 									],
 									"port": "{{kbsPort}}",
 									"path": [
+										"kbs",
 										"v1",
 										"version"
 									]
@@ -731,6 +733,119 @@
 							"body": "eyJhbGciOiJSUzM4NCIsImtpZCI6IjA1Njk2NTA0Zjc0YjMyZTU4ZGU0ZTE5YmE0ZWJhZDc4MDQwMDc3MTQiLCJ0eXAiOiJKV1QifQ.eyJyb2xlcyI6W3sic2VydmljZSI6IktCUyIsIm5hbWUiOiJVc2VyUm9sZU1hbmFnZXIifSx7InNlcnZpY2UiOiJBQVMiLCJuYW1lIjoiQWRtaW5pc3RyYXRvciJ9LHsic2VydmljZSI6IkNNUyIsIm5hbWUiOiJDZXJ0QXBwcm92ZXIiLCJjb250ZXh0IjoiQ049S0JTIFRMUyBDZXJ0aWZpY2F0ZTtTQU49MTAuMTA1LjE2OC4yMDcsa2JzaG9zdG5hbWU7Q0VSVFRZUEU9VExTIn0seyJzZXJ2aWNlIjoiU1FWUyIsIm5hbWUiOiJRdW90ZVZlcmlmaWVyIn1dLCJwZXJtaXNzaW9ucyI6W3sic2VydmljZSI6IkFBUyIsInJ1bGVzIjpbIio6KjoqIl19XSwiZXhwIjoxNjA4MTE5OTM0LCJpYXQiOjE2MDgxMTI3MDQsImlzcyI6IkFBUyBKV1QgSXNzdWVyIiwic3ViIjoiYWRtaW5Aa2JzIn0.hsWnvJ4grPSMx2GbQ0z4UvdGl1YfS0BEp9AqUGz7Gpa9LHkVbJMeJBSXzBlYlK8ahkqTy5QEOWgoMeYzAYI5kmQ-47xg5rBRi1GK7eLdvySGBL-AKCTu-aYeLyZ-WV1vtz1bIfa12_ZPEM0mVdUx0dP5swPx4zZ0eskjeL2vqISrOLR4UVEZ9kdN9ggGNHBDa_1RHgruomw_0A3Bv2hr4F4NmtD0L9QRy15WyhZR7xMshpFW69iRrZkvbYbsE7lwKF2WJR4COtStDlTkleb7_8uZ32k8PgurivFP9umRYYXvjWiWoC6YFrmZFih5w2qCm0uVxxZk6kpq9hTgo43kQkkdZUd8deFW_YTOxtLhTUzApZdBMQkJxJvPEDzlkjJVBZpWCNPEo_zCqahNVgi99EMnK05qJI-wXwyyLp8W5XBv1fFWW5XwKD-0FQlNz7cWmwnx0FfspYXY6nUo2E7P-B0GpeToXUUPQ0UqUUfLdSDr_jS3n3Z-d0QHx2CE22li"
 						}
 					]
+				},
+				{
+					"name": "createScsToken",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.environment.set(\"bearerTokenScs\", pm.response.text());"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"type": "text",
+								"value": "application/jwt"
+							},
+							{
+								"key": "Content-Type",
+								"type": "text",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"{{scsUser}}\",\r\n    \"password\": \"{{scsUserPass}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{aasEnt}}:{{aasPortEnt}}/aas/v1/token",
+							"protocol": "https",
+							"host": [
+								"{{aasEnt}}"
+							],
+							"port": "{{aasPortEnt}}",
+							"path": [
+								"aas",
+								"v1",
+								"token"
+							]
+						},
+						"description": "Creates a new bearer token that can be used in the Authorization header for other API requests. Bearer token Authorization is not required when requesting token for Authservice admin user. Authservice admin user bearer token should be provided in Authorization header when requesting bearer token for other users."
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"type": "text",
+										"value": "application/jwt"
+									},
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\": \"{{scsUser}}\",\r\n    \"password\": \"{{scsUserPass}}\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "https://{{aasEnt}}:{{aasPortEnt}}/aas/v1/token",
+									"protocol": "https",
+									"host": [
+										"{{aasEnt}}"
+									],
+									"port": "{{aasPortEnt}}",
+									"path": [
+										"aas",
+										"v1",
+										"token"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "jwt",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/jwt"
+								},
+								{
+									"key": "Date",
+									"value": "Mon, 30 Aug 2021 13:27:19 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "787"
+								}
+							],
+							"cookie": [],
+							"body": "eyJhbGciOiJSUzM4NCIsImtpZCI6ImYyZTY1YWViZTBhZTIwNDVkY2YzNWEzZDAyYWVjZWY5YmI2MGRiYTkiLCJ0eXAiOiJKV1QifQ.eyJyb2xlcyI6W3sic2VydmljZSI6IlNDUyIsIm5hbWUiOiJDYWNoZU1hbmFnZXIifV0sImV4cCI6MTYzMDMzNzIzOSwiaWF0IjoxNjMwMzMwMDA5LCJpc3MiOiJBQVMgSldUIElzc3VlciIsInN1YiI6InNjc3VzZXJAc2NzIn0.a_F9-QsN-sepZiQE5Mi16EpbLgdfBZjFm9V-TcOD8vvsYM1q4iREsFqTxzvrwI-VUQmYXeV8MLl6Cvyy5kPHNsB_7AKB2oFgXqdyjGomKT8ru3KMKz7C2PznbNmz1G_FxEUg9jliX6DJSMdyzvof44tNkhSC2x4grK5EexqYjLyXHC3sixqJF8gYUV4vHiD-AZ3xAilFgWa8QsfKsc62qhNwsGbSZkdE5lIbtWVbvb4jbaC8QoN3jf6okH16adMaV_0SfdJMAwQM39ViViIjDlt7OQptY1yTzHrqMjXnEM8U8l_YEe50AspiYm5ZluP3BBGGaElhW2c4TqH9y8Mfw2XT0n3efk7yooaR93vRqV0irJpXgHhyQusUlHV3WfI_-R5BLZynlXwPB-DnmX-ITIG2wtVLJj_FbDjvZo6Vp56G5dGqnCoPuxRojSkQRABN5JlzlChAcK_ZyHc6uJzCXreCQH-eQOAZ9wJ26pVZRyP7-15fUKcv7DKg9jnd74zr"
+						}
+					]
 				}
 			],
 			"description": "To make an API request to an Intel® SecL-DC service, an authentication\r\ntoken is now required. API requests must now include an Authorization\r\nheader with an appropriate token:\r\n\r\n```\r\nAuthorization: Bearer <token>\r\n```\r\n\r\nThe token is issued by the AAS and will expire after a set amount of time.\r\nThis token may be used with any Intel® SecL-DC service, and will carry the\r\nappropriate permissions for the role(s) assigned to the account the token was\r\ngenerated for."
@@ -1172,6 +1287,208 @@
 			]
 		},
 		{
+			"name": "Refresh Platform Collaterals in SCS Database",
+			"item": [
+				{
+					"name": "refreshPlatformInfoStatus",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{bearerTokenScs}}",
+								"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://{{scs}}:{{scsPort}}/scs/sgx/certification/v1/refreshes",
+							"protocol": "https",
+							"host": [
+								"{{scs}}"
+							],
+							"port": "{{scsPort}}",
+							"path": [
+								"scs",
+								"sgx",
+								"certification",
+								"v1",
+								"refreshes"
+							]
+						},
+						"description": "This API is used to refresh the platform collaterals stored in the SGX Caching Service (SCS) database,\noutside of the periodic refresh cycles. An Admin can make use of this REST endpoint to force the refresh of\nPCK Certificates, PCK CRL, TCB info and QE Identity information. This is useful in scenarios like TCB recovery.\nA valid bearer token should be provided to authorize this REST call.\n\n\nThe status field in the response conveys the following  :\n    \"idle\" - No refresh is currently in progress.\n    \"inprogress\" - A refresh is already in progress.\n    \"toomanyrequests\" - A refresh will not be started if the last refresh was completed less 900 seconds ago.\n\nThe last-refresh.status field in the response conveys the following  :\n    \"success\" - The last refresh was successfull.\n    \"failed\" - The last refresh failed.\n"
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{bearerTokenScs}}",
+										"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "https://{{scs}}:{{scsPort}}/scs/sgx/certification/v1/refreshes",
+									"protocol": "https",
+									"host": [
+										"{{scs}}"
+									],
+									"port": "{{scsPort}}",
+									"path": [
+										"scs",
+										"sgx",
+										"certification",
+										"v1",
+										"refreshes"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Date",
+									"value": "Mon, 30 Aug 2021 11:29:03 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "98"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"idle\",\n    \"last-refresh\": {\n        \"completed-at\": \"2021-08-30T11:28:08.586295Z\",\n        \"status\": \"success\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "refreshPlatformInfoStart",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{bearerTokenScs}}",
+								"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "https://{{scs}}:{{scsPort}}/scs/sgx/certification/v1/refreshes",
+							"protocol": "https",
+							"host": [
+								"{{scs}}"
+							],
+							"port": "{{scsPort}}",
+							"path": [
+								"scs",
+								"sgx",
+								"certification",
+								"v1",
+								"refreshes"
+							]
+						},
+						"description": "This API is used to refresh the PCK certificates and platform collaterals stored in the SGX Caching Service (SCS) database,\noutside of the periodic refresh cycles. An Admin can make use of this REST endpoint to force the refresh of\nPCK Certificates, PCK CRL, TCB info and QE Identity information. This is useful in scenarios like TCB recovery.\nA valid bearer token should be provided to authorize this REST call.\n\nThe status field in the response conveys the following states.\n    \"started\" - A new refresh is started.\n    \"inprogress\" - A refresh is already in progress.\n    \"toomanyrequests\" - A refresh will not be started if the last refresh was completed less 900 seconds.\n\nThe last-refresh.status field in the response conveys the following states.\n    \"success\" - The last refresh was successfull.\n    \"failed\" - The last refresh failed.\nIf there is no record of previous refresh, last-refresh field will not be populated.\n"
+					},
+					"response": [
+						{
+							"name": "Success",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{bearerTokenScs}}",
+										"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "https://{{scs}}:{{scsPort}}/scs/sgx/certification/v1/refreshes",
+									"protocol": "https",
+									"host": [
+										"{{scs}}"
+									],
+									"port": "{{scsPort}}",
+									"path": [
+										"scs",
+										"sgx",
+										"certification",
+										"v1",
+										"refreshes"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Date",
+									"value": "Mon, 30 Aug 2021 11:28:06 GMT"
+								},
+								{
+									"key": "Content-Length",
+									"value": "101"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"started\",\n    \"last-refresh\": {\n        \"completed-at\": \"2021-08-30T10:14:15.628737Z\",\n        \"status\": \"success\"\n    }\n}"
+						}
+					]
+				}
+			],
+			"description": "SCS provides following REST endpoints for refreshing the platform collaterals, outside of the periodic refresh cycles. \n\n$hostname:$port/scs/sgx/platforminfo/refresh\n\nOn successful refresh, SCS will remember the last refresh status by creating a single entry in the DB.\n\nAn Admin can make use of this REST endpoint to force the refresh of PCK Certificates, PCK CRL, TCB info and QE Identity information. This is useful in scenarios like TCB recovery."
+		},
+		{
 			"name": "SGX Sample Apps Flow",
 			"item": [
 				{
@@ -1447,8 +1764,8 @@
 									},
 									{
 										"key": "Authorization",
-										"value": "Bearer {{bearerTokenAttestedApp}}",
-										"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+										"value": "{{bearerTokenAttestedApp}}",
+										"description": "Enter your bearer token given in config.yml",
 										"type": "text"
 									}
 								],
@@ -1472,7 +1789,7 @@
 										"id"
 									]
 								},
-								"description": "Attesting App generates a cryptographically worthy 32 byte unsigned int (1 >= n <= 2^32) nonce and calls this API endpoint. Attested app extracts the nonce given in the request body, passes the nonce to the enclave, generates a public/private key pair inside the enclave and a quote is generated using DCAP API configured with SCS. A report is generated inside the enclave with the hash of enclave's public key + nonce as UserData. Attested app returns the generated quote and public key in the response. A Hardcoded Bearer token is required to authorize this REST call."
+								"description": "Attesting App generates a cryptographically worthy 32 byte unsigned int (1 >= n <= 2^32) nonce and calls this API endpoint. Attested app extracts the nonce given in the request body, passes the nonce to the enclave, generates a public/private key pair inside the enclave and a quote is generated using DCAP API configured with SCS. A report is generated inside the enclave with the hash of enclave's public key + nonce as UserData. Attested app returns the generated quote and public key in the response. A static bearer token from attested app's config.yml file is required to authorize this REST call."
 							},
 							"response": [
 								{
@@ -1546,8 +1863,9 @@
 									},
 									{
 										"key": "Authorization",
-										"value": "Bearer {{bearerTokenAttestedApp}}",
-										"type": "text"
+										"value": "{{bearerTokenAttestedApp}}",
+										"type": "text",
+										"description": "Enter your bearer token given in config.yml"
 									}
 								],
 								"body": {
@@ -1570,7 +1888,7 @@
 										"wrapped_swk"
 									]
 								},
-								"description": "AttestingApp generates a symmetric wrapping key (SWK) and wraps the SWK using the public key and calls this API endpoint. AttestedApp unwraps the SWK using its private key inside the enclave. A Hardcoded Bearer token is required to authorize this REST call."
+								"description": "AttestingApp generates a symmetric wrapping key (SWK) and wraps the SWK using the public key and calls this API endpoint. AttestedApp unwraps the SWK using its private key inside the enclave. A static bearer token from attested app's config.yml file is required to authorize this REST call."
 							},
 							"response": [
 								{
@@ -1654,8 +1972,8 @@
 									},
 									{
 										"key": "Authorization",
-										"value": "Bearer {{bearerTokenAttestedApp}}",
-										"description": "Enter your bearer token in the format **Bearer &lt;token&gt;**",
+										"value": "{{bearerTokenAttestedApp}}",
+										"description": "Enter your bearer token given in config.yml",
 										"type": "text"
 									}
 								],
@@ -1679,7 +1997,7 @@
 										"wrapped_message"
 									]
 								},
-								"description": "AttestingApp wraps the message with the SWK and calls this API endpoint. AttestedApp unwraps the message using the SWK inside the enclave. A Hardcoded Bearer token is required to authorize this REST call."
+								"description": "AttestingApp wraps the message with the SWK and calls this API endpoint. AttestedApp unwraps the message using the SWK inside the enclave. A static bearer token from attested app's config.yml file is required to authorize this REST call."
 							},
 							"response": [
 								{

@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "1fafaa56-34b6-4557-99e7-bf953eb32e75",
+		"_postman_id": "67d5e4a0-73ff-40d5-aded-bb923a8700ce",
 		"name": "Secure Key Caching",
 		"description": "Key Protection is implemented by the SKC Client -- a set of libraries - which must be linked with a\ntenant workload, like Nginx, deployed in a CSP environment and the Key Broker Service (KBS)\ndeployed in the tenant's enterprise environment. The SKC Client retrieves the keys needed by the\nworkload from KBS after proving that the key can be protected in an SGX enclave.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -229,13 +229,14 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "https://{{kbs}}:{{kbsPort}}/v1/version",
+							"raw": "https://{{kbs}}:{{kbsPort}}/kbs/v1/version",
 							"protocol": "https",
 							"host": [
 								"{{kbs}}"
 							],
 							"port": "{{kbsPort}}",
 							"path": [
+								"kbs",
 								"v1",
 								"version"
 							]
@@ -249,13 +250,14 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "https://{{kbs}}:{{kbsPort}}/v1/version",
+									"raw": "https://{{kbs}}:{{kbsPort}}/kbs/v1/version",
 									"protocol": "https",
 									"host": [
 										"{{kbs}}"
 									],
 									"port": "{{kbsPort}}",
 									"path": [
+										"kbs",
 										"v1",
 										"version"
 									]
@@ -684,13 +686,14 @@
 							}
 						},
 						"url": {
-							"raw": "https://{{kbs}}:{{kbsPort}}/v1/key-transfer-policies",
+							"raw": "https://{{kbs}}:{{kbsPort}}/kbs/v1/key-transfer-policies",
 							"protocol": "https",
 							"host": [
 								"{{kbs}}"
 							],
 							"port": "{{kbsPort}}",
 							"path": [
+								"kbs",
 								"v1",
 								"key-transfer-policies"
 							]
@@ -729,13 +732,14 @@
 									}
 								},
 								"url": {
-									"raw": "https://{{kbs}}:{{kbsPort}}/v1/key-transfer-policies",
+									"raw": "https://{{kbs}}:{{kbsPort}}/kbs/v1/key-transfer-policies",
 									"protocol": "https",
 									"host": [
 										"{{kbs}}"
 									],
 									"port": "{{kbsPort}}",
 									"path": [
+										"kbs",
 										"v1",
 										"key-transfer-policies"
 									]
@@ -794,13 +798,14 @@
 							}
 						},
 						"url": {
-							"raw": "https://{{kbs}}:{{kbsPort}}/v1/keys",
+							"raw": "https://{{kbs}}:{{kbsPort}}/kbs/v1/keys",
 							"protocol": "https",
 							"host": [
 								"{{kbs}}"
 							],
 							"port": "{{kbsPort}}",
 							"path": [
+								"kbs",
 								"v1",
 								"keys"
 							]
@@ -839,13 +844,14 @@
 									}
 								},
 								"url": {
-									"raw": "https://{{kbs}}:{{kbsPort}}/v1/keys",
+									"raw": "https://{{kbs}}:{{kbsPort}}/kbs/v1/keys",
 									"protocol": "https",
 									"host": [
 										"{{kbs}}"
 									],
 									"port": "{{kbsPort}}",
 									"path": [
+										"kbs",
 										"v1",
 										"keys"
 									]
@@ -904,13 +910,14 @@
 							}
 						},
 						"url": {
-							"raw": "https://{{kbs}}:{{kbsPort}}/v1/keys",
+							"raw": "https://{{kbs}}:{{kbsPort}}/kbs/v1/keys",
 							"protocol": "https",
 							"host": [
 								"{{kbs}}"
 							],
 							"port": "{{kbsPort}}",
 							"path": [
+								"kbs",
 								"v1",
 								"keys"
 							]
@@ -949,13 +956,14 @@
 									}
 								},
 								"url": {
-									"raw": "https://{{kbs}}:{{kbsPort}}/v1/keys",
+									"raw": "https://{{kbs}}:{{kbsPort}}/kbs/v1/keys",
 									"protocol": "https",
 									"host": [
 										"{{kbs}}"
 									],
 									"port": "{{kbsPort}}",
 									"path": [
+										"kbs",
 										"v1",
 										"keys"
 									]
@@ -1259,7 +1267,7 @@
 					]
 				}
 			],
-			"description": "1. Nginx will initiate a Key Transfer with the new Key id by calling Key Broker Service (KBS) REST endpoint (GET /v1/keys/:keyId/dhsm2-transfer) and will get a 401 HTTP response from KBS since the session is not established. \n2. Nginx will create a new session key by calling the KBS REST endpoint (POST /v1/session).\n3. SKC Client will send the SGX Quote to KBS, then KBS will verify the quote by calling SGX Quote Verification Service(SQVS) REST endpoint (POST /v1/sgx_qv_verify_quote).\n4. SQVS checks whether the quote signature and PCK Certificate are valid checks other parameters in the quote and returns the verification result. SQVS contacts SGX Caching service (SCS) to make sure that PCKCRL, TCBInfo, and QEIdentity in the quote are correct. \n5. Once the session is successfully established, Again Nginx will initiate a Key Transfer with the key id by calling KBS REST endpoint (GET /v1/keys/:keyId/dhsm2-transfer) and will get the response as key transfer successful.\n\nOn SGX Compute node, Execute below commands for KBS key-transfer:\n\n\nNote: Before initiating key transfer make sure, PYKMIP server is running.\n\n```\n    pkill nginx\n```\n\nRemove any existing pkcs11 token\n\n```\n    rm -rf /opt/intel/cryptoapitoolkit/tokens/*\n```\n\nInitiate Key transfer from KBS\n\n```\n    systemctl restart nginx\n```\n\nChanging group ownership and permissions of pkcs11 token\n\n```\n    chown -R root:intel /opt/intel/cryptoapitoolkit/tokens/\n```\n\n```\n    chmod -R 770 /opt/intel/cryptoapitoolkit/tokens/\n```\n\nEstablish a tls session with the nginx using the key transferred inside the enclave\n\n```\n    wget https://localhost:2443 --no-check-certificate\n```",
+			"description": "1. Nginx will initiate a Key Transfer with the new Key id by calling Key Broker Service (KBS) REST endpoint (GET /kbs/v1/keys/:keyId/dhsm2-transfer) and will get a 401 HTTP response from KBS since the session is not established. \n2. Nginx will create a new session key by calling the KBS REST endpoint (POST /kbs/v1/session).\n3. SKC Client will send the SGX Quote to KBS, then KBS will verify the quote by calling SGX Quote Verification Service(SQVS) REST endpoint (POST /v1/sgx_qv_verify_quote).\n4. SQVS checks whether the quote signature and PCK Certificate are valid checks other parameters in the quote and returns the verification result. SQVS contacts SGX Caching service (SCS) to make sure that PCKCRL, TCBInfo, and QEIdentity in the quote are correct. \n5. Once the session is successfully established, Again Nginx will initiate a Key Transfer with the key id by calling KBS REST endpoint (GET /kbs/v1/keys/:keyId/dhsm2-transfer) and will get the response as key transfer successful.\n\nOn SGX Compute node, Execute below commands for KBS key-transfer:\n\n\nNote: Before initiating key transfer make sure, PYKMIP server is running.\n\n```\n    pkill nginx\n```\n\nRemove any existing pkcs11 token\n\n```\n    rm -rf /opt/intel/cryptoapitoolkit/tokens/*\n```\n\nInitiate Key transfer from KBS\n\n```\n    systemctl restart nginx\n```\n\nChanging group ownership and permissions of pkcs11 token\n\n```\n    chown -R root:intel /opt/intel/cryptoapitoolkit/tokens/\n```\n\n```\n    chmod -R 770 /opt/intel/cryptoapitoolkit/tokens/\n```\n\nEstablish a tls session with the nginx using the key transferred inside the enclave\n\n```\n    wget https://localhost:2443 --no-check-certificate\n```",
 			"event": [
 				{
 					"listen": "prerequest",
