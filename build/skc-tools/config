@@ -23,6 +23,8 @@ else
 fi
 
 USR_BIN_DIR=/usr/bin
+USR_SBIN_DIR=/usr/sbin/
+USR_LOCALBIN_DIR=/usr/local/bin
 
 SGX_VERSION=2.14
 SGX_SDK_VERSION=2.14.100.2
@@ -46,6 +48,8 @@ CTK_INSTALL=$SGX_INSTALL_DIR/cryptoapitoolkit
 P11_KIT_PATH=/usr/include/p11-kit-1/p11-kit/
 CTK_PREFIX=$SGX_INSTALL_DIR/cryptoapitoolkit
 SGXSSL_PREFIX=$SGX_INSTALL_DIR/sgxssl
+INTEL_SGX_STACK_REPO="https://download.01.org/intelsgxstack/2021-07-28/rhel"
+SGX_STACK_URL="https://download.01.org/intel-sgx/sgx-dcap/$DCAP_VERSION/linux/distro/rhel8.2-server"
 
 KDIR=/lib/modules/$(uname -r)/build
 cat $KDIR/.config | grep 'CONFIG_INTEL_SGX=y\|CONFIG_X86_SGX=y' > /dev/null

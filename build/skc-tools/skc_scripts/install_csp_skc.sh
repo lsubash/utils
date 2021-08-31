@@ -8,13 +8,13 @@ fi
 HOME_DIR=~/
 BINARY_DIR=$HOME_DIR/binaries
 
-if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
+if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2"  || "$VER" == "8.4" ]]; then
 	dnf install -qy https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm || exit 1
 	dnf install -qy curl || exit 1
 elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" || "$VER" == "20.04" ]]; then
 	apt install -y curl || exit 1
 else
-	echo "${red} Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04/20.04 ${reset}"
+	echo "${red} Unsupported OS. Please use RHEL 8.1/8.2/8.4 or Ubuntu 18.04/20.04 ${reset}"
 	exit 1
 fi
 
