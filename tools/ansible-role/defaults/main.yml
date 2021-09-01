@@ -260,8 +260,6 @@ crio_version: "1.21"
 # The crictl version for the corresponding crio version
 crictl_version: "1.21.0"
 
-kube_version: 1.21.2
-
 # The OS on which crio runtime needs to be installed. Currently the below option is only 
 # required in case of debian based OS
 # Use "crio_os: xUbuntu_20.04" along with "container_runtime: crio" when deploying on Ubuntu-20.04
