@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "35e78341-1015-46d8-84a2-f371a9f7ba87",
+		"_postman_id": "c50d2243-0c1c-4da1-b10b-9aa2891cf847",
 		"name": "Secure Key Caching",
 		"description": "Key Protection is implemented by the SKC Client -- a set of libraries - which must be linked with a\ntenant workload, like Nginx, deployed in a CSP environment and the Key Broker Service (KBS)\ndeployed in the tenant's enterprise environment. The SKC Client retrieves the keys needed by the\nworkload from KBS after proving that the key can be protected in an SGX enclave.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -903,7 +903,7 @@
 								}
 							],
 							"cookie": [],
-							"body": "{\n    \"quoteData\": {\n        \"Message\": \"SGX_QL_QV_RESULT_OK\",\n        \"reportData\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n        \"EnclaveIssuer\": \"d412a4f07ef83892a5915fb2ab584be31e186e5a4f95ab5f6950fd4eb8694d7b\",\n        \"EnclaveMeasurement\": \"c1145d4f5f3ec497bbd55c9c50dffa8d0e3a50cac715ead40f41e3b4cae47ba0\",\n        \"EnclaveIssuerProdID\": \"00\",\n        \"EnclaveIssuerExtProdID\": \"00000000000000000000000000000000\",\n        \"ConfigSvn\": \"00\",\n        \"IsvSvn\": \"00\",\n        \"ConfigID\": \"00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\n        \"TcbLevel\": \"OutOfDate\",\n        \"Quote\": \"<quote in request>\",\n        \"Challenge\": \"<challenge in request>\"\n    },\n    \"signature\": \"<Digital Signature of the content of response field>\",\n    \"certificateChain\": \"<Chain of leaf and intermediate certs>\"\n}"
+							"body": "{\n    \"quoteData\":\"<Base 64 encoded JSON>\",\n    \"signature\": \"<Digital Signature of the content of response field>\",\n    \"certificateChain\": \"<Chain of leaf and intermediate certs>\"\n}"
 						}
 					]
 				}

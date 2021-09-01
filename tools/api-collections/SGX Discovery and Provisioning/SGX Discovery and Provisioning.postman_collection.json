@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "3ed13885-338c-44d4-af58-5caed81bd68f",
+		"_postman_id": "60349793-a984-430b-857b-e31e0c2e2b1d",
 		"name": "SGX Discovery and Provisioning",
 		"description": "For the secrets to be provisioned securely to SGX compute nodes in public clouds, the owner of the secret needs to ensure that the secrets will be protected in SGX enclaves by performing an SGX Attestation.\r\n\r\nSGX Attestation involves provisioning SGX nodes with Platform Certification Key (PCK) certificates. PCK certificates for SGX nodes are obtained by providing the node SGX data to the Intel SGX Provisioning Certificate Service (PCS), a cloud hosted service. PCS also returns SGX collateral such as CRLs, TCB information and QE Identity.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -1043,7 +1043,7 @@
 								}
 							],
 							"cookie": [],
-							"body": "{\n    \"quoteData\": {\n        \"Message\": \"SGX_QL_QV_RESULT_OK\",\n        \"reportData\": \"0000000000000000000000000000000000000000000000000000000000000000\",\n        \"EnclaveIssuer\": \"d412a4f07ef83892a5915fb2ab584be31e186e5a4f95ab5f6950fd4eb8694d7b\",\n        \"EnclaveMeasurement\": \"c1145d4f5f3ec497bbd55c9c50dffa8d0e3a50cac715ead40f41e3b4cae47ba0\",\n        \"EnclaveIssuerProdID\": \"00\",\n        \"EnclaveIssuerExtProdID\": \"00000000000000000000000000000000\",\n        \"ConfigSvn\": \"00\",\n        \"IsvSvn\": \"00\",\n        \"ConfigID\": \"00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\",\n        \"TcbLevel\": \"OutOfDate\",\n        \"Quote\": \"<quote in request>\",\n        \"Challenge\": \"<challenge in request>\"\n    },\n    \"signature\": \"<Digital Signature of the content of response field>\",\n    \"certificateChain\": \"<Chain of leaf and intermediate certs>\"\n}"
+							"body": "{\n    \"quoteData\":\"<Base 64 encoded JSON>\",\n    \"signature\": \"<Digital Signature of the content of response field>\",\n    \"certificateChain\": \"<Chain of leaf and intermediate certs>\"\n}"
 						}
 					]
 				}
