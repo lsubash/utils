@@ -6,9 +6,10 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/intel-secl/sample-sgx-attestation/v4/common"
 	"github.com/pkg/errors"
-	"os"
 )
 
 var errInvalidCmd = errors.New("Invalid input after command")

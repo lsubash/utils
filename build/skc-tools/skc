@@ -72,7 +72,6 @@ clean:
 	cd sgx-verification-service && make clean
 	cd sgx_agent && make clean
 	cd sgx-hvs && make clean
-	cd sgx-verification-service && make clean
 	cd k8s-extensions && make clean
 	rm -rf binaries/
 	rm -rf k8s/

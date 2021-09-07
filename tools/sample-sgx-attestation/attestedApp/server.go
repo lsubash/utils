@@ -14,15 +14,16 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
-	"github.com/intel-secl/sample-sgx-attestation/v4/common"
-	"github.com/pkg/errors"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"unsafe"
+
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
+	"github.com/intel-secl/sample-sgx-attestation/v4/common"
+	"github.com/pkg/errors"
 )
 
 type privilegeError struct {
@@ -66,9 +67,8 @@ func (ehf errorHandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (a *App) getPubkeyFromEnclave() []byte {
 	var keyBuffer []byte
 	var pubKeySize C.int
-	var keyPtr *C.u_int8_t
 
-	keyPtr = C.get_public_key(&pubKeySize)
+	keyPtr := C.get_public_key(&pubKeySize)
 
 	if keyPtr == nil {
 		log.Error("Unable to retrive public key from enclave.")
@@ -372,7 +372,7 @@ func (a *App) startServer() error {
 
 	// Setup signal handlers to gracefully handle termination
 	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGKILL)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)
 
 	// Dispatch web server go routine
 	go func() {
