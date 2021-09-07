@@ -27,7 +27,6 @@ const (
 const (
 	MREnclaveField  = "MREnclave"
 	MRSignerField   = "MRSigner"
-	CpuSvnField     = "CPU_SVN"
 	PolicyFileDelim = ":"
 )
 

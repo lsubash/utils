@@ -14,15 +14,16 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/gob"
-	"fmt"
-	"github.com/intel-secl/sample-sgx-attestation/v3/common"
-	"github.com/pkg/errors"
-	logger "github.com/sirupsen/logrus"
+
 	"io"
 	"io/ioutil"
 	"math/big"
 	"net"
 	"strings"
+
+	"github.com/intel-secl/sample-sgx-attestation/v3/common"
+	"github.com/pkg/errors"
+	logger "github.com/sirupsen/logrus"
 )
 
 // TODO : Consolidate loggers.
@@ -38,27 +39,15 @@ func (f *customFormatter) Format(entry *logger.Entry) ([]byte, error) {
 	return []byte(customLog), e
 }
 
-type resourceError struct {
-	StatusCode int
-	Message    string
-}
-
 type QuoteVerifyAttributes struct {
 	Message                        string `json:"Message"`
 	ReportData                     string `json:"reportData"`
 	UserDataMatch                  string `json:"userDataMatch"`
 	EnclaveIssuer                  string `json:"EnclaveIssuer"`
 	EnclaveIssuerProductID         string `json:"EnclaveIssuerProdID"`
-	EnclaveIssuerExtendedProductID string `json:"EnclaveIssuerExtProdID"`
 	EnclaveMeasurement             string `json:"EnclaveMeasurement"`
-	ConfigSvn                      string `json:"ConfigSvn"`
 	IsvSvn                         string `json:"IsvSvn"`
-	ConfigID                       string `json:"ConfigId"`
 	TCBLevel                       string `json:"TcbLevel"`
-}
-
-func (e resourceError) Error() string {
-	return fmt.Sprintf("%d: %s", e.StatusCode, e.Message)
 }
 
 type AppVerifierController struct {
@@ -93,7 +82,6 @@ func wrapSWKByPublicKey(swk []byte, key []byte) ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to create cipher text")
 	}
-
 	return wrappedSWK, nil
 }
 
@@ -104,7 +92,6 @@ func (ca AppVerifierController) GenerateSWK() ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to read the key bytes")
 	}
-
 	return keyBytes, nil
 }
 
@@ -128,12 +115,10 @@ func (ca AppVerifierController) SharePubkeyWrappedSWK(conn net.Conn, key []byte,
 		log.Error("Sending Public key wrapped SWK message failed!")
 		return err
 	}
-
 	return nil
 }
 
 func (ca AppVerifierController) ShareSWKWrappedSecret(conn net.Conn, key []byte, secret []byte) error {
-
 	log.Info("Secret : ", string(secret))
 
 	if len(key) != common.SWKSize {
@@ -243,7 +228,7 @@ func (ca AppVerifierController) verifyQuote(quote []byte, publicKey []byte) erro
 
 	// split by newline
 	lines := strings.Split(string(qpRaw), common.EndLine)
-	var mreValue, mrSignerValue, cpusvnValue string
+	var mreValue, mrSignerValue string
 	for _, line := range lines {
 		// split by :
 		lv := strings.Split(strings.TrimSpace(line), common.PolicyFileDelim)
@@ -256,13 +241,11 @@ func (ca AppVerifierController) verifyQuote(quote []byte, publicKey []byte) erro
 			mreValue = lv[1]
 		case common.MRSignerField:
 			mrSignerValue = lv[1]
-		case common.CpuSvnField:
-			cpusvnValue = lv[1]
 		}
 	}
 
-	log.Infof("Quote policy has values \n\tMREnclaveField = %s \n\tMRSignerField = %s \n\tCpuSvnField = %s",
-		mreValue, mrSignerValue, cpusvnValue)
+	log.Infof("Quote policy has values \n\tMREnclaveField = %s \n\tMRSignerField = %s",
+		mreValue, mrSignerValue)
 
 	if responseAttributes.EnclaveIssuer != mrSignerValue {
 		log.Errorf("Quote policy mismatch in %s", common.MRSignerField)
@@ -270,14 +253,6 @@ func (ca AppVerifierController) verifyQuote(quote []byte, publicKey []byte) erro
 		return err
 	} else {
 		log.Infof("%s matched with Quote Policy", common.MRSignerField)
-	}
-
-	if responseAttributes.ConfigSvn != cpusvnValue {
-		log.Errorf("Quote policy mismatch in %s", common.CpuSvnField)
-		err = errors.Errorf("Quote policy mismatch in %s", common.CpuSvnField)
-		return err
-	} else {
-		log.Infof("%s matched with Quote Policy", common.CpuSvnField)
 	}
 
 	if responseAttributes.EnclaveMeasurement != mreValue {

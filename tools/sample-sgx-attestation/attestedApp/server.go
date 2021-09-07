@@ -11,22 +11,22 @@ import "C"
 
 import (
 	"encoding/gob"
-	"github.com/intel-secl/sample-sgx-attestation/v3/common"
-	"github.com/pkg/errors"
 	"net"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
 	"unsafe"
+
+	"github.com/intel-secl/sample-sgx-attestation/v3/common"
+	"github.com/pkg/errors"
 )
 
 func (a *App) getPubkeyFromEnclave() []byte {
 	var keyBuffer []byte
 	var pubKeySize C.int
-	var keyPtr *C.u_int8_t
 
-	keyPtr = C.get_pubkey(&pubKeySize)
+	keyPtr := C.get_pubkey(&pubKeySize)
 	log.Info("getPubkeyFromEnclave : Pub key length : ", pubKeySize)
 	if pubKeySize == 0 {
 		return nil
@@ -46,9 +46,8 @@ func (a *App) getQuoteAndPubkeyFromEnclave() ([]byte, []byte) {
 	var keySize C.int
 
 	// qPtr holds the bytes array of the quote returned from enclave
-	var qPtr *C.u_int8_t
 
-	qPtr = C.get_SGX_Quote(&qSize, &keySize)
+	qPtr := C.get_SGX_Quote(&qSize, &keySize)
 	log.Printf("Quote size : %d", qSize)
 	qBytes = C.GoBytes(unsafe.Pointer(qPtr), qSize)
 	kBytes = C.GoBytes(unsafe.Pointer(qPtr), qSize+keySize)
@@ -56,7 +55,7 @@ func (a *App) getQuoteAndPubkeyFromEnclave() ([]byte, []byte) {
 	return kBytes, qBytes
 }
 
-func (a *App) receiveConnectRequest(connection net.Conn) (error, bool) {
+func (a *App) receiveConnectRequest(connection net.Conn) (bool, error) {
 	authenticated := false
 
 	gobDecoder := gob.NewDecoder(connection)
@@ -64,13 +63,13 @@ func (a *App) receiveConnectRequest(connection net.Conn) (error, bool) {
 	err := gobDecoder.Decode(requestMsg)
 	if err != nil {
 		log.Error("Decoding connect message failed!")
-		return err, authenticated
+		return authenticated, err
 	}
 
 	if requestMsg.Type != common.MsgTypeConnect {
 		err = errors.New("Incorrect message type!")
 		log.Error("Incorrect message type!")
-		return err, authenticated
+		return authenticated, err
 	}
 
 	if requestMsg.ConnectRequest.Username == common.AppUsername &&
@@ -78,7 +77,7 @@ func (a *App) receiveConnectRequest(connection net.Conn) (error, bool) {
 		authenticated = true
 	}
 
-	return err, authenticated
+	return authenticated, err
 }
 
 func (a *App) sendPubkeySGXQuote(connection net.Conn) error {
@@ -184,7 +183,7 @@ func (a *App) handleConnection(connection net.Conn) error {
 	defer connection.Close()
 
 	// Step 1 - Receive a connect request
-	err, authenticated := a.receiveConnectRequest(connection)
+	authenticated, err := a.receiveConnectRequest(connection)
 	if err != nil {
 		log.Error("server:handleConnection : ", err)
 		return err
@@ -288,7 +287,7 @@ func (a *App) startServer() error {
 	// Setup signal handlers to gracefully handle termination
 	stop := make(chan os.Signal, 1)
 	done := make(chan bool, 1)
-	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGKILL)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)
 
 	go func() {
 		for {

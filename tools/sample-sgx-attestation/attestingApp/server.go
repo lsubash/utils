@@ -5,13 +5,14 @@
 package main
 
 import (
-	"github.com/intel-secl/sample-sgx-attestation/v3/attestingApp/controllers"
-	"github.com/intel-secl/sample-sgx-attestation/v3/common"
-	"github.com/pkg/errors"
 	"net"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/intel-secl/sample-sgx-attestation/v3/attestingApp/controllers"
+	"github.com/intel-secl/sample-sgx-attestation/v3/common"
+	"github.com/pkg/errors"
 )
 
 func (a *App) startVerifier() error {
@@ -40,6 +41,9 @@ func (a *App) startVerifier() error {
 
 	// Send a connect message and receive SGX Quote + Public key
 	status, respMsg := verifyController.ConnectAndReceiveQuote(conn)
+	if !status {
+		return errors.New("Failed to receive SGX Quote")
+	}
 	log.Info("Received public key and SGX quote from AttestedApp.")
 
 	// Verify SGX Quote
