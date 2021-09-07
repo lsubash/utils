@@ -76,7 +76,6 @@ func (a *App) receiveConnectRequest(connection net.Conn) (bool, error) {
 		requestMsg.ConnectRequest.Password == common.AppPassword {
 		authenticated = true
 	}
-
 	return authenticated, err
 }
 
@@ -105,7 +104,6 @@ func (a *App) sendPubkeySGXQuote(connection net.Conn) error {
 	if err != nil {
 		log.Error("Encoding Pubkey Quote message failed!")
 	}
-
 	return err
 }
 
@@ -138,7 +136,6 @@ func (a *App) receivePubkeyWrappedSWK(connection net.Conn) error {
 	if status != 0 {
 		err = errors.New("SWK unwrapping failed!")
 	}
-
 	return err
 }
 
@@ -175,7 +172,6 @@ func (a *App) receiveSWKWrappedSecret(connection net.Conn) error {
 	if status != 0 {
 		err = errors.New("Unwrapping of secret failed!")
 	}
-
 	return err
 }
 
@@ -216,7 +212,6 @@ func (a *App) handleConnection(connection net.Conn) error {
 		log.Error("server:handleConnection : ", err)
 		return err
 	}
-
 	return nil
 }
 
@@ -236,7 +231,6 @@ func (a *App) EnclaveInit() error {
 	}
 
 	log.Info("Enclave initialized.")
-
 	return nil
 }
 
@@ -316,7 +310,5 @@ func (a *App) startServer() error {
 	if err != nil {
 		log.WithError(err).Info("app:startServer() Error destroying enclave")
 	}
-
 	return nil
-
 }

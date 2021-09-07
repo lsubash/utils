@@ -19,7 +19,7 @@ The project demonstrates several fundamental usages of Intel® Software Guard Ex
 ### Pre-requisites
 
 - RHEL 8.2
-- GoLang v1.13 or greater
+- GoLang v1.14 or greater
 - Intel® SGX SDK for Linux
 - gcc toolchain
 - make
@@ -149,11 +149,12 @@ MRSigner:83d719e77deaca1470f6baf62a4d774303c899db69020f9c70ee1dfc08c7ce9e
 
 These are the components involved:
 
-Component             | Short Name         | Implmented In | Requires SGX for deploy | Requires SGX for build
---------------------- | ------------------ | ------------- | ----------------------- | ----------------------
-sgx-attesting-app      | verifier           | Go            | No                      | No
-sgx-attested-app | Attested App Service | Go            | Yes                     | Yes
-libenclave      | SGX Enclave Workload           | C/C++            | Yes                      | Yes
+Component             | Short Name           | Implmented In | Requires SGX for deploy | Requires SGX for build
+--------------------- | ------------------   | ------------- | ----------------------- | ----------------------
+sgx-attesting-app     | verifier             | Go            | No                      | No
+sgx-attested-app      | Attested App Service | Go            | Yes                     | Yes
+libenclave            | SGX Enclave Workload | C/C++         | Yes                     | Yes
+----------------------------------------------------------------------------------------------------------------
 
 ### Quote Verification and Secret Provisioning Workflow:
 

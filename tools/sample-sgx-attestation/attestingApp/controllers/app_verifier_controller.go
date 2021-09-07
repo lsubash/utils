@@ -40,14 +40,14 @@ func (f *customFormatter) Format(entry *logger.Entry) ([]byte, error) {
 }
 
 type QuoteVerifyAttributes struct {
-	Message                        string `json:"Message"`
-	ReportData                     string `json:"reportData"`
-	UserDataMatch                  string `json:"userDataMatch"`
-	EnclaveIssuer                  string `json:"EnclaveIssuer"`
-	EnclaveIssuerProductID         string `json:"EnclaveIssuerProdID"`
-	EnclaveMeasurement             string `json:"EnclaveMeasurement"`
-	IsvSvn                         string `json:"IsvSvn"`
-	TCBLevel                       string `json:"TcbLevel"`
+	Message                string `json:"Message"`
+	ReportData             string `json:"reportData"`
+	UserDataMatch          string `json:"userDataMatch"`
+	EnclaveIssuer          string `json:"EnclaveIssuer"`
+	EnclaveIssuerProductID uint16 `json:"EnclaveIssuerProdID"`
+	EnclaveMeasurement     string `json:"EnclaveMeasurement"`
+	IsvSvn                 string `json:"IsvSvn"`
+	TCBLevel               string `json:"TcbLevel"`
 }
 
 type AppVerifierController struct {
