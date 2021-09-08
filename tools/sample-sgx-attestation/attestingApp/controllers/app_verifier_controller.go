@@ -40,12 +40,12 @@ func (f *customFormatter) Format(entry *logger.Entry) ([]byte, error) {
 }
 
 type QuoteVerifyAttributes struct {
-	Message                string `json:"Message"`
 	ReportData             string `json:"reportData"`
 	UserDataMatch          string `json:"userDataMatch"`
+	Message                string `json:"Message"`
 	EnclaveIssuer          string `json:"EnclaveIssuer"`
-	EnclaveIssuerProductID uint16 `json:"EnclaveIssuerProdID"`
 	EnclaveMeasurement     string `json:"EnclaveMeasurement"`
+	EnclaveIssuerProductID string `json:"EnclaveIssuerProdID"`
 	IsvSvn                 string `json:"IsvSvn"`
 	TCBLevel               string `json:"TcbLevel"`
 }
