@@ -70,6 +70,29 @@ k8s: k8s_common
 	mv k8s/manifests/aas/populate-users k8s/manifests/aas/scripts/
 	mv k8s/manifests/aas/populate-users.env k8s/manifests/aas/scripts/
 
+k8s-aio-stacks: k8s_common_stacks
+	cp -r utils/build/k8s-manifests/db-deployments/single-node/aas-db k8s/manifests/
+	cp -r utils/build/k8s-manifests/db-deployments/single-node/skc/* k8s/manifests/
+	cp -r utils/build/k8s-manifests/single-node/* k8s/manifests/
+	cp -r utils/build/skc-tools/skc_k8s/single-node/* k8s/manifests/
+	cp -r utils/build/skc-tools/skc_k8s/trusted_rootca_files k8s/manifests/sqvs/
+	mkdir -p k8s/manifests/aas/scripts
+	cp intel-secl/deployments/k8s/aas/populate-users k8s/manifests/aas/scripts/
+	cp intel-secl/deployments/k8s/aas/populate-users.env k8s/manifests/aas/scripts/populate-users.env
+
+k8s-stacks: k8s_common_stacks
+	cp -r utils/build/k8s-manifests/db-deployments/multi-node/aas-db k8s/manifests/
+	cp -r utils/build/k8s-manifests/db-deployments/multi-node/skc/* k8s/manifests/
+	cp -r intel-secl/deployments/k8s/* k8s/manifests/
+	cp -r utils/build/skc-tools/skc_k8s/create-skc-dirs-nfs.sh k8s/
+	cp -r sgx-caching-service/out/k8s k8s/manifests/scs
+	cp -r sgx-verification-service/out/k8s k8s/manifests/sqvs
+	cp -r utils/build/skc-tools/skc_k8s/trusted_rootca_files k8s/manifests/sqvs/
+	cp -r sgx-hvs/out/k8s k8s/manifests/shvs
+	mkdir -p k8s/manifests/aas/scripts
+	mv k8s/manifests/aas/populate-users k8s/manifests/aas/scripts/
+	mv k8s/manifests/aas/populate-users.env k8s/manifests/aas/scripts/
+
 clean:
 	cd intel-secl && make clean
 	cd sgx-caching-service && make clean
@@ -100,22 +123,25 @@ sgx_agent_k8s:
 skc_library_k8s:
 	cd utils/build/skc-tools/skc_library/build_scripts/ && ./build_skc_docker.sh
 
+sgx_agent_k8s_stacks:
+	cd utils/build/skc-tools/stacks/sgx_agent/build_scripts/ && ./build_sgx_agent_docker.sh
+
+skc_library_k8s_stacks:
+	cd utils/build/skc-tools/stacks/skc_library/build_scripts/ && ./build_skc_docker.sh
+
 k8s_extensions:
 	cd k8s-extensions && make all
 
-k8s_common: clean intel_secl_k8s skc_k8s k8s_extensions sgx_agent_k8s skc_library_k8s app
+k8s_common_services:
 	mkdir -p k8s/container-images
 	mkdir -p k8s/manifests
 	mkdir -p k8s/platform-dependencies
 	mkdir -p k8s/sample_apps
-	cp utils/build/skc-tools/sample_apps/build_scripts/sample_apps.* k8s/sample_apps/
-	cp utils/build/skc-tools/sample_apps/sampleapps_untar.sh k8s/sample_apps/
-	cp -r utils/build/skc-tools/sgx_agent/agent_untar.sh k8s/platform-dependencies/
-	cp -r utils/build/skc-tools/sgx_agent/build_scripts/sgx_agent.* k8s/platform-dependencies/
-	cp -r utils/build/skc-tools/sgx_agent/deploy_scripts/agent_container_prereq.sh k8s/platform-dependencies/
-	cp -r utils/build/skc-tools/sgx_agent/deploy_scripts/deployment_prerequisites.sh k8s/platform-dependencies/
-	cp -r utils/build/skc-tools/skc_k8s/pre-requisites.sh k8s/manifests/
 	cp -pf utils/build/skc-tools/config k8s/manifests/
+	cp -r utils/build/skc-tools/sgx_agent/agent_untar.sh k8s/platform-dependencies/
+	cp -r utils/build/skc-tools/sgx_agent/deploy_scripts/deployment_prerequisites.sh k8s/platform-dependencies/
+	cp utils/build/skc-tools/sample_apps/sampleapps_untar.sh k8s/sample_apps/
+	cp -r utils/build/skc-tools/skc_k8s/pre-requisites.sh k8s/manifests/
 	cp -r utils/build/skc-tools/skc_k8s/skc-bootstrap-db-services.sh k8s/manifests/skc-bootstrap-db-services.sh
 	cp -r utils/build/skc-tools/skc_k8s/sgx_agent k8s/manifests/sgx_agent
 	cp  utils/build/skc-tools/skc_library/deploy_scripts/create_roles.conf utils/build/skc-tools/skc_k8s/skc_library/resources/
@@ -135,6 +161,16 @@ k8s_common: clean intel_secl_k8s skc_k8s k8s_extensions sgx_agent_k8s skc_librar
 	cp sgx-hvs/out/*.tar k8s/container-images/
 	cp sgx_agent/out/*.tar k8s/container-images/
 	cp skc_library/out/*.tar k8s/container-images/
+
+k8s_common: clean intel_secl_k8s skc_k8s k8s_extensions sgx_agent_k8s skc_library_k8s app k8s_common_services
+	cp utils/build/skc-tools/sample_apps/build_scripts/sample_apps.* k8s/sample_apps/
+	cp -r utils/build/skc-tools/sgx_agent/build_scripts/sgx_agent.* k8s/platform-dependencies/
+	cp -r utils/build/skc-tools/sgx_agent/deploy_scripts/agent_container_prereq.sh k8s/platform-dependencies/
+
+k8s_common_stacks: clean intel_secl_k8s skc_k8s k8s_extensions sgx_agent_k8s_stacks skc_library_k8s_stacks app_stacks k8s_common_services
+	cp utils/build/skc-tools/stacks/sample_apps/build_scripts/sample_apps.* k8s/sample_apps/
+	cp -r utils/build/skc-tools/stacks/sgx_agent/build_scripts/sgx_agent.* k8s/platform-dependencies/
+	cp -r utils/build/skc-tools/stacks/sgx_agent/deploy_scripts/agent_container_prereq.sh k8s/platform-dependencies/
 
 sgx_agent_stacks:
 	cd utils/build/skc-tools/stacks/sgx_agent/build_scripts/ && ./sgxagent_build.sh
