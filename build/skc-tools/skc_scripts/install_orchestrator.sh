@@ -1,10 +1,4 @@
 #!/bin/bash
-source install_sgx_infra.sh
-if [ $? -ne 0 ]; then
-	echo "${red} unable to deploy SGX Attestation Infrastructure services ${reset}"
-	exit 1
-fi
-
 # Copy env files to Home directory
 \cp -pf $BINARY_DIR/env/shvs.env $HOME_DIR
 \cp -pf $BINARY_DIR/env/ihub.env $HOME_DIR
@@ -16,14 +10,16 @@ fi
 \cp -pf $BINARY_DIR/populate-users.sh $HOME_DIR
 
 if [ -f ./orchestrator.conf ]; then
-    echo "Reading Installation variables from $(pwd)/orchestrator.conf"
-    source orchestrator.conf
-    if [ $? -ne 0 ]; then
-	echo "${red} please set correct values in orchestrator.conf ${reset}"
-	exit 1
-    fi
-    env_file_exports=$(cat ./orchestrator.conf | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
-    if [ -n "$env_file_exports" ]; then eval export $env_file_exports; fi
+	echo "Reading Installation variables from $(pwd)/orchestrator.conf"
+	source orchestrator.conf
+	if [ $? -ne 0 ]; then
+		echo "${red} please set correct values in orchestrator.conf ${reset}"
+		exit 1
+	fi
+	env_file_exports=$(cat ./orchestrator.conf | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
+	if [ -n "$env_file_exports" ]; then
+		eval export $env_file_exports;
+	fi
 fi
 
 echo "Uninstalling SGX Host Verification Service...."
@@ -87,6 +83,14 @@ sed -i "s/^\(INSTALL_ADMIN_PASSWORD\s*=\s*\).*\$/\1$INSTALL_ADMIN_PASSWORD/" ~/p
 
 sed -i "/GLOBAL_ADMIN_USERNAME/d" ~/populate-users.env
 sed -i "/GLOBAL_ADMIN_PASSWORD/d" ~/populate-users.env
+
+if [ $CCC_ADMIN_USERNAME != "" ] && [ $CCC_ADMIN_PASSWORD != "" ]; then
+	sed -i "s/^\(CCC_ADMIN_USERNAME\s*=\s*\).*\$/\1$CCC_ADMIN_USERNAME/" ~/populate-users.env
+	sed -i "s/^\(CCC_ADMIN_PASSWORD\s*=\s*\).*\$/\1$CCC_ADMIN_PASSWORD/" ~/populate-users.env
+else
+	sed -i "/CCC_ADMIN_USERNAME/d" ~/populate-users.env
+	sed -i "/CCC_ADMIN_PASSWORD/d" ~/populate-users.env
+fi
 
 echo "Invoking populate users script...."
 pushd $PWD

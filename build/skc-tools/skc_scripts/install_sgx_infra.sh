@@ -20,6 +20,15 @@ fi
 
 \cp -pf $BINARY_DIR/trusted_rootca.pem /tmp
 
+if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
+        dnf install -qy curl || exit 1
+elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
+        apt install -y curl || exit 1
+else
+        echo "${red} Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04 ${reset}"
+        exit 1
+fi
+
 # read from environment variables file if it exists
 if [ -f ./enterprise_skc.conf ]; then
 	echo "Reading Installation variables from $(pwd)/enterprise_skc.conf"
@@ -31,7 +40,7 @@ if [ -f ./enterprise_skc.conf ]; then
 
 	if [[ "$SCS_DB_NAME" == "$AAS_DB_NAME" ]]; then
 		echo "${red} SCS_DB_NAME & AAS_DB_NAME should not be same. Please change in enterprise_skc.conf ${reset}"
-	exit 1
+		exit 1
 	fi
 	env_file_exports=$(cat ./enterprise_skc.conf | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
 	if [ -n "$env_file_exports" ]; then

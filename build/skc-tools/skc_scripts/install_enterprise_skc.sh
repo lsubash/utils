@@ -7,29 +7,6 @@ fi
 
 \cp -pf $BINARY_DIR/env/kbs.env $HOME_DIR
 
-if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
-        dnf install -qy curl || exit 1
-elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
-        apt install -y curl || exit 1
-else
-        echo "${red} Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04 ${reset}"
-        exit 1
-fi
-
-# read from environment variables file if it exists
-if [ -f ./enterprise_skc.conf ]; then
-	echo "Reading Installation variables from $(pwd)/enterprise_skc.conf"
-	source enterprise_skc.conf
-	if [ $? -ne 0 ]; then
-		echo "${red} please set correct values in enterprise_skc.conf ${reset}"
-		exit 1
-	fi
-	env_file_exports=$(cat ./enterprise_skc.conf | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
-	if [ -n "$env_file_exports" ]; then
-		eval export $env_file_exports;
-	fi
-fi
-
 AAS_URL=https://$SYSTEM_IP:$AAS_PORT/aas/v1
 
 echo "Updating Populate users env ...."
@@ -78,7 +55,6 @@ SQVS_URL=https://$SYSTEM_IP:$SQVS_PORT/svs/v1
 sed -i "s@^\(SQVS_URL\s*=\s*\).*\$@\1$SQVS_URL@" ~/kbs.env
 ENDPOINT_URL=https://$SYSTEM_IP:$KBS_PORT/v1
 sed -i "s@^\(ENDPOINT_URL\s*=\s*\).*\$@\1$ENDPOINT_URL@" ~/kbs.env
-
 sed -i "s@^\(KEY_MANAGER\s*=\s*\).*\$@\1$KEY_MANAGER@" ~/kbs.env
 
 if [ $KEY_MANAGER == "KMIP" ]; then
