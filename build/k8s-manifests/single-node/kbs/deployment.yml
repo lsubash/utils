@@ -77,9 +77,13 @@ spec:
           hostPath:
             path: /opt/kbs
             type: DirectoryOrCreate
-        - name: kbs-credentials
-          secret:
-              secretName: kbs-secret
         - name: kbs-kmip-volume
           secret:
             secretName: kmip-certs
+        - name: kbs-secrets
+          projected:
+            sources:
+              - secret:
+                  name: kbs-credentials
+              - secret:
+                  name: bearer-token

@@ -72,6 +72,10 @@ spec:
           secret:
             secretName: hvs-db-certs
             defaultMode: 0640
-        - name: hvs-credentials
-          secret:
-              secretName: hvs-secret 
+        - name: hvs-secrets
+          projected:
+            sources:
+              - secret:
+                  name: hvs-credentials
+              - secret:
+                  name: bearer-token
