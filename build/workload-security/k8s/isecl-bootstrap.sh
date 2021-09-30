@@ -82,7 +82,7 @@ get_cms_tls_cert_sha384() {
 get_aas_bootstrap_token() {
   cms_pod=$($KUBECTL get pod -n isecl -l app=cms -o jsonpath="{.items[0].metadata.name}")
   AAS_BOOTSTRAP_TOKEN=$($KUBECTL exec -n isecl --stdin $cms_pod -- cms setup cms-auth-token --force | grep "JWT Token:" | awk '{print $3}')
-  $KUBECTL create secret generic aas-bootstrap-token -n isecl --from-literal=BEARER_TOKEN=AAS_BOOTSTRAP_TOKEN --save-config --dry-run=client -o yaml | $KUBECTL apply -f -
+  $KUBECTL create secret generic aas-bootstrap-token -n isecl --from-literal=BEARER_TOKEN=$AAS_BOOTSTRAP_TOKEN --save-config --dry-run=client -o yaml | $KUBECTL apply -f -
 }
 
 deploy_authservice() {
@@ -111,10 +111,11 @@ deploy_authservice() {
     echo "  NATS_ACCOUNT_NAME: $NATS_ACCOUNT_NAME" >>configMap.yml
     echo "hi"
   fi
-  sed -i "s/AAS_DB_USERNAME: .*/AAS_DB_USERNAME: $AAS_DB_USERNAME/g" secrets.yml
-  sed -i "s/AAS_DB_PASSWORD: .*/AAS_DB_PASSWORD: $AAS_DB_PASSWORD/g" secrets.yml
-  sed -i "s/AAS_ADMIN_USERNAME: .*/AAS_ADMIN_USERNAME: $AAS_ADMIN_USERNAME/g" secrets.yml
-  sed -i "s/AAS_ADMIN_PASSWORD: .*/AAS_ADMIN_PASSWORD: $AAS_ADMIN_PASSWORD/g" secrets.yml
+  echo $AAS_DB_USERNAME
+  sed -i "s/AAS_DB_USERNAME:.*/AAS_DB_USERNAME: $AAS_DB_USERNAME/g" secrets.yml
+  sed -i "s/AAS_DB_PASSWORD:.*/AAS_DB_PASSWORD: $AAS_DB_PASSWORD/g" secrets.yml
+  sed -i "s/AAS_ADMIN_USERNAME:.*/AAS_ADMIN_USERNAME: $AAS_ADMIN_USERNAME/g" secrets.yml
+  sed -i "s/AAS_ADMIN_PASSWORD:.*/AAS_ADMIN_PASSWORD: $AAS_ADMIN_PASSWORD/g" secrets.yml
 
   # deploy
   $KUBECTL kustomize . | $KUBECTL apply -f -
@@ -432,6 +433,7 @@ deploy_kbs() {
       echo "Either or both values for KMIP_USERNAME and KMIP_PASSWORD are not set. Ignoring..."
       sed -i "s/KMIP_USERNAME:.*//g" secrets.yml
       sed -i "s/KMIP_PASSWORD:.*//g" secrets.yml
+      sed -i "s/- secrets.yml*//g" kustomization.yml
     else
       sed -i "s/KMIP_USERNAME:.*/KMIP_USERNAME: $KMIP_USERNAME/g" secrets.yml
       sed -i "s/KMIP_PASSWORD:.*/KMIP_PASSWORD: $KMIP_PASSWORD/g" secrets.yml
@@ -441,6 +443,7 @@ deploy_kbs() {
       echo "Either or both values for KBS_USERNAME and KBS_PASSWORD are not set. Ignoring..."
       sed -i "s/KBS_USERNAME:.*//g" secrets.yml
       sed -i "s/KBS_PASSWORD:.*//g" secrets.yml
+      sed -i "s/- secrets:.*//g" kustomization.yml
     else
       sed -i "s/KBS_USERNAME:.*/KBS_USERNAME: $KBS_USERNAME/g" secrets.yml
       sed -i "s/KBS_PASSWORD:.*/KBS_PASSWORD: $KBS_PASSWORD/g" secrets.yml
