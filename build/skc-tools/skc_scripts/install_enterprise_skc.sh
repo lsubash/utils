@@ -7,6 +7,9 @@ fi
 
 \cp -pf $BINARY_DIR/env/kbs.env $HOME_DIR
 
+echo "Uninstalling Key Broker Service...."
+kbs uninstall --purge
+
 AAS_URL=https://$SYSTEM_IP:$AAS_PORT/aas/v1
 
 echo "Updating Populate users env ...."
