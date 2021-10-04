@@ -19,28 +19,16 @@ install_sgxssl()
 {
         pushd $PWD
 
-        rm -rf $GIT_CLONE_PATH
-        mkdir -p $GIT_CLONE_PATH
+        rm -rf $GIT_CLONE_SGXSSL
+        mkdir -p $GIT_CLONE_SGXSSL
 
-        git clone $LINUX_SGX_REPO $GIT_CLONE_LINUX_SGXSSL ||exit 1
         git clone $SGX_SSL_REPO $GIT_CLONE_SGXSSL ||exit 1
 
-        cd $GIT_CLONE_LINUX_SGXSSL
-        make preparation
-        if [[ "$OS" == "rhel" &&  "$VER" == "8.2" ]]; then
-                cp external/toolset/rhel8.2/{as,ld,ld.gold,objdump} /usr/local/bin || exit 1
-        elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
-                sudo cp external/toolset/ubuntu18.04/{as,ld,ld.gold,objdump} /usr/local/bin
-        else
-                echo "Unsupported OS. Please use RHEL 8.2 or Ubuntu 18.04"
-                exit 1
-        fi
-
-        cd $GIT_CLONE_SGXSSL/openssl_source/
+	cd $GIT_CLONE_SGXSSL/openssl_source/
         wget https://ftp.openssl.org/source/openssl-1.1.1k.tar.gz
 
         cd $GIT_CLONE_SGXSSL/Linux
-        make all
+        make sgxssl_no_mitigation
         if [[ "$OS" == "rhel" &&  "$VER" == "8.2" ]]; then
                 make install || exit 1
         elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
