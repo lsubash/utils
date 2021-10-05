@@ -11,10 +11,9 @@ require (
 	github.com/vmware/govmomi v0.22.2
 )
 
-replace intel/isecl/lib/common/v3 => gitlab.devtools.intel.com/sst/isecl/lib/common.git/v3 v3.6.1/develop
-
-replace intel/isecl/lib/tpmprovider/v3 => gitlab.devtools.intel.com/sst/isecl/lib/tpm-provider.git/v3 v3.6.1/develop
-
-replace intel/isecl/lib/platform-info/v3 => gitlab.devtools.intel.com/sst/isecl/lib/platform-info.git/v3 v3.6.1/develop
-
-replace github.com/vmware/govmomi => github.com/arijit8972/govmomi fix-tpm-attestation-output
+replace (
+	intel/isecl/lib/common/v3 => github.com/intel-secl/common/v3 v3.6.1
+	intel/isecl/lib/tpmprovider/v3 => github.com/intel-secl/tpm-provider/v3 v3.6.1
+	intel/isecl/lib/platform-info/v3 => github.com/intel-secl/platform-info/v3 v3.6.1
+	github.com/vmware/govmomi => github.com/arijit8972/govmomi fix-tpm-attestation-output
+)

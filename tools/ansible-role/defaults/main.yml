@@ -137,7 +137,7 @@ install_admin_password: superAdminPass
 # ------------------------------------------ HOST VERIFICATION SERVICE ------------------------------------------- #
 
 # The name of the binary installer as per release tag for Host Verification Service
-hvs_installer_name: hvs-v3.6.0.bin
+hvs_installer_name: hvs-v3.6.1.bin
 
 # The binary installer file src for Host Verification Service
 hvs_installer_file_src: "{{binaries_path}}/{{hvs_installer_name}}"
@@ -178,7 +178,7 @@ ihub_instance_name: ihub
 # ---------------------------------------- WORKLOAD SERVICE ------------------------------------------ #
 
 # The name of the binary installer as per release tag for Workload Service
-wls_installer_file_name: wls-v3.6.0.bin
+wls_installer_file_name: wls-v3.6.1.bin
 
 # The binary installer file source for Workload Service
 wls_installer_file_src: "{{binaries_path}}/{{wls_installer_file_name}}"
@@ -239,7 +239,7 @@ docker_version: "19.03.13"
 # ---------------------------------------- WORKLOAD POLICY MANAGER ------------------------------------ #
 
 # The name of the binary installer as per release tag for Workload Policy Manager
-wpm_installer_file_name: wpm-v3.6.0.bin
+wpm_installer_file_name: wpm-v3.6.1.bin
 
 # The binary installer file source for Workload Policy Manager
 wpm_installer_file_src: "{{binaries_path}}/{{wpm_installer_file_name}}"
@@ -254,7 +254,7 @@ wpm_admin_password: wpmAdminPass
 # ---------------------------------------- TRUST AGENT ------------------------------------------- #
 
 # The name of the binary installer as per release tag for  Trust Agent
-ta_installer_file_name: trustagent-v3.6.0.bin
+ta_installer_file_name: trustagent-v3.6.1.bin
 
 # The binary installer file source for Trust Agent
 ta_installer_file_src: "{{binaries_path}}/{{ta_installer_file_name}}"
@@ -278,7 +278,7 @@ crio_file_src: "{{binaries_path}}/{{crio_installer_file_name}}"
 # --------------------------------------- WORKLOAD AGENT -------------------------------------------- #
 
 # The name of the binary installer as per release tag for Workload Agent
-wla_installer_file_name: workload-agent-v3.6.0.bin
+wla_installer_file_name: workload-agent-v3.6.1.bin
 
 # The binary installer file source for Workload Agent
 wla_installer_file_src: "{{binaries_path}}/{{wla_installer_file_name}}"
