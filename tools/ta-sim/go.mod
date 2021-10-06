@@ -10,4 +10,4 @@ require (
 	github.com/spf13/viper v1.7.0
 )
 
-github.com/intel-secl/intel-secl/v4 => gitlab.devtools.intel.com/sst/isecl/intel-secl.git/v4 v4.1/develop
+replace github.com/intel-secl/intel-secl/v4 => gitlab.devtools.intel.com/sst/isecl/intel-secl.git/v4 v4.2/develop
