@@ -1,11 +1,11 @@
+bin: app skc orchestrator
+
 ubuntu_k8s:
 	OS := $(shell cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
-	os_ubuntu := $(shell if [ "${OS}" = "ubuntu" ]; then echo 1; else echo 0; fi)
-	ifeq ($(os_ubuntu), 1)
-	     $(error ***Currently all the components have to be build on RHEL machines for containers***)
+	ubuntu := $(shell if [ "${OS}" = "ubuntu" ]; then echo 1; else echo 0; fi)
+	ifeq ($(ubuntu), 1)
+	     $(error Container Build and Deployment not Supported on Ubuntu)
 	endif
-
-bin: app skc orchestrator
 
 attest: clean sgx_agent
 	cd intel-secl && make cms-installer && make authservice-installer && make aas-manager
