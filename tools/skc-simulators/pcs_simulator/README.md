@@ -17,7 +17,7 @@ System Requirements
 Software requirements
 ---------------------
 
--   Go 1.14.4
+-   Go 1.14.1 or newer
 
 Step By Step Build Instructions
 ===============================
@@ -32,12 +32,12 @@ sudo systemctl stop firewalld
 
 ```
 
-### Install `go 1.14.4`
+### Install `go 1.14.1` or newer
 
 
 ``` {.shell}
-wget https://dl.google.com/go/go1.14.4.linux-amd64.tar.gz
-tar -xzf go1.14.4.linux-amd64.tar.gz
+wget https://dl.google.com/go/go1.14.1.linux-amd64.tar.gz
+tar -xzf go1.14.1.linux-amd64.tar.gz
 sudo mv go /usr/local
 export GOROOT=/usr/local/go
 export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
@@ -50,7 +50,7 @@ Build PCS Simulator
 
 ``` {.shell}
 git clone https://github.com/intel-secl/utils.git && cd utils
-git checkout v4.0/develop
+git checkout v4.0.0/develop
 cd tools/skc-simulators/pcs_simulator
 ```
 

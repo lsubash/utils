@@ -6,8 +6,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/intel-secl/sample-sgx-attestation/v4/attestingApp/version"
 	"os"
+
+	"github.com/intel-secl/sample-sgx-attestation/v4/attestingApp/version"
 )
 
 const helpStr = `Usage:

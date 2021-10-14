@@ -1,37 +1,13 @@
 #!/bin/bash
-HOME_DIR=~/
-SKC_BINARY_DIR=$HOME_DIR/binaries
-
-red=`tput setaf 1`
-green=`tput setaf 2`
-reset=`tput sgr0`
-
-# Check OS and VERSION
-OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
-temp="${OS%\"}"
-temp="${temp#\"}"
-OS="$temp"
-VER=$(cat /etc/os-release | grep ^VERSION_ID | tr -d 'VERSION_ID="')
-
-if [[ "$OS" == "rhel" && "$VER" == "8.1" || "$VER" == "8.2" ]]; then
-	dnf install -qy https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm || exit 1
-	dnf install -qy jq || exit 1
-elif [[ "$OS" == "ubuntu" && "$VER" == "18.04" ]]; then
-	apt install -y jq curl || exit 1
-else
-	echo "${red} Unsupported OS. Please use RHEL 8.1/8.2 or Ubuntu 18.04 ${reset}"
-	exit 1
-fi
-
 # Copy env files to Home directory
-\cp -pf $SKC_BINARY_DIR/env/shvs.env $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/env/ihub.env $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/env/iseclpgdb.env $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/env/populate-users.env $HOME_DIR
+\cp -pf $BINARY_DIR/env/shvs.env $HOME_DIR
+\cp -pf $BINARY_DIR/env/ihub.env $HOME_DIR
+\cp -pf $BINARY_DIR/env/iseclpgdb.env $HOME_DIR
+\cp -pf $BINARY_DIR/env/populate-users.env $HOME_DIR
 
 # Copy DB and user/role creation script to Home directory
-\cp -pf $SKC_BINARY_DIR/create_db.sh $HOME_DIR
-\cp -pf $SKC_BINARY_DIR/populate-users.sh $HOME_DIR
+\cp -pf $BINARY_DIR/create_db.sh $HOME_DIR
+\cp -pf $BINARY_DIR/populate-users.sh $HOME_DIR
 
 if [ -f ./orchestrator.conf ]; then
 	echo "Reading Installation variables from $(pwd)/orchestrator.conf"
@@ -108,20 +84,28 @@ sed -i "s/^\(INSTALL_ADMIN_PASSWORD\s*=\s*\).*\$/\1$INSTALL_ADMIN_PASSWORD/" ~/p
 sed -i "/GLOBAL_ADMIN_USERNAME/d" ~/populate-users.env
 sed -i "/GLOBAL_ADMIN_PASSWORD/d" ~/populate-users.env
 
+if [ $CCC_ADMIN_USERNAME != "" ] && [ $CCC_ADMIN_PASSWORD != "" ]; then
+	sed -i "s/^\(CCC_ADMIN_USERNAME\s*=\s*\).*\$/\1$CCC_ADMIN_USERNAME/" ~/populate-users.env
+	sed -i "s/^\(CCC_ADMIN_PASSWORD\s*=\s*\).*\$/\1$CCC_ADMIN_PASSWORD/" ~/populate-users.env
+else
+	sed -i "/CCC_ADMIN_USERNAME/d" ~/populate-users.env
+	sed -i "/CCC_ADMIN_PASSWORD/d" ~/populate-users.env
+fi
+
 echo "Invoking populate users script...."
 pushd $PWD
 cd ~
 ./populate-users.sh
 if [ $? -ne 0 ]; then
-	echo "${red} populate user script failed ${reset}"
-	exit 1
+  echo "${red} populate user script failed ${reset}"
+  exit 1
 fi
 
 echo "Getting AAS Admin user token...."
 INSTALL_ADMIN_TOKEN=`curl --noproxy "*" -k -X POST https://$SYSTEM_IP:$AAS_PORT/aas/v1/token -d '{"username": "'"$INSTALL_ADMIN_USERNAME"'", "password": "'"$INSTALL_ADMIN_PASSWORD"'"}'`
 if [ $? -ne 0 ]; then
-	echo "${red} could not get AAS Admin token ${reset}"
-	exit 1
+  echo "${red} could not get AAS Admin token ${reset}"
+  exit 1
 fi
 popd
 
@@ -142,8 +126,8 @@ echo "Installing SGX Host Verification Service...."
 ./shvs-*.bin
 shvs status > /dev/null
 if [ $? -ne 0 ]; then
-	echo "${red} SGX Host Verification Service Installation Failed ${reset}"
-	exit 1
+  echo "${red} SGX Host Verification Service Installation Failed ${reset}"
+  exit 1
 fi
 echo "${green} Installed SGX Host Verification Service.... ${reset}"
 
@@ -158,10 +142,10 @@ K8S_URL=https://$K8S_IP:$K8S_PORT/
 sed -i "s@^\(SHVS_BASE_URL\s*=\s*\).*\$@\1$SHVS_URL@" ~/ihub.env
 sed -i "s@^\(KUBERNETES_URL\s*=\s*\).*\$@\1$K8S_URL@" ~/ihub.env
 if [[ "$OS" != "ubuntu" ]]; then
-	OPENSTACK_AUTH_URL=http://$OPENSTACK_IP:$OPENSTACK_AUTH_PORT/
-	OPENSTACK_PLACEMENT_URL=http://$OPENSTACK_IP:$OPENSTACK_PLACEMENT_PORT/
-	sed -i "s@^\(OPENSTACK_AUTH_URL\s*=\s*\).*\$@\1$OPENSTACK_AUTH_URL@" ~/ihub.env
-	sed -i "s@^\(OPENSTACK_PLACEMENT_URL\s*=\s*\).*\$@\1$OPENSTACK_PLACEMENT_URL@" ~/ihub.env
+OPENSTACK_AUTH_URL=http://$OPENSTACK_IP:$OPENSTACK_AUTH_PORT/
+OPENSTACK_PLACEMENT_URL=http://$OPENSTACK_IP:$OPENSTACK_PLACEMENT_PORT/
+sed -i "s@^\(OPENSTACK_AUTH_URL\s*=\s*\).*\$@\1$OPENSTACK_AUTH_URL@" ~/ihub.env
+sed -i "s@^\(OPENSTACK_PLACEMENT_URL\s*=\s*\).*\$@\1$OPENSTACK_PLACEMENT_URL@" ~/ihub.env
 fi
 sed -i "s@^\(TENANT\s*=\s*\).*\$@\1$TENANT@" ~/ihub.env
 
@@ -169,7 +153,7 @@ echo "Installing Integration HUB...."
 ./ihub-*.bin
 ihub status > /dev/null
 if [ $? -ne 0 ]; then
-	echo "${red} Integration HUB Installation Failed ${reset}"
-	exit 1
+  echo "${red} Integration HUB Installation Failed ${reset}"
+  exit 1
 fi
 echo "${green} Installed Integration HUB.... ${reset}"

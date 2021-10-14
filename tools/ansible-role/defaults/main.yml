@@ -355,6 +355,8 @@ sqvs_trusted_rootca_filename: trusted_rootca.pem
 # The trusted root ca file source for SGX Quote Verification Service
 sqvs_trusted_rootca_file_src: "{{binaries_path}}/{{sqvs_trusted_rootca_filename}}"
 
+# The response signing key length for SGX Quote Verification Service
+response_signing_key_length: 3072
 
 # --------------------------------------- SGX Agent ------------------------------------------------- #
 
@@ -402,4 +404,3 @@ ccc_admin_username: ccc_admin
 
 # Custom Claims Creator Admin Password
 ccc_admin_password: password
-
