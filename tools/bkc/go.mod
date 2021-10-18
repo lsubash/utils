@@ -12,8 +12,8 @@ require (
 )
 
 replace (
-	intel/isecl/lib/common/v4 => github.com/intel-secl/common/v3 v3.6.0
-	intel/isecl/lib/tpmprovider/v4 => github.com/intel-secl/tpm-provider/v3 v3.6.0
-	intel/isecl/lib/platform-info/v4 => github.com/intel-secl/platform-info/v3 v3.6.0
+	intel/isecl/lib/common/v3 => github.com/intel-secl/common/v3 v3.6.0
+	intel/isecl/lib/tpmprovider/v3 => gitlab.devtools.intel.com/sst/isecl/lib/tpm-provider/v3 v3.6.0
+	intel/isecl/lib/platform-info/v3 => gitlab.devtools.intel.com/sst/isecl/lib/platform-info/v3 v3.6.0
 	github.com/vmware/govmomi => github.com/arijit8972/govmomi fix-tpm-attestation-output
 )
