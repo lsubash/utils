@@ -7,5 +7,3 @@ require (
 	github.com/sirupsen/logrus v1.4.0
 	github.com/spf13/viper v1.7.0
 )
-
-replace github.com/intel-secl/intel-secl/v4 => gitlab.devtools.intel.com/sst/isecl/intel-secl.git/v4 v4.0.1/develop
