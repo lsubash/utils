@@ -218,6 +218,7 @@ install_libkmip() {
   rm -rf libkmip/
   git clone https://github.com/openkmip/libkmip.git
   cd libkmip
+  git reset --hard f7793891c994d927c11ba7206e8aa0383ed7528d
   make uninstall
   make
   local make_error_code=$?
