@@ -1,7 +1,7 @@
 bin: app skc orchestrator
 
 ubuntu_k8s:
-	OS := $(shell cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
+        OS := $(shell cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
 	ubuntu := $(shell if [ "${OS}" = "ubuntu" ]; then echo 1; else echo 0; fi)
 	ifeq ($(ubuntu), 1)
 	     $(error Container Build and Deployment not Supported on Ubuntu)
