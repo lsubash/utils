@@ -95,14 +95,12 @@ if [ $? -ne 0 ]; then
 	echo "${red} KMIP Server Installation Failed ${reset}"
 	exit 1
 fi
-popd
-echo "KMIP Server installed successfully"
 
 echo "Installing Key Broker Service...."
 ./kbs-*.bin
 kbs status > /dev/null
 if [ $? -ne 0 ]; then
-  echo "${red} Key Broker Service Installation Failed ${reset}"
-  exit 1
+	echo "${red} Key Broker Service Installation Failed ${reset}"
+	exit 1
 fi
 echo "${green} Installed Key Broker Service.... ${reset}"

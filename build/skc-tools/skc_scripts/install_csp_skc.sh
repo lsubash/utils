@@ -40,10 +40,9 @@ if [ -f ./csp_skc.conf ]; then
 		echo "${red} please set correct values in csp_skc.conf ${reset}"
 		exit 1
 	fi
-
 	if [[ "$SCS_DB_NAME" == "$SHVS_DB_NAME" || "$AAS_DB_NAME" == "$SHVS_DB_NAME" || "$SCS_DB_NAME" == "$AAS_DB_NAME" ]]; then
 		echo "${red} SCS_DB_NAME, SHVS_DB_NAME & AAS_DB_NAME should not be same. Please change in csp_skc.conf ${reset}"
-	exit 1
+		exit 1
 	fi
 	env_file_exports=$(cat ./csp_skc.conf | grep -E '^[A-Z0-9_]+\s*=' | cut -d = -f 1)
 	if [ -n "$env_file_exports" ]; then

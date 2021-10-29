@@ -1,8 +1,6 @@
 # Trust Agent Simulator
 
-The Trust Agent Simulator could be used for simulating Trust Agents for performance testing of ISecl compoonents - in particular the HVS. The Trust Agent Simulator can simulate thousands of hosts in a single process. The simulated hosts can either be https servers or publish data to a channel on a NATS server.
-- The Trust Agent Simulator that hosts multiple `https servers` with one port per simulated host could simulate upto 25,000 hosts on a single Linux server. The number of servers and starting port number can be configured through the config file.
-- The Trust Agent Simulator that publishes data on to a NATS channel can simulate upto 10K hosts.
+The Trust Agent Simulator could be used for simulating Trust Agents for performance testing of ISecl compoonents - in particular the HVS. The Trust Agent Simulator can simulate thousands of hosts in a single process. A single process hosts multiple `https servers` with one port per simulated host. Typically, you could simulate upto 25,000 hosts on a single Linux server. The number of servers and starting port number can be configured through the config file.
 
 ## Building from Source code
 
@@ -15,7 +13,7 @@ Simplest way to build the Trust Agent invoke the make commands from the commandl
 ```shell
 cd tools/ta-sim
 make installer
-cp deployments/installer/ta-sim-v4.0.0.bin <target_directory>
+cp deployments/installer/ta-sim-v4.1.0.bin <target_directory>
 ```
 
 If this is the first time that you are installing the Trust Agent Simulator, a helper .env file is also provided that can be used to automate the install of the product. Copy the .env file to the home directory of the user installing the simulator. Details about environment variables are documented in go-ta-env section below.
@@ -34,10 +32,10 @@ Run the installer
 
 ```shell
 cp go-ta-sim.env ~
-./ta-sim-v4.0.0.bin
+./ta-sim-v4.1.0.bin
 ```
 
-Some of the required values will be prompted for by the installer if they are not set via the .env file. For others that are needed, the installer will error out. Please check the documentation of the .env file for setting the necessary ones. If the TA service mode is not set, the default mode will be set to "http", which would require a trustagent to be running as https service to download TPM-quote and host-info to simulate the responses. The TA_SERVICE_MODE variable will also define the mode of the simulated trustagents. i.e If an actual trustagent agent from which the simulator downloads data from is running with an outbound communication, the simulated hosts from ta-simulator will also create outbound connection with the same NATS server as the trustagent.  
+Some of the required values will be prompted for by the installer if they are not set via the .env file. For others that are needed, the installer will error out. Please check the documentation of the .env file for setting the necessary ones.
 
 After successful installation, make configuration changes in the configuration file located at `/opt/go-ta-simulator/configuration/config.yml`.
 
@@ -80,7 +78,7 @@ cd /opt/go-ta-simulator
 # Leave the simulator running so that HVS can contact the simulated host to create and refresh hosts.
 ```
 
-To stop the simulator running with http connections, use helper script which looks for the process running the simulator and kills it
+To stop the simulator, use helper script which looks for the process running the simulator and kills it
 
 ```shell
 cd /opt/go-ta-simulator
@@ -89,8 +87,7 @@ cd /opt/go-ta-simulator
 
 ## Uninstalling Trust Agent Simulator
 
-Uninstalling the Trust Agent Simulator is as simple as stopping the TA simulator and removing the contents from the installed directory.
-In case of outbound communication, the `stop` command will close all the client connections with the NATS server.
+Uninstalling the Trust Agent Simulator is as simple as stopping the TA simulator and removing the contents from the installed directory
 
 ```shell
 /opt/go-ta-simulator/tagent-sim stop
@@ -103,9 +100,9 @@ The Simulator can be moved from one machine to another (as long as it is communi
 
 ```shell
 cd /opt/go-ta-simulator
-# Edit contents of config.yml
+# Edit contents of config.yml 
 vi configuration/config.yml
-# change the SimulatorIP to reflect the IP of the new system
+# change the SimulatorIP to reflect the IP of the new system 
 #save the file
 cat /dev/null > configuration/hw_uuid_map.json
 # rm configuration/hw_uuid_map.json

@@ -49,7 +49,7 @@ orchestrator: attest
 	cp sgx-hvs/dist/linux/shvs.env binaries/env
 	cp k8s-extensions/out/isecl-k8s-extensions-*.tar.gz binaries/
 
-k8s-aio: k8s_common
+k8s-aio: ubuntu_k8s k8s_common
 	cp -r utils/build/k8s-manifests/db-deployments/single-node/aas-db k8s/manifests/
 	cp -r utils/build/k8s-manifests/db-deployments/single-node/skc/* k8s/manifests/
 	cp -r utils/build/k8s-manifests/single-node/* k8s/manifests/
@@ -59,7 +59,7 @@ k8s-aio: k8s_common
 	cp intel-secl/deployments/k8s/aas/populate-users k8s/manifests/aas/scripts/
 	cp intel-secl/deployments/k8s/aas/populate-users.env k8s/manifests/aas/scripts/populate-users.env
 
-k8s: k8s_common
+k8s: ubuntu_k8s k8s_common
 	cp -r utils/build/k8s-manifests/db-deployments/multi-node/aas-db k8s/manifests/
 	cp -r utils/build/k8s-manifests/db-deployments/multi-node/skc/* k8s/manifests/
 	cp -r intel-secl/deployments/k8s/* k8s/manifests/
@@ -116,7 +116,7 @@ skc_k8s:
 	cd sgx-hvs && make k8s
 	cd sgx-verification-service && make k8s
 
-intel_secl_k8s:
+intel_secl_k8s: ubuntu_k8s
 	cd intel-secl && make authservice-k8s && make cms-k8s && make ihub-k8s && make kbs-k8s
 
 sgx_agent_k8s:
@@ -131,7 +131,7 @@ sgx_agent_k8s_stacks:
 skc_library_k8s_stacks:
 	cd utils/build/skc-tools/stacks/skc_library/build_scripts/ && ./build_skc_docker.sh
 
-k8s_extensions:
+k8s_extensions: 
 	cd k8s-extensions && make all
 
 k8s_common_services:
@@ -144,6 +144,7 @@ k8s_common_services:
 	cp -r utils/build/skc-tools/sgx_agent/deploy_scripts/deployment_prerequisites.sh k8s/platform-dependencies/
 	cp utils/build/skc-tools/sample_apps/sampleapps_untar.sh k8s/sample_apps/
 	cp -r utils/build/skc-tools/skc_k8s/pre-requisites.sh k8s/manifests/
+	cp -pf utils/build/skc-tools/config k8s/manifests/
 	cp -r utils/build/skc-tools/skc_k8s/skc-bootstrap-db-services.sh k8s/manifests/skc-bootstrap-db-services.sh
 	cp -r utils/build/skc-tools/skc_k8s/sgx_agent k8s/manifests/sgx_agent
 	cp  utils/build/skc-tools/skc_library/deploy_scripts/create_roles.conf utils/build/skc-tools/skc_k8s/skc_library/resources/
