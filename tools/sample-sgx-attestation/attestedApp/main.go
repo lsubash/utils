@@ -6,9 +6,8 @@ package main
 
 import (
 	"fmt"
-	"os"
-
 	logger "github.com/sirupsen/logrus"
+	"os"
 )
 
 var log = logger.New()
@@ -24,7 +23,8 @@ func (f *customFormatter) Format(entry *logger.Entry) ([]byte, error) {
 }
 
 func main() {
-	app := &App{}
+	var app *App
+	app = &App{}
 
 	Formatter := new(customFormatter)
 	Formatter.DisableTimestamp = true
