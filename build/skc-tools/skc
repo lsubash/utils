@@ -1,11 +1,6 @@
-bin: app skc orchestrator
+# Building Container on Ubuntu OS is NOT Supported
 
-ubuntu_k8s:
-        OS := $(shell cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
-	ubuntu := $(shell if [ "${OS}" = "ubuntu" ]; then echo 1; else echo 0; fi)
-	ifeq ($(ubuntu), 1)
-	     $(error Container Build and Deployment not Supported on Ubuntu)
-	endif
+bin: app skc orchestrator
 
 attest: clean sgx_agent
 	cd intel-secl && make cms-installer && make authservice-installer && make aas-manager
@@ -50,7 +45,7 @@ orchestrator: attest
 	cp sgx-hvs/dist/linux/shvs.env binaries/env
 	cp k8s-extensions/out/isecl-k8s-extensions-*.tar.gz binaries/
 
-k8s-aio: ubuntu_k8s k8s_common
+k8s-aio: k8s_common
 	cp -r utils/build/k8s-manifests/db-deployments/single-node/aas-db k8s/manifests/
 	cp -r utils/build/k8s-manifests/db-deployments/single-node/skc/* k8s/manifests/
 	cp -r utils/build/k8s-manifests/single-node/* k8s/manifests/
@@ -60,7 +55,7 @@ k8s-aio: ubuntu_k8s k8s_common
 	cp intel-secl/deployments/k8s/aas/populate-users k8s/manifests/aas/scripts/
 	cp intel-secl/deployments/k8s/aas/populate-users.env k8s/manifests/aas/scripts/populate-users.env
 
-k8s: ubuntu_k8s k8s_common
+k8s: k8s_common
 	cp -r utils/build/k8s-manifests/db-deployments/multi-node/aas-db k8s/manifests/
 	cp -r utils/build/k8s-manifests/db-deployments/multi-node/skc/* k8s/manifests/
 	cp -r intel-secl/deployments/k8s/* k8s/manifests/
@@ -89,24 +84,24 @@ sgx_agent:
 skc_library:
 	cd utils/build/skc-tools/skc_library/build_scripts/ && ./skc_library_build.sh
 
-skc_k8s: ubuntu_k8s
+skc_k8s:
 	cd sgx-caching-service && make k8s
 	cd sgx-hvs && make k8s
 	cd sgx-verification-service && make k8s
 
-intel_secl_k8s: ubuntu_k8s
+intel_secl_k8s:
 	cd intel-secl && make authservice-k8s && make cms-k8s && make ihub-k8s && make kbs-k8s
 
-sgx_agent_k8s: ubuntu_k8s
+sgx_agent_k8s:
 	cd utils/build/skc-tools/sgx_agent/build_scripts/ && ./build_sgx_agent_docker.sh
 
-skc_library_k8s: ubuntu_k8s
+skc_library_k8s:
 	cd utils/build/skc-tools/skc_library/build_scripts/ && ./build_skc_docker.sh
 
 k8s_extensions: 
 	cd k8s-extensions && make all
 
-k8s_common: ubuntu_k8s clean intel_secl_k8s skc_k8s k8s_extensions sgx_agent_k8s skc_library_k8s app
+k8s_common: clean intel_secl_k8s skc_k8s k8s_extensions sgx_agent_k8s skc_library_k8s app
 	mkdir -p k8s/container-images
 	mkdir -p k8s/manifests
 	mkdir -p k8s/platform-dependencies
