@@ -577,6 +577,8 @@ deploy_tagent() {
   if [ ! -z "$TPM_OWNER_SECRET" ]; then
     sed -i "s/TPM_OWNER_SECRET:.*/TPM_OWNER_SECRET: $TPM_OWNER_SECRET/g" secrets.yml
   else
+    sed -n '/ta-credentials/{n;x;d;};x;1d;$G;p' daemonset.yaml  > daemonset-tmp.yaml && mv -f daemonset-tmp.yaml daemonset.yaml
+    sed -n '/ta-credentials/{n;x;d;};x;1d;$G;p' daemonset-suefi.yaml  > daemonset-tmp.yaml && mv -f daemonset-tmp.yaml daemonset-suefi.yaml
     sed -i "s/- secrets.yml//g" kustomization.yml
   fi
   if [ "$TA_SERVICE_MODE" == "outbound" ]; then
