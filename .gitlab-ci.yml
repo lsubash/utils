@@ -38,7 +38,6 @@ pcssimulator:
     - go
   script:
     - cd tools/skc-simulators/pcs_simulator
-    - go mod init pcs_simulator
     - go mod tidy
     - go build ./...
 
