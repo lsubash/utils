@@ -334,7 +334,6 @@ deploy_sqvs() {
   sed -i "s/CMS_TLS_CERT_SHA384:.*/CMS_TLS_CERT_SHA384: ${CMS_TLS_CERT_SHA384}/g" configMap.yml
   sed -i "s/SAN_LIST:.*/SAN_LIST: ${SQVS_CERT_SAN_LIST}/g" configMap.yml
   sed -i "s/SQVS_INCLUDE_TOKEN:.*/SQVS_INCLUDE_TOKEN: \"${SQVS_INCLUDE_TOKEN}\"/g" configMap.yml
-  sed -i "s/BEARER_TOKEN:.*/BEARER_TOKEN ${BEARER_TOKEN}/g" secrets.yml
   sed -i "s#SGX_TRUSTED_ROOT_CA_PATH:.*#SGX_TRUSTED_ROOT_CA_PATH: /tmp/${SGX_TRUSTED_ROOT_CA_FILE}#g" configMap.yml
   sed -i "s/SIGN_QUOTE_RESPONSE:.*/SIGN_QUOTE_RESPONSE: \"${SIGN_QUOTE_RESPONSE}\"/g" configMap.yml
   sed -i "s/RESPONSE_SIGNING_KEY_LENGTH:.*/RESPONSE_SIGNING_KEY_LENGTH: \"${RESPONSE_SIGNING_KEY_LENGTH}\"/g" configMap.yml
@@ -589,6 +588,7 @@ deploy_kbs() {
   if [ ! -f "$KMIP_CLIENT_CERT_NAME" ] && [ ! -f "$KMIP_CLIENT_KEY_NAME" ] && [ ! -f "$KMIP_ROOT_CERT_NAME" ]; then
     echo "One or more Kmip related certificates are empty"
   fi
+  cd ..
   if [ -z "$KMIP_USERNAME" ] || [ ! -f "$KMIP_PASSWORD" ]; then
       echo "Either or both values for KMIP_USERNAME and KMIP_PASSWORD are not set. Ignoring..."
       sed -i "s/KMIP_USERNAME:.*//g" secrets.yml
@@ -598,7 +598,6 @@ deploy_kbs() {
       sed -i "s/KMIP_PASSWORD:.*/KMIP_PASSWORD: $KMIP_PASSWORD/g" secrets.yml
   fi
 
-  cd ..
   sed -i "s#KMIP_CLIENT_CERT_PATH:.*#KMIP_CLIENT_CERT_PATH: $KMIP_CLIENT_CERT_PATH#g" configMap.yml
   sed -i "s#KMIP_CLIENT_KEY_PATH:.*#KMIP_CLIENT_KEY_PATH: $KMIP_CLIENT_KEY_PATH#g" configMap.yml
   sed -i "s#KMIP_ROOT_CERT_PATH:.*#KMIP_ROOT_CERT_PATH: $KMIP_ROOT_CERT_PATH#g" configMap.yml

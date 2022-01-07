@@ -1,12 +1,13 @@
 GITTAG := $(shell git describe --tags --abbrev=0 2> /dev/null)
 GITCOMMIT := $(shell git describe --always)
 GITCOMMITDATE := $(shell git log -1 --date=short --pretty=format:%cd)
-VERSION := $(or ${GITTAG}, v0.0.0)
+VERSION := "v3.6.0"
 BUILDDATE := $(shell TZ=UTC date +%Y-%m-%dT%H:%M:%S%z)
 BUILDDATE_FILENAME := $(shell TZ=UTC date +%Y-%m-%dT%H-%M-%S)
 
 bkc-tool:
 	cd cmd && \
+	env CGO_CFLAGS_ALLOW="-f.*" GOOS=linux GOSUMDB=off GOPROXY=direct go mod tidy && \
 	env CGO_CFLAGS_ALLOW="-f.*" GOOS=linux GOSUMDB=off GOPROXY=direct go build -gcflags=all="-N -l" \
 		-ldflags "-X main.Version=$(VERSION) -X main.Build=$(GITCOMMIT) -X main.BuildDate=$(BUILDDATE)" \
 		-o bkc-tool.bin

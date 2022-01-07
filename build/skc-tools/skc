@@ -1,3 +1,5 @@
+# Building Container on Ubuntu OS is NOT Supported
+
 bin: app skc orchestrator
 
 sgx-stack: app_stacks skc_stacks orchestrator_stacks
@@ -17,7 +19,8 @@ skc_services:
 	cp sgx-verification-service/out/*.bin binaries/
 	cp sgx-verification-service/dist/linux/sqvs.env binaries/env
 	cp sgx-verification-service/dist/linux/trusted_rootca_icx_preprod.pem binaries/
-	cp sgx-verification-service/dist/linux/trusted_rootca_icx_prod.pem binaries/
+	cp sgx-verification-service/dist/linux/trusted_rootca_icx_prod.pem binaries/trusted_rootca.pem
+	cp sgx-verification-service/dist/linux/trusted_rootca_clx_prod.pem binaries/
 	cp -pf utils/build/skc-tools/skc_scripts/env/*.env binaries/env
 	cp -pf utils/build/skc-tools/skc_scripts/env/install_pgdb.sh binaries/
 	cp -pf utils/build/skc-tools/skc_scripts/install_*.sh binaries/
@@ -130,7 +133,7 @@ sgx_agent_k8s_stacks:
 skc_library_k8s_stacks:
 	cd utils/build/skc-tools/stacks/skc_library/build_scripts/ && ./build_skc_docker.sh
 
-k8s_extensions:
+k8s_extensions: 
 	cd k8s-extensions && make all
 
 k8s_common_services:
@@ -143,6 +146,7 @@ k8s_common_services:
 	cp -r utils/build/skc-tools/sgx_agent/deploy_scripts/deployment_prerequisites.sh k8s/platform-dependencies/
 	cp utils/build/skc-tools/sample_apps/sampleapps_untar.sh k8s/sample_apps/
 	cp -r utils/build/skc-tools/skc_k8s/pre-requisites.sh k8s/manifests/
+	cp -pf utils/build/skc-tools/config k8s/manifests/
 	cp -r utils/build/skc-tools/skc_k8s/skc-bootstrap-db-services.sh k8s/manifests/skc-bootstrap-db-services.sh
 	cp -r utils/build/skc-tools/skc_k8s/sgx_agent k8s/manifests/sgx_agent
 	cp  utils/build/skc-tools/skc_library/deploy_scripts/create_roles.conf utils/build/skc-tools/skc_k8s/skc_library/resources/
