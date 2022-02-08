@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Check OS
 OS=$(cat /etc/os-release | grep ^ID= | cut -d'=' -f2)
 temp="${OS%\"}"

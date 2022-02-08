@@ -1,3 +1,5 @@
+#!/bin/bash
+
 declare -a PRE_REQ_PACKAGES_RHEL
 PRE_REQ_PACKAGES_RHEL=(
   https://download-ib01.fedoraproject.org/pub/epel/8/Everything/x86_64/Packages/m/makeself-2.4.2-1.el8.noarch.rpm
