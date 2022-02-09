@@ -1,5 +1,5 @@
 TARGETS = intel-secl workload-service k8s-extensions trust-agent
-INTEL_SECL_K8S = authservice cms ihub kbs hvs
+INTEL_SECL_K8S = authservice cms ihub kbs hvs aas-manager
 
 binaries: clean download-eca $(TARGETS) workload-agent
 	mkdir binaries

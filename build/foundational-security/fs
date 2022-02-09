@@ -1,5 +1,5 @@
 TARGETS = trust-agent
-INTEL_SECL_K8S = authservice cms hvs
+INTEL_SECL_K8S = authservice cms hvs aas-manager
 
 binaries: clean $(TARGETS) intel-secl
 	mkdir binaries
