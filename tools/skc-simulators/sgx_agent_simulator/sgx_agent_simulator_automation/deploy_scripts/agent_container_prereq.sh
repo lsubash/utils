@@ -63,7 +63,8 @@ install_dcap_driver()
 install_psw_qgl()
 {
 	if [ "$OS" == "rhel" ]; then
-		tar -xf $SGX_AGENT_BIN/sgx_rpm_local_repo.tgz
+		wget -q $MPA_URL/sgx_rpm_local_repo.tgz || exit 1
+		tar -xf sgx_rpm_local_repo.tgz
 		yum-config-manager --add-repo file://$PWD/sgx_rpm_local_repo || exit 1
 		$PKGMGR install -qy --nogpgcheck libsgx-dcap-ql || exit 1
 		rm -rf sgx_rpm_local_repo /etc/yum.repos.d/*sgx_rpm_local_repo.repo
