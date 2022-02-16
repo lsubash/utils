@@ -406,7 +406,7 @@ func (ca AppVerifierController) verifyQuote(quote []byte, userData []byte) error
 
 	// split by newline
 	lines := strings.Split(string(qpRaw), common.EndLine)
-	var mreValue, mrSignerValue, cpusvnValue string
+	var mreValue, mrSignerValue string
 	for _, line := range lines {
 		// split by :
 		lv := strings.Split(strings.TrimSpace(line), common.PolicyFileDelim)
@@ -419,13 +419,11 @@ func (ca AppVerifierController) verifyQuote(quote []byte, userData []byte) error
 			mreValue = lv[1]
 		case common.MRSignerField:
 			mrSignerValue = lv[1]
-		case common.CpuSvnField:
-			cpusvnValue = lv[1]
 		}
 	}
 
-	log.Infof("Quote policy has values \n\tMREnclaveField = %s \n\tMRSignerField = %s \n\tCpuSvnField = %s",
-		mreValue, mrSignerValue, cpusvnValue)
+	log.Infof("Quote policy has values \n\tMREnclaveField = %s \n\tMRSignerField = %s \n",
+		mreValue, mrSignerValue)
 
 	if responseAttributes.EnclaveIssuer != mrSignerValue {
 		log.Errorf("Quote policy mismatch in %s", common.MRSignerField)
@@ -433,14 +431,6 @@ func (ca AppVerifierController) verifyQuote(quote []byte, userData []byte) error
 		return err
 	} else {
 		log.Infof("%s matched with Quote Policy", common.MRSignerField)
-	}
-
-	if responseAttributes.ConfigSvn != cpusvnValue {
-		log.Errorf("Quote policy mismatch in %s", common.CpuSvnField)
-		err = errors.Errorf("Quote policy mismatch in %s", common.CpuSvnField)
-		return err
-	} else {
-		log.Infof("%s matched with Quote Policy", common.CpuSvnField)
 	}
 
 	if responseAttributes.EnclaveMeasurement != mreValue {
