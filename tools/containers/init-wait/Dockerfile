@@ -5,4 +5,4 @@ FROM curlimages/curl
 
 COPY utils/tools/containers/init-wait/entrypoint.sh /entrypoint.sh
 
-CMD ["./entrypoint"]
+CMD ["/entrypoint.sh"]
