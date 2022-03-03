@@ -54,7 +54,7 @@ k8s-control-plane: clean k8s_common $(TARGETS)
 	cp utils/build/workload-security/k8s/create-dirs-nfs.sh k8s/
 
 $(INTEL_SECL_K8S):
-	cd intel-secl && make $@-k8s
+	cd intel-secl && make download-eca && make $@-k8s
 
 intel-secl:
 	cd $@ && make cms-installer && make authservice-installer && make aas-manager && make download-eca && make hvs-installer && make ihub-installer

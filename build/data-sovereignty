@@ -64,7 +64,7 @@ tagent_k8s:
 	cd trust-agent && make oci-archive
 
 $(INTEL_SECL_K8S):
-	cd intel-secl && make $@-k8s
+	cd intel-secl && make download-eca && make $@-k8s
 
 k8s-extensions:
 	cd k8s-extensions && make
