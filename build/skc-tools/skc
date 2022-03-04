@@ -15,7 +15,7 @@ attest: clean sgx_agent
 	cp sgx-caching-service/dist/linux/scs.env binaries/env
 	cp sgx-verification-service/out/*.bin binaries/
 	cp sgx-verification-service/dist/linux/sqvs.env binaries/env
-	cp sgx-verification-service/dist/linux/trusted_rootca.pem binaries/
+	cp sgx-verification-service/dist/linux/*.pem binaries/
 	cp utils/build/skc-tools/sgx_agent/build_scripts/sgx_agent.* binaries/
 	cp utils/build/skc-tools/sgx_agent/agent_untar.sh binaries/
 	cp -pf utils/build/skc-tools/config binaries/

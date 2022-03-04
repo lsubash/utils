@@ -9,7 +9,7 @@
 - name: ISECL - SGX QUOTE VERIFICATION SERVICE | Copy trusted_rootca.pem
   copy:
     src: "{{sqvs_trusted_rootca_file_src}}"
-    dest: "/tmp/{{sqvs_trusted_rootca_filename}}"
+    dest: "/tmp/trusted_rootca.pem"
     mode: "u+x"
 
 - name: ISECL - SGX QUOTE VERIFICATION SERVICE | Generate sqvs.env file

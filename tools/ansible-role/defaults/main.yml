@@ -350,6 +350,9 @@ sqvs_installer_name: sqvs-v4.0.2.bin
 sqvs_installer_file_src:  "{{binaries_path}}/{{sqvs_installer_name}}"
 
 # The name of the trusted root ca file for SGX Quote Verification Service
+# If host machine is 'Mehlow' use 'trusted_rootca_clx_prod.pem'
+# If host machine is 'prod-icx' use 'trusted_rootca_icx_prod.pem'
+# If host machine is 'pre-prod-icx' use 'trusted_rootca.pem'
 sqvs_trusted_rootca_filename: trusted_rootca.pem
 
 # The trusted root ca file source for SGX Quote Verification Service
