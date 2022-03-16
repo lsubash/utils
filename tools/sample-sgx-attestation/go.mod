@@ -7,7 +7,7 @@ require (
 	github.com/sirupsen/logrus v1.7.0
 	github.com/spf13/viper v1.7.1
 	gopkg.in/yaml.v2 v2.4.0
-	intel/isecl/lib/common/v4 v4.2.0
+	intel/isecl/lib/common/v4 v4.2.0-Beta
 )
 
-replace intel/isecl/lib/common/v4 => gitlab.devtools.intel.com/sst/isecl/lib/common.git/v4 v4.2/develop
+replace intel/isecl/lib/common/v4 => github.com/intel-secl/common/v4 v4.2.0-Beta
